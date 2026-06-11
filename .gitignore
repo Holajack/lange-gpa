@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+.DS_Store
+*.log
+.env*
+
+._*
+.DS_Store
+.playwright-mcp/
+.vercel
+research/phase*.txt
+landing-hero.jpeg
