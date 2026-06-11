@@ -28,13 +28,13 @@ const OPENING_LINES: Partial<Record<LangCode, string>> = {
   de: "Jemand musste Josef K. verleumdet haben…",
   pt: "Tudo vale a pena se a alma não é pequena.",
   it: "Nel mezzo del cammin di nostra vita…",
+  ja: "吾輩は猫である。名前はまだ無い。",
+  zh: "话说天下大势，分久必合，合久必分。",
 };
 
 /** Friendly greeting fallback for languages without a curated line. */
 const GREETINGS: Partial<Record<LangCode, string>> = {
   en: "Hello, friend! How are you today?",
-  ja: "こんにちは！ お元気ですか？",
-  zh: "你好，朋友！今天好吗？",
   ar: "مرحباً يا صديقي! كيف حالك اليوم؟",
   ko: "안녕하세요! 오늘 기분이 어때요?",
   tr: "Merhaba arkadaşım! Bugün nasılsın?",

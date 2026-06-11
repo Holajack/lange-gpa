@@ -13,7 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/lib/store";
 import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
 import { phaseById } from "@/lib/phases";
-import { langByCode } from "@/lib/languages";
+import { LANGUAGES, langByCode } from "@/lib/languages";
 import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
 import { Card, Pill, SectionTitle, Tag } from "@/components/ui";
@@ -21,6 +21,23 @@ import type { Nurturer } from "@/lib/types";
 
 const HOURS = Array.from({ length: 12 }, (_, i) => `${String(9 + i).padStart(2, "0")}:00`);
 const CONFETTI = ["🎉", "✨", "🌱", "💜", "⭐", "🎊", "🧡", "💚", "🌍", "🪄"];
+
+/** Nuri — the AI nurturer. Lives in every language; never sleeps. */
+const NURI: Nurturer = {
+  id: "ai",
+  name: "Nuri",
+  langs: LANGUAGES.map((l) => l.code),
+  city: "LANGE",
+  bio: "Always awake, endlessly patient. Runs the same GPA games — speaks only your growing language.",
+  tags: ["AI", "24/7", "picture cards"],
+  sessions: 0,
+  rating: 5,
+  online: true,
+  color: "#ff8a1e",
+};
+
+/** nurturerById that also resolves the AI nurturer */
+const findNurturer = (id: string): Nurturer | undefined => (id === "ai" ? NURI : nurturerById(id));
 
 interface DayCell {
   iso: string;
@@ -162,6 +179,10 @@ export default function SchedulePage() {
   const phase = phaseById(profile?.phase ?? 1);
   const defaultActivity = phase.activities[0]?.name ?? "Growing session";
 
+  // t() returns the key itself when missing — fall back to plain English
+  const aiLabelRaw = t("aiNurturer");
+  const aiLabel = aiLabelRaw === "aiNurturer" ? "AI nurturer" : aiLabelRaw;
+
   const forLang = useMemo(() => nurturersForLang(targetLang), [targetLang]);
   const fallbackAll = forLang.length === 0;
   const roster = fallbackAll ? NURTURERS : forLang;
@@ -246,7 +267,8 @@ export default function SchedulePage() {
           ) : (
             <div className="space-y-3">
               {bookings.map((b, i) => {
-                const n = nurturerById(b.nurturerId);
+                const n = findNurturer(b.nurturerId);
+                const isAI = b.nurturerId === "ai";
                 return (
                   <motion.div
                     key={b.id}
@@ -255,7 +277,13 @@ export default function SchedulePage() {
                     transition={{ delay: 0.12 + i * 0.06, duration: 0.45, ease: "easeOut" }}
                   >
                     <Card hover className="flex items-center gap-3 p-4">
-                      <Avatar name={n?.name ?? "?"} color={n?.color ?? "#7c5cff"} size={44} ring />
+                      {isAI ? (
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-lime/10 ring-2 ring-lime/40">
+                          <Mascot size={36} mood="happy" float={false} />
+                        </span>
+                      ) : (
+                        <Avatar name={n?.name ?? "?"} color={n?.color ?? "#7c5cff"} size={44} ring />
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-display text-sm font-bold">{n?.name ?? b.nurturerId}</p>
                         <p className="truncate text-xs text-muted">
@@ -296,7 +324,7 @@ export default function SchedulePage() {
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {HOURS.map((h, i) => {
                 const booked = bookings.find((b) => b.date === selectedIso && b.time === h);
-                const bn = booked ? nurturerById(booked.nurturerId) : undefined;
+                const bn = booked ? findNurturer(booked.nurturerId) : undefined;
                 return booked ? (
                   <motion.div
                     key={h}
@@ -335,6 +363,62 @@ export default function SchedulePage() {
           className="space-y-6"
         >
           <SectionTitle sub={`${target.flag} ${target.name}`}>{t("availableNurturers")}</SectionTitle>
+
+          {/* AI nurturer — Nuri */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.55, ease: "easeOut" }}
+          >
+            <div
+              className="rounded-[30px] p-[2px]"
+              style={{
+                background: "linear-gradient(135deg, var(--color-violet), var(--color-lime))",
+                boxShadow: "0 0 44px -14px rgba(124, 92, 255, 0.55)",
+              }}
+            >
+              <div className="card relative overflow-hidden p-5" style={{ borderColor: "transparent" }}>
+                <div className="orb right-[-70px] top-[-70px] h-[180px] w-[180px] bg-lime/15" />
+                <div className="relative flex items-center gap-4">
+                  <Mascot size={64} mood="happy" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-display text-lg font-bold">Nuri</p>
+                      <span className="rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-canvas">
+                        AI
+                      </span>
+                      <span className="ml-auto flex items-center gap-1.5 rounded-full bg-mint/10 px-2.5 py-1 text-[11px] font-semibold text-mint">
+                        <span className="pulsedot h-2 w-2 rounded-full bg-mint" />
+                        24/7
+                      </span>
+                    </div>
+                    <p className="truncate text-xs text-muted">{aiLabel}</p>
+                  </div>
+                </div>
+                <p className="relative mt-3 text-sm leading-relaxed text-muted">
+                  Nuri — always awake, endlessly patient. Runs the same GPA games, speaks only {target.name}.
+                </p>
+                <div className="relative mt-4 flex items-center gap-2">
+                  <Link
+                    href="/session?nurturer=ai"
+                    className="pill bg-lime px-5 py-2 text-sm font-semibold text-canvas"
+                    style={{ boxShadow: "0 0 30px -10px rgba(184, 240, 60, 0.7)" }}
+                  >
+                    ▶ Start now
+                  </Link>
+                  <Pill onClick={() => openSheet({ nurturerId: "ai" })} className="bg-violet px-4 py-2 text-sm text-white">
+                    {t("book")}
+                  </Pill>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Real people */}
+          <div className="space-y-1 pt-1">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">🫶 Real people</p>
+            <p className="text-xs text-muted/80">Real people are the heart of GPA — Nuri fills the gaps between meetings.</p>
+          </div>
 
           {fallbackAll && (
             <Card className="flex items-center gap-3 p-4">
@@ -390,21 +474,34 @@ export default function SchedulePage() {
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("nurturerWord")}</p>
                   <div className="flex gap-3 overflow-x-auto pb-2">
-                    {roster.map((n) => {
+                    {[NURI, ...roster].map((n) => {
                       const sel = sheet.nurturerId === n.id;
+                      const isAI = n.id === "ai";
                       return (
                         <button
                           key={n.id}
                           type="button"
                           onClick={() => setSheet((s) => (s ? { ...s, nurturerId: n.id } : s))}
                           className={`flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-3 py-2.5 transition ${
-                            sel ? "bg-violet/15 ring-2 ring-violet" : "hover:bg-white/5"
+                            sel ? (isAI ? "bg-lime/10 ring-2 ring-lime" : "bg-violet/15 ring-2 ring-violet") : "hover:bg-white/5"
                           }`}
                         >
                           <div className="relative">
-                            <Avatar name={n.name} color={n.color} size={48} ring={sel} />
-                            {n.online && (
-                              <span className="pulsedot absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-raised bg-mint" />
+                            {isAI ? (
+                              <span className="grid h-12 w-12 place-items-center rounded-full bg-lime/10">
+                                <Mascot size={40} mood="happy" float={false} />
+                              </span>
+                            ) : (
+                              <Avatar name={n.name} color={n.color} size={48} ring={sel} />
+                            )}
+                            {isAI ? (
+                              <span className="absolute -right-1 -top-1 rounded-full bg-lime px-1.5 py-px text-[8px] font-extrabold text-canvas">
+                                AI
+                              </span>
+                            ) : (
+                              n.online && (
+                                <span className="pulsedot absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-raised bg-mint" />
+                              )
                             )}
                           </div>
                           <span className={`text-[11px] font-semibold ${sel ? "text-ink" : "text-muted"}`}>

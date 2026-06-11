@@ -11,3 +11,4 @@ out
 .vercel
 research/phase*.txt
 landing-hero.jpeg
+tsconfig.tsbuildinfo

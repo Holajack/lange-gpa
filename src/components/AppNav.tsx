@@ -14,6 +14,9 @@ const TABS = [
   { key: "forum", href: "/forum" },
 ];
 
+/** Extra tab for nurturer-role users — the Nurturer Studio. */
+const NURTURE_TAB = { key: "nurture", href: "/nurture" };
+
 export function AppNav() {
   const { profile, t, uiLang, toggleImmersion } = useApp();
   const pathname = usePathname();
@@ -23,6 +26,7 @@ export function AppNav() {
 
   const target = langByCode(profile.targetLang);
   const known = profile.knownLangs.map(langByCode);
+  const tabs = profile.role === "nurturer" || profile.role === "both" ? [...TABS, NURTURE_TAB] : TABS;
   const roleLabel =
     profile.role === "nurturer" ? t("nurturerWord") : profile.role === "both" ? `${t("student")} + ${t("nurturerWord")}` : t("student");
 
@@ -31,14 +35,19 @@ export function AppNav() {
       <div className="mx-auto flex max-w-[1400px] items-center gap-3">
         {/* tabs */}
         <nav className="card flex items-center gap-1 rounded-full bg-raised/85 p-1.5 backdrop-blur-xl">
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const active = pathname.startsWith(tab.href);
+            const nurture = tab.key === "nurture";
             return (
               <Link
                 key={tab.key}
                 href={tab.href}
                 className={`pill px-4 py-2.5 text-sm lg:px-6 ${
-                  active ? "bg-violet text-white shadow-glow-violet" : "text-muted hover:text-ink"
+                  active
+                    ? nurture
+                      ? "bg-orange text-canvas shadow-glow-orange"
+                      : "bg-violet text-white shadow-glow-violet"
+                    : "text-muted hover:text-ink"
                 }`}
               >
                 {t(tab.key)}

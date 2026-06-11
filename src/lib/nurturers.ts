@@ -15,6 +15,10 @@ export const NURTURERS: Nurturer[] = [
   { id: "greta", name: "Greta Baumann", langs: ["de"], city: "Leipzig", bio: "Kindergarten helper, speaks to growers the way she speaks to five-year-olds: clearly and warmly.", tags: ["clear speech", "phase 1"], sessions: 233, rating: 4.9, online: false, color: "#a78bfa" },
   { id: "joao", name: "João Mendes", langs: ["pt"], city: "Porto", bio: "Bus driver and amateur cook. His picture cards are photos of his own street.", tags: ["everyday life", "phase 1–2"], sessions: 144, rating: 4.8, online: true, color: "#ff8a1e" },
   { id: "elena", name: "Elena Greco", langs: ["it"], city: "Bari", bio: "Seamstress. Teaches through her hands: fabrics, tools, actions. Pure here-and-now talk.", tags: ["hands-on", "phase 1–2"], sessions: 178, rating: 4.9, online: true, color: "#b8f03c" },
+  { id: "haruka", name: "Haruka Sato", langs: ["ja"], city: "Osaka", bio: "Retired school-lunch cook. Forty years of feeding children — now she feeds growers words, one warm bowl at a time.", tags: ["warm", "food", "phase 1–2"], sessions: 287, rating: 4.9, online: true, color: "#ff8a1e" },
+  { id: "kenji", name: "Kenji Nakamura", langs: ["ja"], city: "Sapporo", bio: "Train conductor. Stations, timetables, bento on the platform — ride his daily route and the words arrive on schedule.", tags: ["routines", "travel", "phase 2–3"], sessions: 142, rating: 4.8, online: false, color: "#7c5cff" },
+  { id: "liwei", name: "Li Wei", langs: ["zh"], city: "Chengdu", bio: "Street-food vendor. Point at anything on his cart and he names it, fries it, and hands it over — meaning you can taste.", tags: ["market life", "food", "phase 1–2"], sessions: 203, rating: 4.8, online: true, color: "#b8f03c" },
+  { id: "zhangmin", name: "Zhang Min", langs: ["zh"], city: "Kunming", bio: "Grandmother and mahjong fan. Learns your name in one session, deals you into the family table by the next.", tags: ["family", "games", "phase 1–3"], sessions: 356, rating: 5.0, online: true, color: "#ffd234" },
 ];
 
 export const nurturerById = (id: string) => NURTURERS.find((n) => n.id === id);

@@ -108,6 +108,67 @@ export default function PhasePage() {
   const next = PHASES.find((p) => p.id === phase.id + 1);
   const onAccent = textOn(phase.color);
 
+  /* ----- The sequence: ordered parts + any activities that run throughout ----- */
+  const parts = phase.parts ?? [];
+  const activityById = new Map(phase.activities.map((a) => [a.id, a]));
+  const referenced = new Set(parts.flatMap((p) => p.activityIds));
+  const throughout = phase.activities.filter((a) => !referenced.has(a.id));
+
+  const renderActivity = (a: PhaseActivity) => {
+    const Icon = KIND_ICON[a.kind];
+    const done = profile.completed.includes(a.id);
+    return (
+      <div
+        key={a.id}
+        className={`card card-hover relative flex h-full flex-col gap-3 p-5 ${
+          done ? "opacity-75" : ""
+        }`}
+      >
+        {done && (
+          <span
+            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-mint text-canvas"
+            aria-label="✓"
+          >
+            <Check size={14} strokeWidth={3.5} />
+          </span>
+        )}
+
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-2xl"
+          style={{ background: phase.color + "22", color: phase.color }}
+          aria-hidden
+        >
+          <Icon size={20} strokeWidth={2.25} />
+        </span>
+
+        <div>
+          <h3 className="pr-8 font-semibold leading-snug">{a.name}</h3>
+          <p className="mt-1.5 text-sm leading-relaxed">{a.description}</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">{a.how}</p>
+        </div>
+
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+          <Tag>⏱ {a.minutes} {t("minutes")}</Tag>
+          {a.practiceHref ? (
+            <Link
+              href={a.practiceHref}
+              className={`pill ml-auto px-4 py-2 text-xs font-bold ${onAccent}`}
+              style={{ background: phase.color }}
+            >
+              {t("start")} →
+            </Link>
+          ) : (
+            <Link href="/schedule" className="ml-auto">
+              <Tag className="transition-colors hover:bg-white/10 hover:text-ink">
+                🤝 with your nurturer
+              </Tag>
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-8 pb-12">
       {/* ============ Hero band ============ */}
@@ -205,68 +266,92 @@ export default function PhasePage() {
         </div>
       </motion.section>
 
-      {/* ============ Activities ============ */}
+      {/* ============ The sequence ============ */}
       <motion.section variants={fadeUp} className="space-y-4">
-        <SectionTitle sub={`${phase.activities.length} · ${phase.emoji}`}>
-          {t("activitiesWord")}
+        <SectionTitle sub={`${phase.activities.length} ${t("activitiesWord")} · ${phase.emoji}`}>
+          The sequence
         </SectionTitle>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {phase.activities.map((a) => {
-            const Icon = KIND_ICON[a.kind];
-            const done = profile.completed.includes(a.id);
-            return (
-              <div
-                key={a.id}
-                className={`card card-hover relative flex h-full flex-col gap-3 p-5 ${
-                  done ? "opacity-75" : ""
-                }`}
-              >
-                {done && (
+        {parts.length > 0 ? (
+          <div className="relative">
+            {/* progression line: the order matters — listening before speaking */}
+            <div
+              className="absolute bottom-12 left-[21px] top-4 w-[2px] rounded-full"
+              style={{
+                background: `linear-gradient(to bottom, ${phase.color}99, ${phase.color}14)`,
+              }}
+              aria-hidden
+            />
+
+            <div className="space-y-12">
+              {parts.map((part, i) => (
+                <section key={part.id} className="relative pl-14 sm:pl-16">
+                  {/* stage marker */}
                   <span
-                    className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-mint text-canvas"
-                    aria-label="✓"
+                    className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-2xl font-display text-sm font-extrabold tracking-wide"
+                    style={{
+                      background: `linear-gradient(0deg, ${phase.color}26, ${phase.color}26), var(--color-canvas)`,
+                      color: phase.color,
+                      border: `1px solid ${phase.color}55`,
+                    }}
+                    aria-hidden
                   >
-                    <Check size={14} strokeWidth={3.5} />
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                )}
 
-                <span
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl"
-                  style={{ background: phase.color + "22", color: phase.color }}
-                  aria-hidden
-                >
-                  <Icon size={20} strokeWidth={2.25} />
-                </span>
-
-                <div>
-                  <h3 className="pr-8 font-semibold leading-snug">{a.name}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed">{a.description}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{a.how}</p>
-                </div>
-
-                <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-                  <Tag>⏱ {a.minutes} {t("minutes")}</Tag>
-                  {a.practiceHref ? (
-                    <Link
-                      href={a.practiceHref}
-                      className={`pill ml-auto px-4 py-2 text-xs font-bold ${onAccent}`}
-                      style={{ background: phase.color }}
+                  <div className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <h3 className="headline text-xl lg:text-2xl">{part.title}</h3>
+                    <span
+                      className="rounded-full px-3 py-1 text-[11px] font-bold"
+                      style={{ background: phase.color + "1e", color: phase.color }}
                     >
-                      {t("start")} →
-                    </Link>
-                  ) : (
-                    <Link href="/schedule" className="ml-auto">
-                      <Tag className="transition-colors hover:bg-white/10 hover:text-ink">
-                        🤝 with your nurturer
-                      </Tag>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                      ⏱ {part.hours}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted">
+                    {part.focus}
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {part.activityIds
+                      .map((id) => activityById.get(id))
+                      .filter((a): a is PhaseActivity => Boolean(a))
+                      .map(renderActivity)}
+                  </div>
+                </section>
+              ))}
+
+              {/* activities not tied to one stage */}
+              {throughout.length > 0 && (
+                <section className="relative pl-14 sm:pl-16">
+                  <span
+                    className="absolute left-0 top-0 flex h-11 w-11 items-center justify-center rounded-2xl text-base"
+                    style={{
+                      background: `linear-gradient(0deg, ${phase.color}26, ${phase.color}26), var(--color-canvas)`,
+                      color: phase.color,
+                      border: `1px solid ${phase.color}55`,
+                    }}
+                    aria-hidden
+                  >
+                    ✦
+                  </span>
+
+                  <div className="flex min-h-11 items-center">
+                    <h3 className="headline text-xl lg:text-2xl">Throughout the phase</h3>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {throughout.map(renderActivity)}
+                  </div>
+                </section>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {phase.activities.map(renderActivity)}
+          </div>
+        )}
       </motion.section>
 
       {/* ============ Milestones ============ */}

@@ -31,7 +31,8 @@ interface PowerPhrase {
   id: string;
   /** Scene emoji — the picture carries the meaning, never a translation. */
   emoji: string;
-  words: Record<ContentLang, string>;
+  /** ja/zh listed explicitly so this compiles whether or not ContentLang includes them yet. */
+  words: Record<ContentLang | "ja" | "zh", string>;
 }
 
 /** The 8 GPA power tools — the survival kit of every Phase-1 grower. */
@@ -46,6 +47,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Was ist das?",
       pt: "O que é isto?",
       it: "Che cos'è questo?",
+      ja: "これは何ですか？",
+      zh: "这是什么？",
     },
   },
   {
@@ -58,6 +61,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Was ist das da?",
       pt: "O que é isso?",
       it: "Che cos'è quello?",
+      ja: "あれは何ですか？",
+      zh: "那是什么？",
     },
   },
   {
@@ -70,6 +75,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Was macht er?",
       pt: "O que ele está fazendo?",
       it: "Che cosa sta facendo?",
+      ja: "何をしていますか？",
+      zh: "他在做什么？",
     },
   },
   {
@@ -82,6 +89,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Wer ist er?",
       pt: "Quem é ele?",
       it: "Chi è lui?",
+      ja: "あの人は誰ですか？",
+      zh: "他是谁？",
     },
   },
   {
@@ -94,6 +103,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Ich weiß nicht",
       pt: "Não sei",
       it: "Non lo so",
+      ja: "わかりません",
+      zh: "我不知道",
     },
   },
   {
@@ -106,6 +117,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Noch einmal, bitte",
       pt: "Mais uma vez, por favor",
       it: "Ancora una volta, per favore",
+      ja: "もう一度お願いします",
+      zh: "请再说一遍",
     },
   },
   {
@@ -118,6 +131,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Langsamer, bitte",
       pt: "Mais devagar, por favor",
       it: "Più lentamente, per favore",
+      ja: "ゆっくりお願いします",
+      zh: "请说慢一点",
     },
   },
   {
@@ -130,6 +145,8 @@ const POWER_PHRASES: PowerPhrase[] = [
       de: "Was bedeutet das?",
       pt: "O que significa?",
       it: "Che cosa significa?",
+      ja: "どういう意味ですか？",
+      zh: "是什么意思？",
     },
   },
 ];

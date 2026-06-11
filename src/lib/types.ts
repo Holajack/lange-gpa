@@ -40,6 +40,12 @@ export interface Phase {
   principles: string[];
   activities: PhaseActivity[];
   milestones: string[];
+  /**
+   * The research-true learning sequence: ordered sub-stages of the phase
+   * (e.g. 1A listening-only → 1B constrained talking). Each part references
+   * activities by id; unreferenced activities run throughout the phase.
+   */
+  parts?: { id: string; title: string; hours: string; focus: string; activityIds: string[] }[];
 }
 
 export interface SessionBooking {

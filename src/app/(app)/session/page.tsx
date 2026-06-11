@@ -16,16 +16,30 @@ import { Mic, MicOff, PhoneOff, Video, VideoOff, Volume2 } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
 import { phaseById } from "@/lib/phases";
-import { FULL_CONTENT_LANGS, langByCode } from "@/lib/languages";
+import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { speak, stopSpeaking } from "@/lib/tts";
 import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
 import { Card, Pill, Tag } from "@/components/ui";
-import type { LangCode, VocabItem } from "@/lib/types";
+import type { LangCode, Nurturer, VocabItem } from "@/lib/types";
 
 const TOTAL_SECONDS = 30 * 60;
 const BARS = [14, 26, 18, 32, 22, 28, 16];
+
+/** Nuri — the AI nurturer. Lives in every language; never sleeps. */
+const NURI: Nurturer = {
+  id: "ai",
+  name: "Nuri",
+  langs: LANGUAGES.map((l) => l.code),
+  city: "LANGE",
+  bio: "Always awake, endlessly patient. Runs the same GPA games — speaks only your growing language.",
+  tags: ["AI", "24/7", "picture cards"],
+  sessions: 0,
+  rating: 5,
+  online: true,
+  color: "#ff8a1e",
+};
 
 type Stage = "pre" | "live" | "end";
 
@@ -56,6 +70,7 @@ function SessionRoom() {
   const activityParam = params.get("activity");
 
   const nurturer = useMemo(() => {
+    if (nurturerParam === "ai") return NURI;
     const fromParam = nurturerParam ? nurturerById(nurturerParam) : undefined;
     return (
       fromParam ??
@@ -64,6 +79,9 @@ function SessionRoom() {
       NURTURERS[0]
     );
   }, [nurturerParam, targetLang]);
+
+  /** Nuri, the AI nurturer — same session, tireless host */
+  const isAI = nurturer.id === "ai";
 
   const activity =
     activityParam && activityParam.trim().length > 0
@@ -90,6 +108,7 @@ function SessionRoom() {
 
   const halfRef = useRef(false);
   const loggedRef = useRef(false);
+  const autoOpenedRef = useRef(false);
 
   const pickWord = useCallback(() => {
     setTargetId((prev) => {
@@ -134,6 +153,14 @@ function SessionRoom() {
     const id = window.setInterval(() => setNurturerSpeaking(Math.random() > 0.32), 2200);
     return () => window.clearInterval(id);
   }, [stage]);
+
+  // with Nuri the card game IS the session — auto-open the panel on start
+  useEffect(() => {
+    if (stage !== "live" || !isAI || autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    pickWord();
+    setCardsOpen(true);
+  }, [stage, isAI, pickWord]);
 
   // speak the current card word (on change + every few seconds)
   useEffect(() => {
@@ -207,20 +234,38 @@ function SessionRoom() {
               transition={{ delay: 0.15, type: "spring", damping: 14 }}
               className="mt-6 flex flex-col items-center gap-2"
             >
-              <Avatar name={nurturer.name} color={nurturer.color} size={96} ring />
-              <h1 className="headline mt-2 text-3xl">{nurturer.name}</h1>
+              {isAI ? (
+                <Mascot size={110} mood="happy" />
+              ) : (
+                <Avatar name={nurturer.name} color={nurturer.color} size={96} ring />
+              )}
+              <h1 className="headline mt-2 flex items-center justify-center gap-2.5 text-3xl">
+                {nurturer.name}
+                {isAI && (
+                  <span className="rounded-full bg-lime px-2.5 py-1 font-sans text-[11px] font-extrabold tracking-wide text-canvas">
+                    AI
+                  </span>
+                )}
+              </h1>
               <p className="text-sm text-muted">
-                📍 {nurturer.city} · {lang.flag} {lang.name}
+                {isAI ? "✨" : "📍"} {nurturer.city} · {lang.flag} {lang.name}
               </p>
               <Tag className="mt-1 bg-violet/15 text-violet-soft">🌱 {activity}</Tag>
             </motion.div>
 
             <div className="mt-8 space-y-3 text-left">
-              {[
-                ["🗣️", `${nurturer.name.split(" ")[0]} speaks only ${lang.name} — a wall of noise becoming a window.`],
-                ["👉", "You point, act and play. Understanding comes first — no pressure to speak."],
-                ["🎥", "The whole session is recorded so you can re-live it afterwards."],
-              ].map(([emoji, text], i) => (
+              {(isAI
+                ? [
+                    ["🤖", `Nuri speaks only ${lang.name} — and never gets tired of repeating.`],
+                    ["👉", "You point, act and play. Understanding comes first — no pressure to speak."],
+                    ["🃏", "The picture cards open by themselves — with Nuri, the card game IS the session."],
+                  ]
+                : [
+                    ["🗣️", `${nurturer.name.split(" ")[0]} speaks only ${lang.name} — a wall of noise becoming a window.`],
+                    ["👉", "You point, act and play. Understanding comes first — no pressure to speak."],
+                    ["🎥", "The whole session is recorded so you can re-live it afterwards."],
+                  ]
+              ).map(([emoji, text], i) => (
                 <motion.div
                   key={emoji}
                   initial={{ opacity: 0, x: -16 }}
@@ -381,12 +426,23 @@ function SessionRoom() {
             className="rounded-full"
             style={nurturerSpeaking ? { boxShadow: `0 0 70px -10px ${nurturer.color}aa` } : undefined}
           >
-            <Avatar name={nurturer.name} color={nurturer.color} size={132} ring />
+            {isAI ? (
+              <Mascot size={132} mood="happy" />
+            ) : (
+              <Avatar name={nurturer.name} color={nurturer.color} size={132} ring />
+            )}
           </motion.div>
           <div className="text-center">
-            <p className="font-display text-xl font-bold">{nurturer.name}</p>
+            <p className="flex items-center justify-center gap-2 font-display text-xl font-bold">
+              {nurturer.name}
+              {isAI && (
+                <span className="rounded-full bg-lime px-2 py-0.5 font-sans text-[10px] font-extrabold tracking-wide text-canvas">
+                  AI
+                </span>
+              )}
+            </p>
             <p className="text-xs text-muted">
-              📍 {nurturer.city} · {lang.flag} {lang.name}
+              {isAI ? "✨" : "📍"} {nurturer.city} · {lang.flag} {lang.name}
             </p>
           </div>
           {/* wavebars */}

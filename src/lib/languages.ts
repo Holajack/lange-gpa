@@ -21,4 +21,4 @@ export const langByCode = (code: LangCode): Language =>
   LANGUAGES.find((l) => l.code === code) ?? LANGUAGES[0];
 
 /** Languages with full in-app immersion content (vocab decks + UI strings) */
-export const FULL_CONTENT_LANGS: LangCode[] = ["es", "ru", "fr", "de", "pt", "it"];
+export const FULL_CONTENT_LANGS: LangCode[] = ["es", "ru", "fr", "de", "pt", "it", "ja", "zh"];

@@ -48,6 +48,22 @@ export const PHASES: Phase[] = [
         practiceHref: "/practice/listening",
       },
       {
+        id: "p1-make-true",
+        name: "Make It True",
+        description: "The pointing game in reverse: the nurturer describes the scene, and you change the world to match.",
+        how: "'The boy is behind the horse' — so you place the boy doll behind the horse. The nurturer keeps stating things that aren't true yet, and you rearrange dolls, cue cards and toy houses until they are. Later one grower plays 'you' and another plays 'she', and the sentences come alive between you.",
+        minutes: 10,
+        kind: "listening",
+      },
+      {
+        id: "p1-photos",
+        name: "Photos of US in Action",
+        description: "Cards made from photos of your own group performing actions — recycled and growing every meeting.",
+        how: "'In which photo am I walking? In which photo are you running?' To point right you must decode both the action and the person — I, you, we, she. The deck gains new actions and pairings each meeting, and in 1B you flip it: now you describe the photos yourselves.",
+        minutes: 10,
+        kind: "listening",
+      },
+      {
         id: "p1-lexicarry",
         name: "Cartoon Bubbles (Lexicarry)",
         description: "Comic strips with empty speech bubbles carry ~60 social expressions: greetings, thanks, apologies.",
@@ -99,6 +115,40 @@ export const PHASES: Phase[] = [
         minutes: 15,
         kind: "vocabulary",
         practiceHref: "/practice/vocabulary",
+      },
+      {
+        id: "p1-market",
+        name: "Marketplace Role-Play",
+        description: "Late 1B: a toy marketplace where buying, selling and real bargaining happen entirely in the host language.",
+        how: "Each grower runs a stall with goods, a worker puppet and toy money; the nurturer shops first with the full script — greetings, 'Do you have…?', 'How much is it?' — then growers shop from each other. 'I'll give you 100.' 'No, 200.' 'I only have 150.' The haggling is the lesson.",
+        minutes: 20,
+        kind: "speaking",
+      },
+    ],
+    parts: [
+      {
+        id: "1a",
+        title: "Games for Listening & Responding",
+        hours: "Meetings 1–15 · 30–40h",
+        focus:
+          "Listening only — you never speak. You point, act, arrange and laugh while hundreds of words pour in through picture cards, commands, photos of your own group and comic-strip bubbles.",
+        activityIds: [
+          "p1-dozen",
+          "p1-listen-do",
+          "p1-make-true",
+          "p1-photos",
+          "p1-lexicarry",
+          "p1-sounds",
+          "p1-dictionary",
+        ],
+      },
+      {
+        id: "1b",
+        title: "Constrained Two-Way Interaction",
+        hours: "Meetings 16–40 · ~60h",
+        focus:
+          "Two-way at last: your first 300 best-known words climb the iceberg from understanding into careful, constrained speech — ladder games, info-gaps and role-plays, with the nurturer recasting, never correcting.",
+        activityIds: ["p1-ladder", "p1-power", "p1-infogap", "p1-market"],
       },
     ],
     milestones: [
@@ -164,6 +214,22 @@ export const PHASES: Phase[] = [
         practiceHref: "/practice/repeat",
       },
       {
+        id: "p2-busy",
+        name: "Busy Pictures",
+        description: "One gloriously detailed scene — many people doing many things — explored together with questions.",
+        how: "A market square, a harbour, a packed street: the nurturer names, asks and points while you hunt and answer. When the iceberg's growth slows below pace, a busy picture floods it with fresh words faster than any single story can.",
+        minutes: 15,
+        kind: "vocabulary",
+      },
+      {
+        id: "p2-process",
+        name: "Process Picture Series",
+        description: "Familiar processes — making tea, brushing teeth — told step by step across a picture strip.",
+        how: "The nurturer narrates each panel in order while you follow, then you act the process out as it's described. A gentle preview of Phase 3's Scripts of Life, one minute of recorded talk at a time.",
+        minutes: 15,
+        kind: "listening",
+      },
+      {
         id: "p2-smalltalk",
         name: "Small Talk + One New Fact",
         description: "Every meeting opens with genuine small talk and one new thing about each other's lives.",
@@ -178,6 +244,32 @@ export const PHASES: Phase[] = [
         how: "You sketch your childhood home, your family, your journey — and learn to tell your own story, the words you'll use for the rest of your life here.",
         minutes: 30,
         kind: "speaking",
+      },
+    ],
+    parts: [
+      {
+        id: "2a",
+        title: "Loosening the Tongue",
+        hours: "~50h",
+        focus:
+          "You lead: the Monolingual Half Hour. Real small talk opens every meeting, then you describe wordless picture pages in your own emerging words while the nurturer listens, helps and recasts.",
+        activityIds: ["p2-smalltalk", "p2-describe"],
+      },
+      {
+        id: "2b",
+        title: "Story-Building",
+        hours: "~80h",
+        focus:
+          "The nurturer leads: stories built page by page, recorded, then clarified line by line. The clarified recordings — and their word–sentence–word harvest — become your growing listening library.",
+        activityIds: ["p2-storybuild", "p2-clarify", "p2-wsw", "p2-busy", "p2-process"],
+      },
+      {
+        id: "2c",
+        title: "Your Own Story",
+        hours: "~20h",
+        focus:
+          "The capstone: drawing as you go, you learn to tell your own life story — the words you'll use to be known for the rest of your life here.",
+        activityIds: ["p2-lifestory"],
       },
     ],
     milestones: [
@@ -232,6 +324,14 @@ export const PHASES: Phase[] = [
         practiceHref: "/practice/listening",
       },
       {
+        id: "p3-massage",
+        name: "Record-and-Massage Loop",
+        description: "The growth loop of Phase 3, made explicit: retell, get re-expressed, re-record, re-listen.",
+        how: "You retell today's story onto the recorder; the nurturer re-expresses it in better host-language form — never correcting, just saying it the way an insider would. You re-record the improved telling, and that recording joins your listening library for the week.",
+        minutes: 25,
+        kind: "speaking",
+      },
+      {
         id: "p3-shared",
         name: "Shared Experience + Reminiscing",
         description: "Do something together — an outing, cooking — then talk about it again and again.",
@@ -255,6 +355,32 @@ export const PHASES: Phase[] = [
         minutes: 15,
         kind: "listening",
         practiceHref: "/practice/listening",
+      },
+      {
+        id: "p3-host",
+        name: "Host Stories",
+        description: "The stories every host person grew up on — and you're about to.",
+        how: "Days before the session you soak in a translation of a widely-known host story until the plot is truly yours. Then you hear it in the host language for the first time, negotiating meaning sentence by sentence. Harder than bridge stories — the background knowledge is all theirs — so re-listen to these recordings often.",
+        minutes: 30,
+        kind: "culture",
+      },
+    ],
+    parts: [
+      {
+        id: "3a",
+        title: "Massaged Stories",
+        hours: "~125h",
+        focus:
+          "Stories whose plots you already own, heard in host form for the first time — told, retold, massaged into better shape and re-recorded. The mainstay: at least half of all session time.",
+        activityIds: ["p3-bridge", "p3-script", "p3-cartoon", "p3-massage"],
+      },
+      {
+        id: "3b",
+        title: "Stuff We Both Know",
+        hours: "~125h",
+        focus:
+          "Shared context guarantees comprehension: things you did together, objects with histories, grammar floods — and host stories whose plots you pre-loaded at home.",
+        activityIds: ["p3-shared", "p3-prop", "p3-flood", "p3-host"],
       },
     ],
     milestones: [
@@ -291,6 +417,15 @@ export const PHASES: Phase[] = [
         kind: "conversation",
       },
       {
+        id: "p4-vocab",
+        name: "Vocabulary Recordings",
+        description: "Every life-story session ends with its harvest of new words, recorded in living context.",
+        how: "Each new word from the word log is captured word–sentence–word, the sentence drawn straight from today's conversation. A notebook and a recorder turn heart-to-hearts into a permanent listening library.",
+        minutes: 15,
+        kind: "vocabulary",
+        practiceHref: "/practice/repeat",
+      },
+      {
         id: "p4-walkoflife",
         name: "Walk-of-Life Conversations",
         description: "Ethnographic interviewing about how hosts really live: weddings, markets, farming, raising children.",
@@ -323,6 +458,40 @@ export const PHASES: Phase[] = [
         minutes: 20,
         kind: "vocabulary",
         practiceHref: "/practice/vocabulary",
+      },
+      {
+        id: "p4-tworecorder",
+        name: "Two-Recorder Technique",
+        description: "Your telling on one recorder, your mentor's richer version wrapped around it on a second — compared side by side.",
+        how: "Recorder one holds the original story. Play it back with your mentor while recorder two runs, capturing every question, expansion and improved re-expression — fifteen-second questions earning five-minute answers. The layered recordings make fascinating listening for months, even years.",
+        minutes: 30,
+        kind: "speaking",
+      },
+    ],
+    parts: [
+      {
+        id: "4-life",
+        title: "Life Stories",
+        hours: "~200h",
+        focus:
+          "Your nurturer's life, chapter by chapter — recorded, clarified, re-listened, and harvested for words. Being deeply known starts with deeply knowing.",
+        activityIds: ["p4-lifestory", "p4-vocab"],
+      },
+      {
+        id: "4-walks",
+        title: "Walks of Life",
+        hours: "~200h",
+        focus:
+          "Ethnography of the heart: mapping whole cultural domains — the Lists of Life — one walk of life at a time, then checking what you saw against what insiders see.",
+        activityIds: ["p4-walkoflife", "p4-observe"],
+      },
+      {
+        id: "4-voice",
+        title: "Your Voice",
+        hours: "~100h",
+        focus:
+          "The nativeness audit: hearing where your words and ways still differ from host norms, and closing the gap kindly — without losing your own voice.",
+        activityIds: ["p4-feedback", "p4-holes", "p4-tworecorder"],
       },
     ],
     milestones: [
@@ -367,6 +536,22 @@ export const PHASES: Phase[] = [
         kind: "listening",
       },
       {
+        id: "p5-retell",
+        name: "Next-Day Retelling",
+        description: "Each meeting warms up with you retelling yesterday's discourse in your own words.",
+        how: "Summarize the stretch you clarified yesterday while your mentor helps you over the gaps. When a whole discourse is finished you retell it end to end — and the retelling itself can be recorded for feedback.",
+        minutes: 15,
+        kind: "speaking",
+      },
+      {
+        id: "p5-library",
+        name: "Listening-Library Review",
+        description: "Your clarified discourses live on — solo re-listening keeps every recording earning interest.",
+        how: "After each meeting, re-listen to the clarified discourse and its word recordings, then revisit older items on a loose rotation. What was a wall of noise last month is easy listening now — that feeling is the progress meter.",
+        minutes: 20,
+        kind: "listening",
+      },
+      {
         id: "p5-media",
         name: "Clarify a Movie or TV Drama",
         description: "Ready-made native discourse: films, series, talk shows.",
@@ -390,6 +575,32 @@ export const PHASES: Phase[] = [
         how: "Group talk no longer excludes you. You are inside the room where the language actually lives.",
         minutes: 120,
         kind: "culture",
+      },
+    ],
+    parts: [
+      {
+        id: "5-collect",
+        title: "Collect",
+        hours: "ongoing · ~60h",
+        focus:
+          "Build a library of real insider speech — hired conversations, elders' memories, hot-topic debates, films and series. Speech meant for insiders, not for you.",
+        activityIds: ["p5-record", "p5-media"],
+      },
+      {
+        id: "5-clarify",
+        title: "Clarify",
+        hours: "~320h",
+        focus:
+          "The Ten-Step engine: one native-to-native discourse at a time, clarified with your mentor, retold the next day, and re-listened until the wall of noise becomes a window.",
+        activityIds: ["p5-tensteps", "p5-retell", "p5-library"],
+      },
+      {
+        id: "5-belong",
+        title: "Belong",
+        hours: "~120h",
+        focus:
+          "Growth moves into groups: long-form telling of your own, and weekly life inside a community of practice where nobody talks down to you.",
+        activityIds: ["p5-epic", "p5-community"],
       },
     ],
     milestones: [
@@ -442,6 +653,14 @@ export const PHASES: Phase[] = [
         kind: "conversation",
       },
       {
+        id: "p6-remedial",
+        name: "Remedial Pickup",
+        description: "Any earlier-phase technique, re-run at full power on whatever domain has gone soft.",
+        how: "Story-building, scripts of life, world stories, reminiscing — pick the old technique that fits the gap and run it at your current level. Aim for ten new words an hour: even admired 'advanced' speakers meet dozens of new words in a five-minute Cinderella.",
+        minutes: 45,
+        kind: "vocabulary",
+      },
+      {
         id: "p6-nurture",
         name: "Become a Nurturer",
         description: "The circle closes: guide a new grower through their first hundred hours.",
@@ -449,6 +668,32 @@ export const PHASES: Phase[] = [
         minutes: 60,
         kind: "conversation",
         practiceHref: "/onboarding",
+      },
+    ],
+    parts: [
+      {
+        id: "6-notice",
+        title: "Notice",
+        hours: "ongoing",
+        focus:
+          "Where does life still outrun your language? A deliberate needs analysis — not vague ambition — chooses your next target discourses.",
+        activityIds: ["p6-needs"],
+      },
+      {
+        id: "6-target",
+        title: "Target",
+        hours: "~300h",
+        focus:
+          "Run the old playbook on new ground: rare-but-urgent discourses, professional depth, and weak domains revisited — genuinely special growth, at ten new words an hour.",
+        activityIds: ["p6-rare", "p6-expert", "p6-remedial"],
+      },
+      {
+        id: "6-give",
+        title: "Give Back",
+        hours: "forever",
+        focus:
+          "The deepest participation: nurturing the next grower through their own first hundred hours of the wall of noise.",
+        activityIds: ["p6-nurture"],
       },
     ],
     milestones: [
