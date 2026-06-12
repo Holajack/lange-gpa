@@ -1,12 +1,13 @@
 "use client";
 
 import type { MascotDef } from "@/lib/mascots";
+import { Buddy, BUDDY_IDS } from "@/components/buddies/Buddy";
 
 /**
- * Portrait of a LANGE language sibling — renders the pre-generated
- * /mascots/{id}.png (1024×1024, transparent background) with an optional
- * soft drop-shadow glow in the sibling's own color and, when `float` is
- * on, the organic .buddy-bob / .buddy-peek idle motion from globals.css.
+ * Portrait of a LANGE language sibling — flat hand-drawn SVG art in the
+ * same style as the hero Nuri (the 3D renders live on in docs/, but the
+ * app is flat-vector everywhere). Falls back to the rendered PNG for any
+ * future buddy whose SVG hasn't been drawn yet.
  *
  * Every floating sibling moves to its own rhythm: a tiny deterministic
  * hash of the mascot id picks the animation delay (0–2s, applied negative
@@ -37,61 +38,56 @@ export function MascotImage({
     ? `drop-shadow(0 0 ${Math.max(10, Math.round(size * 0.16))}px color-mix(in srgb, ${mascot.color} 55%, transparent))`
     : undefined;
 
+  const hasSvg = (BUDDY_IDS as readonly string[]).includes(mascot.id);
+  const art = hasSvg ? (
+    <Buddy id={mascot.id} size={size} animated={float} />
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- static public/ asset fallback for buddies without SVG art yet
+    <img
+      src={mascot.image}
+      alt={`${mascot.name} — ${mascot.toy}`}
+      title={mascot.toy}
+      width={size}
+      height={size}
+      draggable={false}
+      className="select-none"
+      style={{ width: size, height: size, objectFit: "contain" }}
+    />
+  );
+
   if (!float) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- static public/ asset, no optimization needed
-      <img
-        src={mascot.image}
-        alt={`${mascot.name} — ${mascot.toy}`}
+      <span
+        role="img"
+        aria-label={`${mascot.name} — ${mascot.toy}`}
         title={mascot.toy}
-        width={size}
-        height={size}
-        draggable={false}
-        className={`select-none ${className}`}
-        style={{
-          width: size,
-          height: size,
-          objectFit: "contain",
-          filter: glowFilter,
-        }}
-      />
+        className={`inline-block select-none ${className}`}
+        style={{ width: size, height: size, filter: glowFilter }}
+      >
+        {art}
+      </span>
     );
   }
 
   const h = seed(mascot.id);
   const bobDelay = -((h % 200) / 100); // 0–2s, negative → starts mid-bob
   const bobDuration = 3.1 + ((h >>> 3) % 81) / 100; // 3.1–3.9s
-  const peekDelay = -(((h >>> 5) % 200) / 100);
-  const peekDuration = 4.8 + ((h >>> 7) % 161) / 100; // 4.8–6.4s
 
   return (
     <span
-      className={`buddy-bob inline-block ${className}`}
+      role="img"
+      aria-label={`${mascot.name} — ${mascot.toy}`}
+      title={mascot.toy}
+      className={`buddy-bob inline-block select-none ${className}`}
       style={{
         width: size,
         height: size,
         animationDelay: `${bobDelay}s`,
         animationDuration: `${bobDuration}s`,
+        filter: glowFilter,
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- static public/ asset, no optimization needed */}
-      <img
-        src={mascot.image}
-        alt={`${mascot.name} — ${mascot.toy}`}
-        title={mascot.toy}
-        width={size}
-        height={size}
-        draggable={false}
-        className="buddy-peek select-none"
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          animationDelay: `${peekDelay}s`,
-          animationDuration: `${peekDuration}s`,
-          filter: glowFilter,
-        }}
-      />
+      {art}
     </span>
   );
 }

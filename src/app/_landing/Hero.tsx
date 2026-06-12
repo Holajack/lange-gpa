@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { HeroBuddy } from "@/components/HeroBuddy";
+import { Mascot } from "@/components/Mascot";
 import { NURTURERS } from "@/lib/nurturers";
 import { speak } from "@/lib/tts";
 import type { LangCode } from "@/lib/types";
@@ -146,7 +146,7 @@ export function Hero() {
             style={{ background: "radial-gradient(circle, rgba(255,138,30,0.28), transparent 70%)" }}
           />
           <div className="-rotate-3">
-            <HeroBuddy size={320} />
+            <Mascot mood="wave" size={290} />
           </div>
           <div className="absolute -right-4 top-2 rotate-12 text-3xl">✨</div>
         </motion.div>
