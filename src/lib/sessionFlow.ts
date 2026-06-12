@@ -104,6 +104,14 @@ export const CUES: Partial<Record<LangCode, CueSet>> = {
     praise: "Bravo! Ou fè sa byen!",
     begin: "Ann kòmanse!",
   },
+  ja: {
+    greeting: "こんにちは！ふたばだよ。",
+    listen: "聞いて。",
+    again: "もう一回。",
+    point: "指さして。",
+    praise: "上手！",
+    begin: "はじめよう！",
+  },
 };
 
 /** "Where is …?" — the one question that powers all of Phase 1. */

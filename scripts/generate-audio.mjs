@@ -49,19 +49,22 @@ const LANGS = {
     },
   },
   // Haitian Creole — NO native ElevenLabs model exists for Kreyòl ayisyen;
-  // multilingual_v2 reads it through its French-leaning engine, so this is a
-  // BOOTSTRAP voice (Jessica — warm/playful, suits Ti Boujon) to be replaced
-  // by native-speaker recordings dropped into public/audio/ht/ later.
-  ht: {
-    voiceId: "cgSgspJ2msm6clMCkdW9",
-    question: (word) => `Kote ${word}?`,
+  // multilingual_v2 reads it through its French-leaning engine, so it stays
+  // OFF (commented) until native-speaker recordings land in public/audio/ht/.
+  // ht: { ... } — see scripts/ingest-ht-audio.mjs + docs/HT-RECORDING-SCRIPT.md
+  //
+  // Japanese — fully supported by multilingual_v2 (accurate native
+  // pronunciation). Voice: Bella (warm/bright) for Futaba the daruma.
+  ja: {
+    voiceId: "hpp4J3VqNfWAUOO0d1Us",
+    question: (word) => `${word}はどこ？`,
     cues: {
-      greeting: "Bonjou! Mwen rele Ti Boujon.",
-      listen: "Koute.",
-      again: "Ankò.",
-      point: "Montre m.",
-      praise: "Bravo! Ou fè sa byen!",
-      begin: "Ann kòmanse!",
+      greeting: "こんにちは！ふたばだよ。",
+      listen: "聞いて。",
+      again: "もう一回。",
+      point: "指さして。",
+      praise: "上手！",
+      begin: "はじめよう！",
     },
   },
 };
