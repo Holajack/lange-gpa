@@ -41,7 +41,7 @@ function DomainChooser() {
     <div>
       <PracticeHeader
         emoji="🃏"
-        title="Rough-and-Ready Dozen"
+        title={t("prcVocabName")}
         kicker={t("chooseCategory")}
         accent={LIME}
       />
@@ -201,10 +201,10 @@ function Game({ domain }: { domain: VocabDomain }) {
   if (finished) {
     return (
       <div>
-        <PracticeHeader emoji={domain.emoji} title="Rough-and-Ready Dozen" kicker={domainName} accent={LIME} />
+        <PracticeHeader emoji={domain.emoji} title={t("prcVocabName")} kicker={domainName} accent={LIME} />
         <FinishScreen
           title={t("correct")}
-          sub="Twelve meetings, zero translation — those words now live in pictures and sound."
+          sub={t("prcVocabFinish")}
           accent={LIME}
           stats={[
             { value: `${correctCount}/${TOTAL_ROUNDS}`, label: t("correct") },
@@ -223,7 +223,7 @@ function Game({ domain }: { domain: VocabDomain }) {
 
   return (
     <div>
-      <PracticeHeader emoji={domain.emoji} title="Rough-and-Ready Dozen" kicker={domainName} accent={LIME} />
+      <PracticeHeader emoji={domain.emoji} title={t("prcVocabName")} kicker={domainName} accent={LIME} />
       <FallbackBanner show={fellBack} />
 
       <div className="mx-auto max-w-3xl">

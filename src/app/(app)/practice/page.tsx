@@ -14,9 +14,9 @@ import { Mascot } from "@/components/Mascot";
 interface Launcher {
   href: string;
   emoji: string;
-  gpaName: string;
+  nameKey: string; // t() key for the GPA game name (headline)
   labelKey: string; // t() key for the small chrome label
-  blurb: string;
+  blurbKey: string; // t() key for the instruction line
   accent: string; // css color
   glow: string;
   dark: boolean; // pill text dark on bright accents
@@ -26,9 +26,9 @@ const GAMES: Launcher[] = [
   {
     href: "/practice/vocabulary",
     emoji: "🃏",
-    gpaName: "Rough-and-Ready Dozen",
+    nameKey: "prcVocabName",
     labelKey: "vocabulary",
-    blurb: "A dozen picture cards a round — hear the word, find the picture. Ears before eyes.",
+    blurbKey: "prcVocabBlurb",
     accent: "var(--color-lime)",
     glow: "rgba(184,240,60,0.45)",
     dark: true,
@@ -36,9 +36,9 @@ const GAMES: Launcher[] = [
   {
     href: "/practice/listening",
     emoji: "👂",
-    gpaName: "Listen & Do (TPR)",
+    nameKey: "prcListenName",
     labelKey: "listening",
-    blurb: "Nuri speaks, your body answers. No talking yet — just do what you hear.",
+    blurbKey: "prcListenBlurb",
     accent: "var(--color-lemon)",
     glow: "rgba(255,210,52,0.4)",
     dark: true,
@@ -46,9 +46,9 @@ const GAMES: Launcher[] = [
   {
     href: "/practice/speaking",
     emoji: "🗣️",
-    gpaName: "Power Phrases",
+    nameKey: "prcSpeakName",
     labelKey: "speaking",
-    blurb: "Eight survival questions that turn every host person into your nurturer.",
+    blurbKey: "prcSpeakBlurb",
     accent: "var(--color-orange)",
     glow: "rgba(255,138,30,0.45)",
     dark: true,
@@ -56,9 +56,9 @@ const GAMES: Launcher[] = [
   {
     href: "/practice/repeat",
     emoji: "🔁",
-    gpaName: "Re-live Your Words",
+    nameKey: "prcRepeatName",
     labelKey: "fastRepeat",
-    blurb: "Replay yesterday's session — eyes on the pictures, ears in the host world.",
+    blurbKey: "prcRepeatBlurb",
     accent: "var(--color-violet)",
     glow: "rgba(124,92,255,0.5)",
     dark: false,
@@ -132,8 +132,8 @@ export default function PracticeHubPage() {
                   </div>
 
                   <div>
-                    <h2 className="headline text-2xl lg:text-[28px]">{g.gpaName}</h2>
-                    <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">{g.blurb}</p>
+                    <h2 className="headline text-2xl lg:text-[28px]">{t(g.nameKey)}</h2>
+                    <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">{t(g.blurbKey)}</p>
                   </div>
 
                   <div className="mt-1">
@@ -158,7 +158,7 @@ export default function PracticeHubPage() {
         transition={{ delay: 0.6, duration: 0.6 }}
         className="mt-8 text-center text-xs text-muted"
       >
-        🌱 Growing Participator practice — meaning lives in pictures and voices, never in translation.
+        🌱 {t("prcFootnote")}
       </motion.p>
     </div>
   );

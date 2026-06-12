@@ -338,17 +338,17 @@ export default function SpeakingPage() {
       <div>
         <PracticeHeader
           emoji="🗣️"
-          title="Power Phrases"
-          kicker="Your power tools — they make every host person your nurturer"
+          title={t("prcSpeakName")}
+          kicker={t("prcSpeakKicker")}
           accent={ORANGE}
         />
         <FinishScreen
           title={t("done")}
-          sub="Eight power tools in your pocket — now every patient stranger in the host world can become your nurturer."
+          sub={t("prcSpeakFinish")}
           accent={ORANGE}
           stats={[
             { value: `${TOTAL}/${TOTAL}`, label: t("speak") },
-            { value: "🔑 ×8", label: "power tools" },
+            { value: "🔑 ×8", label: t("prcPowerTools") },
           ]}
           actions={[
             { href: "/practice/speaking", label: `🔁 ${t("repeat")}`, primary: true },
@@ -366,8 +366,8 @@ export default function SpeakingPage() {
     <div>
       <PracticeHeader
         emoji="🗣️"
-        title="Power Phrases"
-        kicker="Your power tools — they make every host person your nurturer"
+        title={t("prcSpeakName")}
+        kicker={t("prcSpeakKicker")}
         accent={ORANGE}
       />
       <FallbackBanner show={fellBack} />
@@ -454,8 +454,8 @@ export default function SpeakingPage() {
               ) : (
                 <span className="self-center text-xs text-muted/70">
                   {recState === "done" && !fallback
-                    ? "hold a little longer next time 🎙️"
-                    : "hold the mic & say it aloud"}
+                    ? `${t("prcHoldLonger")} 🎙️`
+                    : t("prcHoldMic")}
                 </span>
               )}
             </div>
@@ -486,12 +486,12 @@ export default function SpeakingPage() {
               🎙️
             </button>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-              ⏺ hold to record
+              ⏺ {t("prcHoldToRecord")}
             </p>
 
             {fallback && (
               <p className="rounded-full border border-line bg-white/5 px-4 py-1.5 text-xs text-muted">
-                Mic unavailable — saying it out loud still counts 🌱
+                {t("prcMicUnavailable")} 🌱
               </p>
             )}
           </div>

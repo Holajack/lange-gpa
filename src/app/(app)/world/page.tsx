@@ -495,12 +495,12 @@ export default function WorldPage() {
     <div className="flex flex-wrap gap-1.5">
       {p.growing && (
         <Tag className="px-2.5 py-1 text-[11px]">
-          🌱 growing {langByCode(p.growing).flag} {langByCode(p.growing).name}
+          🌱 {t("wldGrowing")} {langByCode(p.growing).flag} {langByCode(p.growing).name}
         </Tag>
       )}
       {p.speaks.map((code) => (
         <Tag key={code} className="px-2.5 py-1 text-[11px]">
-          💬 speaks {langByCode(code).flag} {langByCode(code).name}
+          💬 {t("wldSpeaks")} {langByCode(code).flag} {langByCode(code).name}
         </Tag>
       ))}
     </div>
@@ -612,12 +612,12 @@ export default function WorldPage() {
                   >
                     {peopleMode ? (
                       <>
-                        👋 the people of {lang.name}
+                        👋 {t("wldPeopleOf")} {lang.name}
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: NURTURER_DOT }} />
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: GROWER_DOT }} />
                       </>
                     ) : (
-                      <>🔭 drag to spin · zoom in to meet people</>
+                      <>🔭 {t("wldSpinHint")}</>
                     )}
                   </motion.span>
                 </AnimatePresence>
@@ -666,7 +666,7 @@ export default function WorldPage() {
 
             {/* persistent privacy promise */}
             <p className="relative mt-3 text-center text-[11px] text-muted">
-              🔒 Everyone appears at city level only — never an exact location.
+              🔒 {t("wldPrivacyPromise")}
             </p>
           </Card>
         </motion.section>
@@ -693,10 +693,10 @@ export default function WorldPage() {
                     <MascotImage mascot={mascot} size={64} float />
                     <div className="min-w-0">
                       <p className="font-display text-lg font-bold">
-                        {lang.flag} People of {lang.name}
+                        {lang.flag} {t("wldPeopleOf")} {lang.name}
                       </p>
                       <p className="mt-0.5 text-xs text-muted">
-                        Tap a dot on the planet or a row below to say hello. City level only — never an exact location.
+                        {t("wldPeopleSub")}
                       </p>
                     </div>
                   </div>
@@ -704,10 +704,10 @@ export default function WorldPage() {
                   <div className="space-y-3">
                     <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: NURTURER_DOT }} />
-                      Nurturers — they live the language
+                      {t("wldNurturersLabel")}
                     </p>
                     {nurturers.length === 0 ? (
-                      <Card className="p-4 text-sm text-muted">More {lang.name} nurturers are joining soon.</Card>
+                      <Card className="p-4 text-sm text-muted">{lang.name} {t("wldMoreNurturers")}</Card>
                     ) : (
                       nurturers.map((n, i) => personRow(nurturerView(n), i))
                     )}
@@ -716,18 +716,18 @@ export default function WorldPage() {
                   <div className="space-y-3">
                     <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: GROWER_DOT }} />
-                      Growers — growing into it, near and far
+                      {t("wldGrowersLabel")}
                     </p>
                     {growers.length === 0 ? (
-                      <Card className="p-4 text-sm text-muted">No growers here yet — you could be the first.</Card>
+                      <Card className="p-4 text-sm text-muted">{t("wldNoGrowers")}</Card>
                     ) : (
                       growers.map((p, i) =>
                         personRow(
                           participantView(p),
                           i,
                           p.growingLang === mascot.lang
-                            ? `growing ${lang.flag}`
-                            : `speaks ${lang.flag} · growing ${langByCode(p.growingLang).flag}`,
+                            ? `${t("wldGrowing")} ${lang.flag}`
+                            : `${t("wldSpeaks")} ${lang.flag} · ${t("wldGrowing")} ${langByCode(p.growingLang).flag}`,
                         ),
                       )
                     )}
@@ -790,7 +790,7 @@ export default function WorldPage() {
                     <Card className="flex items-center gap-3 p-4">
                       <span className="text-2xl">🌍</span>
                       <p className="text-sm text-muted">
-                        More {lang.name} nurturers are joining soon — meet the wider village meanwhile.
+                        {lang.name} {t("wldMoreNurturersWide")}
                       </p>
                     </Card>
                   ) : (
@@ -891,13 +891,13 @@ export default function WorldPage() {
                     className="mt-0.5 text-xs font-semibold"
                     style={{ color: person.kind === "nurturer" ? NURTURER_DOT : GROWER_DOT }}
                   >
-                    {person.kind === "nurturer" ? "Nurturer" : "Grower"}
+                    {person.kind === "nurturer" ? t("nurturerWord") : t("student")}
                   </p>
                   <p className="mt-1 text-xs text-muted">
                     📍 {person.city}
                     {person.country ? `, ${person.country}` : ""}
                   </p>
-                  <p className="text-[10px] text-muted/80">city shown, never exact location</p>
+                  <p className="text-[10px] text-muted/80">{t("wldCityOnly")}</p>
                 </div>
               </div>
 
@@ -907,12 +907,12 @@ export default function WorldPage() {
                 <div className="flex flex-wrap items-center gap-1.5">
                   {person.phase !== undefined && (
                     <span className="rounded-full bg-violet/15 px-2.5 py-1 text-[11px] font-semibold text-violet">
-                      🌱 Phase {person.phase}
+                      🌱 {t("phaseWord")} {person.phase}
                     </span>
                   )}
                   {person.kind === "grower" && (person.exchange || profile?.exchange) && (
                     <span className="rounded-full bg-lime/15 px-2.5 py-1 text-[11px] font-semibold text-lime">
-                      ⇄ Open to language exchange
+                      ⇄ {t("wldOpenToExchange")}
                     </span>
                   )}
                 </div>
@@ -939,7 +939,7 @@ export default function WorldPage() {
                     href="/forum"
                     className="pill mt-1 flex justify-center bg-violet px-5 py-2.5 text-sm font-semibold text-white"
                   >
-                    👋 Wave hello in the Village
+                    👋 {t("wldWaveHello")}
                   </Link>
                 )}
               </div>

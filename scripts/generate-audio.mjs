@@ -22,10 +22,17 @@ const MANIFEST_PATH = path.join(AUDIO_DIR, "manifest.json");
 const MODEL_ID = "eleven_multilingual_v2";
 const DELAY_MS = 300;
 
-/** AUDIO CUE CONTRACT — exact strings shared with the session flow. */
+/**
+ * AUDIO CUE CONTRACT — exact strings shared with the session flow.
+ * Voice casting: female personas → Bella (hpp4J3VqNfWAUOO0d1Us),
+ * male personas → Brian (nPczCjzI2devNBz1zQrb). `voiceId` is the primary
+ * (the language's AI buddy); `maleVoiceId` generates a parallel male set
+ * into public/audio/{lang}/m/ + manifest["{lang}-m"] for male nurturers.
+ */
 const LANGS = {
   ru: {
-    voiceId: "EXAVITQu4vr4xnSDxMaL",
+    voiceId: "hpp4J3VqNfWAUOO0d1Us", // Bella — Listik (matryoshka, female)
+    maleVoiceId: "nPczCjzI2devNBz1zQrb", // Brian — male nurturers (e.g. Dmitri)
     question: (word) => `Где ${word}?`,
     cues: {
       greeting: "Привет! Я Листик.",
@@ -191,6 +198,36 @@ async function main() {
         console.error(`  FAIL ${lang}/${task.file}  "${task.text}": ${err.message}`);
       }
       await sleep(DELAY_MS);
+    }
+
+    // Optional parallel male voice → public/audio/{lang}/m/ + manifest["{lang}-m"]
+    if (def.maleVoiceId) {
+      const mDir = path.join(dir, "m");
+      const mKey = `${lang}-m`;
+      await fs.mkdir(mDir, { recursive: true });
+      manifest[mKey] ??= {};
+      console.log(`--- ${lang} male voice: ${tasks.length} clips ---`);
+      for (const task of tasks) {
+        const outPath = path.join(mDir, task.file);
+        const publicPath = `/audio/${lang}/m/${task.file}`;
+        if (await fileExists(outPath)) {
+          manifest[mKey][task.text] = publicPath;
+          skipped++;
+          continue;
+        }
+        try {
+          const audio = await ttsWithRetry(apiKey, def.maleVoiceId, task.text);
+          await fs.writeFile(outPath, audio);
+          manifest[mKey][task.text] = publicPath;
+          generated++;
+          chars += task.text.length;
+          console.log(`  ${mKey}/${task.file}  "${task.text}"  (chars so far: ${chars})`);
+        } catch (err) {
+          failed++;
+          console.error(`  FAIL ${mKey}/${task.file}  "${task.text}": ${err.message}`);
+        }
+        await sleep(DELAY_MS);
+      }
     }
   }
 

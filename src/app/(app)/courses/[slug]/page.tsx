@@ -84,11 +84,8 @@ export default function PhasePage() {
           className="card flex max-w-md flex-col items-center gap-5 p-10 text-center"
         >
           <Mascot size={130} mood="think" />
-          <h1 className="headline text-3xl">Hmm… no such phase</h1>
-          <p className="text-sm leading-relaxed text-muted">
-            This corner of the journey doesn&apos;t exist — but six real phases are waiting on the
-            map.
-          </p>
+          <h1 className="headline text-3xl">{t("crsNoPhaseTitle")}</h1>
+          <p className="text-sm leading-relaxed text-muted">{t("crsNoPhaseBody")}</p>
           <Link
             href="/courses"
             className="pill bg-violet px-6 py-3 text-sm font-bold text-white"
@@ -160,7 +157,7 @@ export default function PhasePage() {
           ) : (
             <Link href="/schedule" className="ml-auto">
               <Tag className="transition-colors hover:bg-white/10 hover:text-ink">
-                🤝 with your nurturer
+                🤝 {t("crsWithNurturer")}
               </Tag>
             </Link>
           )}
@@ -246,7 +243,7 @@ export default function PhasePage() {
       {/* ============ Principles ============ */}
       <motion.section variants={fadeUp} className="space-y-4">
         <SectionTitle sub={`${t("phaseWord")} ${phase.id} · ${phase.name}`}>
-          How growth works here
+          {t("crsHowGrowthWorks")}
         </SectionTitle>
         <div className="card p-6">
           <ul className="space-y-4">
@@ -269,7 +266,7 @@ export default function PhasePage() {
       {/* ============ The sequence ============ */}
       <motion.section variants={fadeUp} className="space-y-4">
         <SectionTitle sub={`${phase.activities.length} ${t("activitiesWord")} · ${phase.emoji}`}>
-          The sequence
+          {t("crsSequence")}
         </SectionTitle>
 
         {parts.length > 0 ? (
@@ -337,7 +334,7 @@ export default function PhasePage() {
                   </span>
 
                   <div className="flex min-h-11 items-center">
-                    <h3 className="headline text-xl lg:text-2xl">Throughout the phase</h3>
+                    <h3 className="headline text-xl lg:text-2xl">{t("crsThroughout")}</h3>
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -356,7 +353,7 @@ export default function PhasePage() {
 
       {/* ============ Milestones ============ */}
       <motion.section variants={fadeUp} className="space-y-4">
-        <SectionTitle sub={phase.id < 6 ? "How host people experience you" : "The circle closes"}>
+        <SectionTitle sub={phase.id < 6 ? t("crsHostExperience") : t("crsCircleCloses")}>
           {t("milestonesWord")}
         </SectionTitle>
 

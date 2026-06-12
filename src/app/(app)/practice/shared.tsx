@@ -64,6 +64,7 @@ export function pickN<T>(arr: readonly T[], n: number): T[] {
 
 /** Soft notice when the target language fell back to the Spanish demo deck. */
 export function FallbackBanner({ show }: { show: boolean }) {
+  const { t } = useApp();
   if (!show) return null;
   return (
     <motion.div
@@ -73,9 +74,7 @@ export function FallbackBanner({ show }: { show: boolean }) {
       className="mb-5 flex items-center gap-3 rounded-2xl border border-mint/25 bg-mint/10 px-4 py-3 text-sm text-ink"
     >
       <span className="text-xl">🌱</span>
-      <span>
-        Full picture decks for this language are growing — here&rsquo;s the Spanish demo deck 🌱
-      </span>
+      <span>{t("prcFallbackDeck")} 🌱</span>
     </motion.div>
   );
 }
@@ -201,12 +200,13 @@ export function ReplayButton({
 /* --------------------------------- toast ---------------------------------- */
 
 /** Muted GPA toast — a wrong answer just sinks into the iceberg for later. */
-export function IcebergToast({ show, text = "It's in your iceberg 🧊" }: { show: boolean; text?: string }) {
+export function IcebergToast({ show, text }: { show: boolean; text?: string }) {
+  const { t } = useApp();
   if (!show) return null;
   return (
     <div className="pointer-events-none fixed bottom-8 left-1/2 z-50 -translate-x-1/2">
       <div className="popin rounded-full border border-line bg-raised-2/95 px-5 py-2.5 text-sm font-medium text-muted shadow-[var(--shadow-pop)]">
-        {text}
+        {text ?? `${t("prcIceberg")} 🧊`}
       </div>
     </div>
   );

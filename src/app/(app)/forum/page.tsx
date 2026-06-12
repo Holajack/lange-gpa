@@ -12,19 +12,20 @@ import { FORUM_SEED, NURTURERS } from "@/lib/nurturers";
 import type { ForumPost, LangCode } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
-/* Category metadata (curriculum/meta text stays English, per brief)  */
+/* Category metadata — labels route through t() so chips follow immersion */
 /* ------------------------------------------------------------------ */
 
 type Category = ForumPost["category"];
 type CatFilter = Category | "all";
 
-const CATEGORIES: { id: CatFilter; emoji: string; label: string; color: string }[] = [
-  { id: "all", emoji: "✨", label: "All", color: "#7c5cff" },
-  { id: "find-nurturer", emoji: "🔍", label: "Find a nurturer", color: "#ff8a1e" },
-  { id: "phase-help", emoji: "🪜", label: "Phase help", color: "#7c5cff" },
-  { id: "wins", emoji: "🎉", label: "Wins", color: "#b8f03c" },
-  { id: "culture", emoji: "🏮", label: "Culture", color: "#ff5d5d" },
-  { id: "tools", emoji: "🧰", label: "Nurturer tools", color: "#ffd234" },
+/** `labelKey` resolves through t() at render time so chips/options follow immersion. */
+const CATEGORIES: { id: CatFilter; emoji: string; labelKey: string; color: string }[] = [
+  { id: "all", emoji: "✨", labelKey: "frmCatAll", color: "#7c5cff" },
+  { id: "find-nurturer", emoji: "🔍", labelKey: "frmCatFindNurturer", color: "#ff8a1e" },
+  { id: "phase-help", emoji: "🪜", labelKey: "frmCatPhaseHelp", color: "#7c5cff" },
+  { id: "wins", emoji: "🎉", labelKey: "frmCatWins", color: "#b8f03c" },
+  { id: "culture", emoji: "🏮", labelKey: "frmCatCulture", color: "#ff5d5d" },
+  { id: "tools", emoji: "🧰", labelKey: "frmCatTools", color: "#ffd234" },
 ];
 
 const catMeta = (id: Category) => CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[0];
@@ -211,7 +212,7 @@ export default function ForumPage() {
                 active ? "bg-violet text-white" : "bg-white/6 text-muted hover:bg-white/10 hover:text-ink"
               }`}
             >
-              <span aria-hidden>{c.emoji}</span> {c.label}
+              <span aria-hidden>{c.emoji}</span> {t(c.labelKey)}
             </button>
           );
         })}
@@ -261,14 +262,14 @@ export default function ForumPage() {
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="What's happening in your village?"
+                    placeholder={t("frmTitlePlaceholder")}
                     maxLength={120}
                     className={`${inputCls} font-display text-base font-bold`}
                   />
                   <textarea
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
-                    placeholder="Tell the story — a win, a question, a tool that worked…"
+                    placeholder={t("frmBodyPlaceholder")}
                     rows={3}
                     className={`${inputCls} resize-none`}
                   />
@@ -281,7 +282,7 @@ export default function ForumPage() {
                     >
                       {CATEGORIES.filter((c) => c.id !== "all").map((c) => (
                         <option key={c.id} value={c.id}>
-                          {c.emoji} {c.label}
+                          {c.emoji} {t(c.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -345,6 +346,8 @@ export default function ForumPage() {
                 userName={userName}
                 userColor={userColor}
                 replyLabel={t("reply")}
+                replyPlaceholder={t("frmReplyPlaceholder")}
+                catLabel={t(catMeta(post.category).labelKey)}
                 roleLabel={post.authorRole === "nurturer" ? t("nurturerWord") : t("student")}
               />
             </motion.article>
@@ -360,10 +363,8 @@ export default function ForumPage() {
           >
             <Card className="flex flex-col items-center gap-4 px-8 py-14 text-center">
               <Mascot size={120} mood="think" float />
-              <p className="headline text-2xl">It&apos;s quiet on this street…</p>
-              <p className="max-w-sm text-sm text-muted">
-                No posts match these filters yet. Plant the first one and watch the village gather.
-              </p>
+              <p className="headline text-2xl">{t("frmEmptyTitle")}</p>
+              <p className="max-w-sm text-sm text-muted">{t("frmEmptyBody")}</p>
               <Pill
                 onClick={() => {
                   setCat("all");
@@ -398,6 +399,8 @@ function PostCard({
   userName,
   userColor,
   replyLabel,
+  replyPlaceholder,
+  catLabel,
   roleLabel,
 }: {
   post: ForumPost;
@@ -411,6 +414,8 @@ function PostCard({
   userName: string;
   userColor: string;
   replyLabel: string;
+  replyPlaceholder: string;
+  catLabel: string;
   roleLabel: string;
 }) {
   const lang = langByCode(post.lang);
@@ -453,7 +458,7 @@ function PostCard({
           </div>
           <Tag className="ml-auto">
             <span aria-hidden>{meta.emoji}</span>
-            <span style={{ color: meta.color }}>{meta.label}</span>
+            <span style={{ color: meta.color }}>{catLabel}</span>
           </Tag>
         </div>
 
@@ -539,7 +544,7 @@ function PostCard({
                   <input
                     value={draft}
                     onChange={(e) => onDraft(e.target.value)}
-                    placeholder="Add your voice…"
+                    placeholder={replyPlaceholder}
                     className={`${inputCls} py-2.5`}
                   />
                   <Pill

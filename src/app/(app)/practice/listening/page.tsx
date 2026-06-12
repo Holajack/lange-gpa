@@ -153,10 +153,10 @@ export default function ListeningPage() {
   if (finished) {
     return (
       <div>
-        <PracticeHeader emoji="👂" title="Listen & Do" kicker="Total Physical Response" accent={LEMON} />
+        <PracticeHeader emoji="👂" title={t("prcListenName")} kicker={t("prcListenKicker")} accent={LEMON} />
         <FinishScreen
           title={t("correct")}
-          sub="Your body answered before your mouth had to — that's exactly how Phase 1 grows."
+          sub={t("prcListenFinish")}
           accent={LEMON}
           stats={[
             { value: `${correctCount}/${TOTAL_ROUNDS}`, label: t("correct") },
@@ -173,7 +173,7 @@ export default function ListeningPage() {
 
   return (
     <div>
-      <PracticeHeader emoji="👂" title="Listen & Do" kicker="Total Physical Response" accent={LEMON} />
+      <PracticeHeader emoji="👂" title={t("prcListenName")} kicker={t("prcListenKicker")} accent={LEMON} />
       <FallbackBanner show={fellBack} />
 
       <div className="mx-auto max-w-3xl">

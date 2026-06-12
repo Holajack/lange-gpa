@@ -205,8 +205,8 @@ export default function RepeatPage() {
   const header = (
     <PracticeHeader
       emoji="🔁"
-      title="Re-live Your Words"
-      kicker="Re-live yesterday's meeting — eyes on the pictures, ears in the host world"
+      title={t("prcRepeatName")}
+      kicker={t("prcRepeatKicker")}
       accent={VIOLET}
     />
   );
@@ -228,7 +228,7 @@ export default function RepeatPage() {
         {header}
         <FinishScreen
           title={t("done")}
-          sub="Ten word-meetings re-lived — yesterday's session just sank a little deeper into your iceberg."
+          sub={t("prcRepeatFinish")}
           accent={VIOLET}
           stats={[
             { value: `${TOTAL}`, label: t("words") },
@@ -366,7 +366,7 @@ export default function RepeatPage() {
             onClick={togglePause}
             className="pill bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink"
           >
-            {paused ? `▶ ${t("play")}` : "⏸ Pause"}
+            {paused ? `▶ ${t("play")}` : `⏸ ${t("prcPause")}`}
           </button>
 
           <div className="flex items-center gap-1 rounded-full bg-white/6 p-1">
