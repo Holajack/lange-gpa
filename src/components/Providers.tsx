@@ -3,6 +3,7 @@
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { ProfileSync } from "@/components/ProfileSync";
 
 /**
  * Auth + backend providers, keyless-safe.
@@ -27,6 +28,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider publishableKey={clerkKey}>
       <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
+        <ProfileSync />
         {children}
       </ConvexProviderWithClerk>
     </ClerkProvider>
