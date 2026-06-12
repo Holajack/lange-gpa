@@ -24,6 +24,8 @@ export function blankProfile(): Profile {
     bookings: [],
     week: DEFAULT_WEEK,
     createdAt: new Date().toISOString(),
+    interests: [],
+    exchange: false,
   };
 }
 

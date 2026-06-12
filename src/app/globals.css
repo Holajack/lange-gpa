@@ -163,6 +163,32 @@ body {
   animation: wavehand 2.6s ease-in-out infinite;
 }
 
+/* Alive buddies — gentle organic bob with a hint of tilt (MascotImage
+   staggers delay/duration per mascot so a group never bobs in sync) */
+@keyframes buddy-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  26% { transform: translateY(-4px) rotate(1deg); }
+  54% { transform: translateY(1px) rotate(-0.4deg); }
+  76% { transform: translateY(-3px) rotate(-1deg); }
+}
+.buddy-bob {
+  animation: buddy-bob 3.4s ease-in-out infinite;
+  transform-origin: 50% 80%;
+  will-change: transform;
+}
+
+/* …plus an occasional curious wiggle layered on its own rhythm */
+@keyframes buddy-peek {
+  0%, 76%, 100% { transform: rotate(0deg); }
+  84% { transform: rotate(-2.2deg); }
+  90% { transform: rotate(1.8deg); }
+  95% { transform: rotate(-0.7deg); }
+}
+.buddy-peek {
+  animation: buddy-peek 5.6s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
 /* Marquee for landing */
 @keyframes marquee {
   from { transform: translateX(0); }

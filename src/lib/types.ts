@@ -81,6 +81,17 @@ export interface Profile {
   /** day-of-week activity minutes for the chart, Mon..Sun */
   week: number[];
   createdAt: string;
+  /** home city — shown on the map at city level only, never an exact location */
+  city?: string;
+  country?: string;
+  /** what the participant loves — picture-card worlds a nurturer can start from */
+  interests?: string[];
+  /** why this language (e.g. "family roots", "someone I love") */
+  motivation?: string;
+  /** daily watering commitment in minutes (10 / 20 / 40) */
+  dailyMinutes?: number;
+  /** open to language exchange — you nurture yours, they nurture theirs */
+  exchange?: boolean;
 }
 
 export interface Nurturer {

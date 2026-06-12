@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Volume2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Mascot } from "@/components/Mascot";
+import { MascotImage } from "@/components/MascotImage";
 import { Avatar } from "@/components/Avatar";
 import { useApp } from "@/lib/store";
 import { speak } from "@/lib/tts";
@@ -424,8 +425,8 @@ export default function LandingPage() {
         <div className="orb -left-40 top-24 h-[400px] w-[400px] bg-violet/15" />
         <SectionHead
           eyebrow="Meet the family"
-          title="Nine languages. Nine little nurturers."
-          sub="Every language's guide is that country's most beloved toy, sprouted to life — a piñata, a matryoshka, a daruma. Tap a hello and they'll greet you in their own words. No translation. Of course."
+          title="Little nurturers, big worlds"
+          sub="Tap a hello — they'll answer in their own words. No translation. Of course."
         />
 
         <div className="relative mt-14 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
@@ -441,17 +442,15 @@ export default function LandingPage() {
                 whileHover={{ y: -8 }}
                 className="card card-hover flex h-full flex-col items-center p-6 text-center sm:p-7"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={m.image}
-                  alt={`${m.name} — ${m.toy}`}
-                  loading="lazy"
-                  className="h-28 w-28 object-contain sm:h-36 sm:w-36"
-                  style={{ filter: `drop-shadow(0 0 26px ${m.color}88)` }}
+                <MascotImage
+                  mascot={m}
+                  size={144}
+                  float
+                  glow
+                  className="h-28! w-28! sm:h-36! sm:w-36!"
                 />
                 <p className="mt-5 font-display text-lg font-bold">{m.name}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted">{m.toy}</p>
-                <p className="mt-2 text-xs font-semibold text-muted">
+                <p className="mt-1.5 text-xs font-semibold text-muted">
                   <span className="mr-1.5" aria-hidden>{lang.flag}</span>
                   {lang.name}
                 </p>

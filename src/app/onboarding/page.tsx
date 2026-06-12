@@ -1,19 +1,26 @@
 "use client";
 
 /**
- * Onboarding — a warm five-step conversation with Nuri.
+ * Onboarding — a warm conversation with Nuri.
  *
  * 0  Welcome + role choice (grower / nurturer / both, ?role= preselects)
  * 1  Known languages (multi-select, English preselected)
  * 2  Target world (grower/both) — or nurture languages (nurturer-only)
- * 3  Name + live preview
- * 4  Immersion moment (growers) / nurturer toolkit — then plant the profile
+ * 3  Where you're growing from (city + country, optional, city-level privacy)
+ * 4  Why this language (single-select motivation, optional)
+ * 5  What you love (multi-select interests, optional)
+ * 6  Daily watering rhythm + language-exchange toggle (optional, pledge CTA)
+ * 7  Name + live preview
+ * 8  Immersion moment (growers) / nurturer toolkit — then plant the profile
+ *
+ * Steps 3–6 are invitations, never gates: they can be skipped without
+ * blocking completion (GPA is invitation, not interrogation).
  */
 
 import { Suspense, useMemo, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Sparkles, Volume2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Volume2 } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { Logo } from "@/components/Logo";
 import { blankProfile, useApp } from "@/lib/store";
@@ -21,7 +28,38 @@ import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
 import { speak } from "@/lib/tts";
 import type { LangCode, Language, Profile, Role } from "@/lib/types";
 
-const STEP_COUNT = 5;
+const STEP_COUNT = 9;
+
+/** Why this language — single-select; stored as a readable phrase. */
+const MOTIVATIONS = [
+  { id: "family roots", emoji: "🌳", label: "Family roots" },
+  { id: "travel", emoji: "🧳", label: "Travel" },
+  { id: "someone I love", emoji: "💛", label: "Someone I love" },
+  { id: "work", emoji: "💼", label: "Work" },
+  { id: "faith", emoji: "🕊️", label: "Faith" },
+  { id: "the joy of it", emoji: "✨", label: "The joy of it" },
+] as const;
+
+/** What you love — multi-select picture-card worlds. */
+const INTERESTS = [
+  { id: "food", emoji: "🍲", label: "Food" },
+  { id: "music", emoji: "🎶", label: "Music" },
+  { id: "sport", emoji: "⚽", label: "Sport" },
+  { id: "nature", emoji: "🌿", label: "Nature" },
+  { id: "family", emoji: "👨‍👩‍👧", label: "Family" },
+  { id: "craft", emoji: "🧵", label: "Craft" },
+  { id: "games", emoji: "🎲", label: "Games" },
+  { id: "stories", emoji: "📚", label: "Stories" },
+  { id: "travel", emoji: "🗺️", label: "Travel" },
+  { id: "faith", emoji: "🙏", label: "Faith" },
+] as const;
+
+/** Daily watering rhythms — minutes → growing identity. */
+const PACES = [
+  { minutes: 10, emoji: "🌱", identity: "Seedling" },
+  { minutes: 20, emoji: "🌿", identity: "Sprout" },
+  { minutes: 40, emoji: "🌳", identity: "Grove" },
+] as const;
 
 /** First word a grower meets — pure target language, meaning carried by voice. */
 const HELLO: Record<LangCode, string> = {
@@ -242,13 +280,23 @@ function TargetCard({
   );
 }
 
-function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+function Toggle({
+  on,
+  onClick,
+  label = "Immersion mode",
+  knob = "🌱",
+}: {
+  on: boolean;
+  onClick: () => void;
+  label?: string;
+  knob?: string;
+}) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
-      aria-label="Immersion mode"
+      aria-label={label}
       onClick={onClick}
       className={`relative h-9 w-[60px] shrink-0 rounded-full transition-colors duration-300 ${
         on ? "bg-lime" : "bg-white/12"
@@ -260,9 +308,135 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
           on ? "translate-x-[24px]" : ""
         }`}
       >
-        {on ? "🌱" : ""}
+        {on ? knob : ""}
       </span>
     </button>
+  );
+}
+
+function MotivationCard({
+  emoji,
+  label,
+  selected,
+  onClick,
+}: {
+  emoji: string;
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      variants={item}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={onClick}
+      className="card relative flex flex-col items-start gap-2 p-5 text-left transition-[border-color,box-shadow] duration-200"
+      style={
+        selected
+          ? { borderColor: "var(--color-violet)", boxShadow: "var(--shadow-glow-violet)" }
+          : undefined
+      }
+    >
+      <span className="text-3xl">{emoji}</span>
+      <span className="headline text-lg leading-tight">{label}</span>
+      <CheckBadge on={selected} />
+    </motion.button>
+  );
+}
+
+function InterestChip({
+  emoji,
+  label,
+  selected,
+  onClick,
+}: {
+  emoji: string;
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      variants={item}
+      whileTap={{ scale: 0.93 }}
+      onClick={onClick}
+      className={`pill border px-4 py-2.5 text-sm font-semibold ${
+        selected
+          ? "border-transparent bg-lime text-canvas"
+          : "border-line bg-white/5 text-ink hover:bg-white/10"
+      }`}
+      style={selected ? { boxShadow: "0 0 28px -8px rgba(184,240,60,0.6)" } : undefined}
+    >
+      <span className="text-lg leading-none">{emoji}</span>
+      {label}
+      {selected && <Check size={14} strokeWidth={3} />}
+    </motion.button>
+  );
+}
+
+function PaceRow({
+  minutes,
+  emoji,
+  identity,
+  selected,
+  onClick,
+}: {
+  minutes: number;
+  emoji: string;
+  identity: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      variants={item}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="card flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-[border-color,box-shadow] duration-200"
+      style={
+        selected
+          ? { borderColor: "var(--color-lime)", boxShadow: "0 0 40px -10px rgba(184,240,60,0.5)" }
+          : undefined
+      }
+    >
+      <span className="flex items-center gap-3.5">
+        <span className="text-2xl">{emoji}</span>
+        <span className="font-semibold">
+          {minutes} min <span className="font-normal text-muted">/ day</span>
+        </span>
+      </span>
+      <span className="headline text-xl text-lime">{identity}</span>
+    </motion.button>
+  );
+}
+
+function PlaceInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-bold uppercase tracking-widest text-muted">{label}</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        maxLength={40}
+        className="mt-2 w-full rounded-xl border border-line bg-white/5 px-4 py-3 text-ink caret-violet outline-none transition-colors placeholder:text-white/20 focus:border-violet"
+      />
+    </label>
   );
 }
 
@@ -352,9 +526,24 @@ function OnboardingFlow() {
   const [name, setName] = useState("");
   const [immersion, setImmersion] = useState(true);
 
+  // the invitation steps — every one of these may stay empty
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [motivation, setMotivation] = useState<string | null>(null);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [dailyMinutes, setDailyMinutes] = useState<number | null>(null);
+  const [exchange, setExchange] = useState(false);
+
   const nurturerOnly = role === "nurturer";
   const trimmed = name.trim();
   const target = targetLang ? langByCode(targetLang) : null;
+
+  /** Current invitation step left blank — the CTA turns into an honest "Skip for now". */
+  const inviteStepEmpty =
+    (step === 3 && city.trim() === "" && country.trim() === "") ||
+    (step === 4 && motivation === null) ||
+    (step === 5 && interests.length === 0) ||
+    (step === 6 && dailyMinutes === null);
 
   const valid = useMemo(() => {
     switch (step) {
@@ -364,9 +553,10 @@ function OnboardingFlow() {
         return knownLangs.length > 0;
       case 2:
         return nurturerOnly ? nurtureLangs.length > 0 : targetLang !== null;
-      case 3:
+      case 7:
         return trimmed.length > 0;
       default:
+        // steps 3–6 are invitations — always passable, never blocking
         return true;
     }
   }, [step, role, knownLangs, nurturerOnly, nurtureLangs, targetLang, trimmed]);
@@ -402,6 +592,9 @@ function OnboardingFlow() {
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
 
+  const toggleInterest = (id: string) =>
+    setInterests((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   const finish = () => {
     if (!role || trimmed.length === 0) return;
     const nurture = nurturerOnly ? nurtureLangs : role === "both" ? knownLangs : [];
@@ -416,6 +609,13 @@ function OnboardingFlow() {
       targetLang: finalTarget,
       nurtureLangs: nurture,
       immersion: nurturerOnly ? false : immersion,
+      // invitation answers — saved only when given
+      city: city.trim() || undefined,
+      country: country.trim() || undefined,
+      motivation: motivation ?? undefined,
+      interests,
+      dailyMinutes: dailyMinutes ?? undefined,
+      exchange,
     };
     saveProfile(out);
     router.replace("/dashboard");
@@ -632,8 +832,139 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {/* ============ 3 · name ============ */}
+              {/* ============ 3 · place (optional) ============ */}
               {step === 3 && (
+                <>
+                  <NuriSays mood="happy">Every garden grows somewhere.</NuriSays>
+                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
+                    Where are you {nurturerOnly ? "nurturing" : "growing"} from?
+                  </motion.h1>
+                  <motion.p variants={item} className="mt-3 text-muted">
+                    So kindred {nurturerOnly ? "growers" : "voices"} can find you on the world map.
+                    Totally optional — skip ahead if you’d rather not say.
+                  </motion.p>
+                  <motion.div variants={item} className="card mt-8 grid gap-5 p-6 sm:grid-cols-2">
+                    <PlaceInput label="City" value={city} placeholder="e.g. Porto" onChange={setCity} />
+                    <PlaceInput
+                      label="Country"
+                      value={country}
+                      placeholder="e.g. Portugal"
+                      onChange={setCountry}
+                    />
+                  </motion.div>
+                  <motion.p
+                    variants={item}
+                    className="mt-4 flex items-center gap-2 text-xs text-muted"
+                  >
+                    <MapPin size={14} className="shrink-0 text-lime" />
+                    Shown at city level only — never your exact location.
+                  </motion.p>
+                </>
+              )}
+
+              {/* ============ 4 · why this language (optional) ============ */}
+              {step === 4 && (
+                <>
+                  <NuriSays mood="think">There’s no wrong reason — only yours.</NuriSays>
+                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
+                    {nurturerOnly || !target ? (
+                      <>Why nurture?</>
+                    ) : (
+                      <>
+                        Why <span className="text-violet-soft">{target.nativeName}</span>?
+                      </>
+                    )}
+                  </motion.h1>
+                  <motion.p variants={item} className="mt-3 text-muted">
+                    {nurturerOnly
+                      ? "What draws you to share your world? It helps growers feel who you are."
+                      : "Your reason shapes the journey — and helps a nurturer meet you where you are."}
+                  </motion.p>
+                  <motion.div variants={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {MOTIVATIONS.map((m) => (
+                      <MotivationCard
+                        key={m.id}
+                        emoji={m.emoji}
+                        label={m.label}
+                        selected={motivation === m.id}
+                        onClick={() => setMotivation((cur) => (cur === m.id ? null : m.id))}
+                      />
+                    ))}
+                  </motion.div>
+                </>
+              )}
+
+              {/* ============ 5 · what you love (optional) ============ */}
+              {step === 5 && (
+                <>
+                  <NuriSays mood="happy">Words grow fastest where love already lives.</NuriSays>
+                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
+                    What do you love?
+                  </motion.h1>
+                  <motion.p variants={item} className="mt-3 text-muted">
+                    These become picture-card worlds a nurturer can start from. Pick as many — or
+                    as few — as you like.
+                  </motion.p>
+                  <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
+                    {INTERESTS.map((i) => (
+                      <InterestChip
+                        key={i.id}
+                        emoji={i.emoji}
+                        label={i.label}
+                        selected={interests.includes(i.id)}
+                        onClick={() => toggleInterest(i.id)}
+                      />
+                    ))}
+                  </motion.div>
+                </>
+              )}
+
+              {/* ============ 6 · watering rhythm + exchange (optional) ============ */}
+              {step === 6 && (
+                <>
+                  <NuriSays mood="cheer">Little and often beats much and rarely.</NuriSays>
+                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
+                    How often will you water it?
+                  </motion.h1>
+                  <motion.p variants={item} className="mt-3 text-muted">
+                    Pick a rhythm that fits your real life — you can always change it later.
+                  </motion.p>
+                  <motion.div variants={grid} className="mt-8 grid gap-3">
+                    {PACES.map((p) => (
+                      <PaceRow
+                        key={p.minutes}
+                        minutes={p.minutes}
+                        emoji={p.emoji}
+                        identity={p.identity}
+                        selected={dailyMinutes === p.minutes}
+                        onClick={() =>
+                          setDailyMinutes((cur) => (cur === p.minutes ? null : p.minutes))
+                        }
+                      />
+                    ))}
+                  </motion.div>
+                  <motion.div
+                    variants={item}
+                    className="card mt-6 flex items-center justify-between gap-4 p-5"
+                  >
+                    <div>
+                      <p className="font-semibold">🤝 Open to language exchange</p>
+                      <p className="mt-1 text-sm text-muted">
+                        You nurture your language, they nurture theirs.
+                      </p>
+                    </div>
+                    <Toggle
+                      on={exchange}
+                      onClick={() => setExchange((v) => !v)}
+                      label="Open to language exchange"
+                      knob="🤝"
+                    />
+                  </motion.div>
+                </>
+              )}
+
+              {/* ============ 7 · name ============ */}
+              {step === 7 && (
                 <>
                   <NuriSays mood="happy">Almost there — what may I call you?</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
@@ -669,8 +1000,8 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {/* ============ 4 · immersion moment (growers) ============ */}
-              {step === 4 && !nurturerOnly && target && (
+              {/* ============ 8 · immersion moment (growers) ============ */}
+              {step === 8 && !nurturerOnly && target && (
                 <>
                   <NuriSays mood="cheer">From here, the pictures do the explaining.</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
@@ -732,8 +1063,8 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {/* ============ 4 · nurturer toolkit ============ */}
-              {step === 4 && nurturerOnly && (
+              {/* ============ 8 · nurturer toolkit ============ */}
+              {step === 8 && nurturerOnly && (
                 <>
                   <NuriSays mood="cheer">Here’s what’s in your pocket.</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
@@ -790,7 +1121,14 @@ function OnboardingFlow() {
                 className="pill bg-violet px-8 py-3 font-semibold text-white disabled:pointer-events-none disabled:opacity-35"
                 style={valid ? { boxShadow: "var(--shadow-glow-violet)" } : undefined}
               >
-                {t("continue")} <ArrowRight size={16} />
+                {step === 6 && dailyMinutes !== null ? (
+                  <>{nurturerOnly ? "I’m nurturing 🤝" : "I’m growing 🌱"}</>
+                ) : inviteStepEmpty ? (
+                  <>Skip for now</>
+                ) : (
+                  <>{t("continue")}</>
+                )}{" "}
+                <ArrowRight size={16} />
               </button>
             ) : (
               <button
