@@ -19,6 +19,8 @@ export const NURTURERS: Nurturer[] = [
   { id: "kenji", name: "Kenji Nakamura", langs: ["ja"], city: "Sapporo", bio: "Train conductor. Stations, timetables, bento on the platform — ride his daily route and the words arrive on schedule.", tags: ["routines", "travel", "phase 2–3"], sessions: 142, rating: 4.8, online: false, color: "#7c5cff" },
   { id: "liwei", name: "Li Wei", langs: ["zh"], city: "Chengdu", bio: "Street-food vendor. Point at anything on his cart and he names it, fries it, and hands it over — meaning you can taste.", tags: ["market life", "food", "phase 1–2"], sessions: 203, rating: 4.8, online: true, color: "#b8f03c" },
   { id: "zhangmin", name: "Zhang Min", langs: ["zh"], city: "Kunming", bio: "Grandmother and mahjong fan. Learns your name in one session, deals you into the family table by the next.", tags: ["family", "games", "phase 1–3"], sessions: 356, rating: 5.0, online: true, color: "#ffd234" },
+  { id: "maggie", name: "Maggie Whitlow", langs: ["en"], city: "Leeds", bio: "Tea-shop owner. Pours, points and natters — scones, teapots and weather talk until her counter is your first hundred words.", tags: ["cozy", "food", "phase 1–2"], sessions: 248, rating: 4.9, online: true, color: "#a78bfa" },
+  { id: "dwayne", name: "Dwayne Carter", langs: ["en"], city: "Atlanta", bio: "School bus driver. Twenty years of morning routes — seats, stops and the same jokes daily, so the words show up right on time.", tags: ["humor", "routines", "phase 1–3"], sessions: 173, rating: 4.8, online: true, color: "#3ddc84" },
 ];
 
 export const nurturerById = (id: string) => NURTURERS.find((n) => n.id === id);

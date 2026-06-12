@@ -41,6 +41,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "what-is-this",
     emoji: "🫳❓",
     words: {
+      en: "What is this?",
       es: "¿Qué es esto?",
       ru: "Что это?",
       fr: "Qu'est-ce que c'est ?",
@@ -55,6 +56,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "what-is-that",
     emoji: "👉❓",
     words: {
+      en: "And what is that?",
       es: "¿Qué es eso?",
       ru: "А это что?",
       fr: "Et ça, qu'est-ce que c'est ?",
@@ -69,6 +71,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "what-is-he-doing",
     emoji: "🏃❓",
     words: {
+      en: "What is he doing?",
       es: "¿Qué está haciendo?",
       ru: "Что он делает?",
       fr: "Qu'est-ce qu'il fait ?",
@@ -83,6 +86,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "who-is-he",
     emoji: "🧑❓",
     words: {
+      en: "Who is he?",
       es: "¿Quién es él?",
       ru: "Кто он?",
       fr: "Qui est-ce ?",
@@ -97,6 +101,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "i-dont-know",
     emoji: "🤷",
     words: {
+      en: "I don't know",
       es: "No sé",
       ru: "Я не знаю",
       fr: "Je ne sais pas",
@@ -111,6 +116,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "again-please",
     emoji: "🔁",
     words: {
+      en: "Again, please",
       es: "Otra vez, por favor",
       ru: "Ещё раз, пожалуйста",
       fr: "Encore une fois, s'il vous plaît",
@@ -125,6 +131,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "slowly-please",
     emoji: "🐢",
     words: {
+      en: "Slower, please",
       es: "Más despacio, por favor",
       ru: "Помедленнее, пожалуйста",
       fr: "Plus lentement, s'il vous plaît",
@@ -139,6 +146,7 @@ const POWER_PHRASES: PowerPhrase[] = [
     id: "what-does-it-mean",
     emoji: "💭",
     words: {
+      en: "What does it mean?",
       es: "¿Qué significa?",
       ru: "Что это значит?",
       fr: "Qu'est-ce que ça veut dire ?",

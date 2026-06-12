@@ -13,6 +13,7 @@ export const STRINGS: Dict = {
   dashboard: { en: "Dashboard", es: "Panel", ru: "Главная", fr: "Tableau", de: "Übersicht", pt: "Painel", it: "Pannello", ja: "ホーム", zh: "主页" },
   schedule: { en: "Schedule", es: "Agenda", ru: "Расписание", fr: "Agenda", de: "Kalender", pt: "Agenda", it: "Agenda", ja: "スケジュール", zh: "日程" },
   forum: { en: "Forum", es: "Foro", ru: "Форум", fr: "Forum", de: "Forum", pt: "Fórum", it: "Forum", ja: "フォーラム", zh: "论坛" },
+  world: { en: "World", es: "Mundo", ru: "Мир", fr: "Monde", de: "Welt", pt: "Mundo", it: "Mondo", ja: "世界", zh: "世界" },
   student: { en: "Grower", es: "Cultivador", ru: "Растущий", fr: "Apprenant", de: "Wachsende:r", pt: "Cultivador", it: "Coltivatore", ja: "育つ人", zh: "成长者" },
   nurturerWord: { en: "Nurturer", es: "Nutridor", ru: "Наставник", fr: "Accompagnant", de: "Begleiter", pt: "Nutridor", it: "Nutritore", ja: "ナーチャラー", zh: "培育者" },
   nurture: { en: "Nurture", es: "Nutrir", ru: "Наставник", fr: "Accompagner", de: "Begleiten", pt: "Nutrir", it: "Nutrire", ja: "育てる", zh: "培育" },

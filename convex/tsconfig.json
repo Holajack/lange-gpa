@@ -1,0 +1,23 @@
+{
+  /*
+   * Convex functions are typechecked by `npx convex dev` with this config,
+   * NOT by the Next.js build (the root tsconfig excludes convex/ because
+   * convex/_generated does not exist until codegen runs).
+   */
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "lib": ["ES2021", "dom"],
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["./**/*"],
+  "exclude": ["./_generated"]
+}

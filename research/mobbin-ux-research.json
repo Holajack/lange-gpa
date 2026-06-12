@@ -1,0 +1,632 @@
+{
+  "summary": "Mobbin: Duolingo achievement/flow/mascot/card patterns; web: validate per-language mascot names",
+  "agentCount": 6,
+  "logs": [],
+  "result": {
+    "mobbin": {
+      "achievements": {
+        "takeaways": [
+          "Duolingo's lesson-complete screen is a rigid three-part template: mascot vignette on white, one yellow headline, then exactly three rounded stat chips (XP / time / accuracy), each chip a white pill with a saturated header band (yellow/blue/green) holding tiny caps text and one big colored number. The consistency is the point — the ritual is recognizable in 100ms, only the contents change.",
+          "Chip labels are adaptive copy, not fixed field names: the time chip reads 'SPEEDY' or 'BLAZING' when fast and 'COMMITTED' when slow; accuracy reads 'GOOD' → 'GREAT' → 'AMAZING' → 'PERFECT!'. Every label praises — slowness is reframed as commitment. There is no neutral or negative state on a celebration screen.",
+          "The headline itself is selected by the standout stat: 'Super fast!' when time wins, 'High scorer!' when accuracy wins, and joke copy at 100% ('When's the parade? You made 0 mistakes. Confetti time!'). The screen feels authored, not templated, even though it is one template with a switch statement.",
+          "Rarity is communicated by palette inversion, not by adding more confetti: routine completions sit on white; the Legendary screen flips to pure black with radial gold rays and a fully gold-recolored Duo. Streak days flip to full-bleed orange. Background color ownership = event tier.",
+          "Almost every celebration embeds the NEXT goal inside the current one: a third gray unfilled star above the character, a grayed-out silhouette of tomorrow's widget art, a locked trophy to the right of the new Silver one, 'Tomorrow makes 7 days, let's goooooo!' with the 7th day wearing sunglasses on the calendar row. Celebration and tease are one screen.",
+          "Rewards are claimed, not dismissed: buttons say 'CLAIM XP' / 'CLAIM REWARD', and the streak screens replace Continue with a pledge button — 'I'M COMMITTED' / 'I CAN DO IT'. The tap is framed as the user doing something, which converts a passive interstitial into an action.",
+          "Achievement badges are dated physical objects: embossed, glossy, shield-shaped, with the milestone number baked into the art and a small date chip ('DEC 6, 2025') underneath — a trophy with an engraving, on its own full-screen detail page with a share icon top-right.",
+          "Sharing is bribed and percentile-framed: 'SHARE +20 GEMS' pays you to share, and recap screens add social comparison ('more than 93% of learners!') plus one human sentence ('You put in the work. It shows.') — number, comparison, compliment, in that order."
+        ],
+        "patterns": [
+          {
+            "name": "Three-chip stat ritual (adaptive praise labels)",
+            "description": "Post-lesson screen: character vignette top, yellow headline ('Lesson complete!'), then three equal rounded chips side by side. Each chip = colored header band (caps, 10-11pt) + white body with icon and large bold number in the band's color: TOTAL XP ⚡13 (yellow), COMMITTED 5:07 (blue), GREAT 94% (green). Labels swap per value (SPEEDY/BLAZING/COMMITTED; GOOD→PERFECT!), so every outcome reads as a win. One full-width CTA below.",
+            "apply_to_lange": "End every GPA listening session with Nuri + headline + exactly three chips on the dark violet canvas: WORDS MET (lime #b8f03c band, sprout icon, count), LISTENING (violet #7c5cff band, clock, mm:ss), UNDERSTOOD (orange #ff8a1e band, ear icon, %). Make chips dark cards with neon bands so they pop on near-black. Write adaptive labels in GPA language: long sessions = 'DEEP ROOTS', fast picture-matching = 'SHARP EARS', high comprehension = 'ALL EARS!'. Never show a negative label — comprehension-first means a low % chip reads 'SPROUTING', not 'POOR'."
+          },
+          {
+            "name": "Rarity via palette inversion",
+            "description": "Routine celebrations live on white; the rare 'Legendary' moment inverts to a full black screen with dark-gold radial sunburst rays, a gold coin with checkmark, and Duo himself recolored entirely in metallic gold with sparkles. Streak days own full-bleed orange. The background color alone tells you the event tier before you read a word.",
+            "apply_to_lange": "LANGE is dark by default, so invert the other way: routine session-complete screens stay on the near-black violet canvas; GPA phase completion (e.g. finishing 'Here-and-Now') triggers a full-bleed bright takeover — a lime-to-orange 'sunrise' gradient filling the screen, with radial rays behind a special Nuri. Reserve a gold-recolored Nuri (gold egg body, gold leaves) exclusively for the rarest tier, like completing all hours of a full phase. Never use the takeover palette anywhere else in the app, so it stays sacred."
+          },
+          {
+            "name": "Dated badge as a physical trophy",
+            "description": "Achievement detail is a full-screen page: large embossed, glossy shield-shaped badge with character art and the milestone number rendered INTO the badge ('30' in white with gold outline), a small pill date chip below ('DEC 6, 2025'), one bold sentence of plain-language explanation, share icon top-right, and a 'CLAIM REWARD' button. The dark-maroon 4-day-streak variant shows the same badge anatomy works on dark backgrounds.",
+            "apply_to_lange": "Build LANGE milestone badges as chunky embossed objects matching the neon-playroom style: rounded shield with Nuri art, milestone baked in ('100' for first 100 words understood, a laughing Nuri for 'First Joke Understood'), date chip underneath ('JUN 11, 2026'), and one sentence in grower language: 'You understood your first joke in Thai — no translation, just you.' The dark Duolingo streak-badge screen proves this reads beautifully on LANGE's near-black violet. Keep a share icon top-right; these one-of-a-kind GPA firsts (first joke, first story followed) are inherently shareable."
+          },
+          {
+            "name": "Collection row with grayed-out next item",
+            "description": "Unlock screens show a horizontal carousel of collectible cards: previous card peeking off-screen left in full color, the just-unlocked card centered ('You unlocked Sleepytime Duo'), and the NEXT card visible as a gray silhouette. League promotion does the same with trophies: bronze small left, new silver large center, locked trophy with padlock right.",
+            "apply_to_lange": "Render GPA phases as a badge carousel on phase completion: completed phase badges in full neon color sliding left, the just-earned badge center-stage large, and the next phase ('Story Building') as a gray silhouette of its badge with a padlock — visible enough to want. Same mechanic for listening-hour milestone cards (25h / 50h / 100h): each milestone is a collectible illustrated card of Nuri growing taller, with the next growth stage silhouetted. The silhouette IS the retention hook; never hide what's next."
+          },
+          {
+            "name": "Next-goal teaser embedded in the celebration",
+            "description": "Celebrations always show the gap to the next milestone: 'You earned 20 XP and another star!' shows two gold stars plus one gray unfilled star; the 6-day streak screen says 'Tomorrow makes 7 days, let's gooooooo!' and renders tomorrow on the calendar row wearing a sunglasses icon; the CTA becomes 'I'M COMMITTED' instead of Continue.",
+            "apply_to_lange": "Every LANGE milestone screen carries one forward element: at 87 listening hours show a progress ring '87 / 100 hours — Phase 2 is sprouting'; at the 100-words celebration show a faint '250' marker ahead on the word-garden meter; have Nuri say the tease in a speech bubble ('3 more sessions and you've grown 100 hours!'). Swap the dismiss button for a pledge in GPA voice: 'KEEP GROWING' or 'I'M IN' — the tap becomes the grower's commitment, matching the participation philosophy."
+          },
+          {
+            "name": "Giant-number takeover for cumulative stats",
+            "description": "Daily/period recap: full-bleed warm gradient, one enormous numeral dominating the upper half ('97%') with small Duo peeking from behind it, headline below ('You're acing your Korean lessons today!'), then a sentence with the key figures bolded inline ('You practiced 24 words today with an average accuracy of 97%!'). Share is incentivized: white pill 'SHARE +20 GEMS'; Continue demoted to a text link.",
+            "apply_to_lange": "This is the exact template for 'first 100 words understood': full-bleed violet-to-orange gradient takeover, colossal '100' with Nuri peeking around the zero (or sprouting out of it), headline 'You understand 100 words!', subline with inline neon-bold numbers: 'You grew 100 words in 6 hours of listening — without reading a single translation.' That last clause is LANGE's unique brag; make it the share line. Demote 'Continue' to a quiet text link so the share pill is the primary action."
+          },
+          {
+            "name": "Adaptive headline + joke copy at peak moments",
+            "description": "The headline is chosen by whichever stat is most notable ('Super fast!', 'High scorer!'), and perfect runs get genuinely funny copy with a starburst-eyed mascot: 'When's the parade? You made 0 mistakes. Confetti time!' The mascot's pose matches the emotion — crying with joy, flexing, held aloft Lion-King style by another character.",
+            "apply_to_lange": "Build a Nuri pose library (6-8 poses: leaf-flap joy, starburst eyes, rolling-on-floor laughing, held up by a nurturer character, asleep, gold) and key the celebration headline to the standout stat. The 'first joke understood' milestone demands the funny register: Nuri laughing so hard a leaf falls off, headline 'Wait — you actually got that?!', subline 'Understanding humor is one of the deepest signs of growing into a language.' Pair the nurturer character with Nuri in phase-completion art, mirroring how Duolingo pairs Duo with human characters — it reinforces that growth happened WITH a person."
+          },
+          {
+            "name": "Chained post-session ritual ending in the next node",
+            "description": "Completion is never one screen — it's a fixed chain: in-lesson 'PERFECT' stamp with full-screen lightning → stats screen → gem chest reward ('+50 gems') → streak calendar → commitment ask → social quest progress ('Do 9 more lessons to finish this Friends Quest' with 'SEND XP BOOST' to a friend). Back on the path, the finished node flips to a gold check and a white 'CONTINUE' tooltip bounces over the NEXT node.",
+            "apply_to_lange": "Define LANGE's post-session chain: comprehension stamp during the last picture-card ('ALL UNDERSTOOD!' with lime flash) → three-chip stats → growth reward (water-drop or sun token added to Nuri's garden, the LANGE analog of the gem chest) → listening-hours calendar row → one commitment tap. Cap it at 3-4 screens. Then land on the phase path with the finished activity glowing checked and a tooltip pulsing on the next picture-card set. For the social slot, swap Friends Quest for the nurturer: 'Session 12 with Mei — send her a thank-you sticker', honoring GPA's relational core."
+          }
+        ],
+        "notable": [
+          {
+            "title": "Perfect Week achievement badge with date chip and CLAIM REWARD",
+            "why": "The cleanest reference for LANGE's one-time GPA firsts (first joke understood): embossed shield badge with the number '30' baked into the art, dated pill 'DEC 6, 2025', one plain-language sentence, share icon, and a claim button instead of a dismiss.",
+            "mobbin_url": "https://mobbin.com/screens/6e64c8e4-fabb-471b-b515-a3c87be4ba99"
+          },
+          {
+            "title": "Legendary level — black background, gold rays, gold-recolored Duo",
+            "why": "Proof that prestige = palette inversion plus a metallic mascot recolor. Works natively on LANGE's dark canvas; reserve gold Nuri for full-phase completion and it instantly reads as the rarest tier.",
+            "mobbin_url": "https://mobbin.com/screens/5f698e13-7b77-4a3f-813f-f06e5ee279c8"
+          },
+          {
+            "title": "'When's the parade?' perfect-lesson screen with joke copy",
+            "why": "The voice benchmark: starburst-eyed mascot, 'You made 0 mistakes. Confetti time!', and praise-only chip labels (AMAZING, BLAZING). LANGE's first-joke-understood milestone should hit exactly this comedic register.",
+            "mobbin_url": "https://mobbin.com/screens/8086bc1d-dede-4e4f-bc90-181f53bd642f"
+          },
+          {
+            "title": "97% daily recap — giant numeral with Duo peeking, SHARE +20 GEMS",
+            "why": "The direct template for 'first 100 words understood': full-bleed gradient, colossal number with mascot peeking from behind it, inline-bolded stats ('24 words... 97%'), incentivized share pill with Continue demoted to a text link.",
+            "mobbin_url": "https://mobbin.com/screens/18d49135-ed38-4820-bf85-af3f4188900c"
+          },
+          {
+            "title": "Silver League promotion — trophy carousel with locked next trophy",
+            "why": "Phase-completion blueprint: the old tier small on the left, new trophy large center with confetti ticks, next tier locked with a padlock on the right. Maps one-to-one onto GPA phase badges with the next phase silhouetted.",
+            "mobbin_url": "https://mobbin.com/screens/790f98ad-76bd-4145-91ba-9c8173dc99d4"
+          },
+          {
+            "title": "Sleepytime Duo widget unlock — collection carousel with gray silhouette of tomorrow",
+            "why": "The collectible-card mechanic for listening-hour milestones: just-unlocked art centered in full color, next card a gray silhouette. The silhouette is the comeback hook — show growers the next Nuri growth stage they haven't earned yet.",
+            "mobbin_url": "https://mobbin.com/screens/58c15548-1cf4-4584-a7ea-4d81c6999105"
+          },
+          {
+            "title": "6-day streak — 'Tomorrow makes 7 days' with I'M COMMITTED button",
+            "why": "Best example of celebration-as-pledge: calendar row with tomorrow wearing sunglasses, mascot speech bubble teasing the milestone, and the CTA turned into a commitment. LANGE's listening-hours screens should end on a pledge tap, not a Continue.",
+            "mobbin_url": "https://mobbin.com/screens/f6675d16-c6b5-4847-aa9f-fb66a2d61e88"
+          },
+          {
+            "title": "Year-recap XP screen — percentile framing plus human compliment",
+            "why": "Copy formula worth stealing for hour milestones: big number, social comparison ('more than 93% of learners!'), then one warm sentence ('You put in the work. It shows.'). LANGE's version: 'Most learners never reach 50 hours of pure listening. You grew here.'",
+            "mobbin_url": "https://mobbin.com/screens/1ba1889c-150a-4241-ae78-4a757d3e551c"
+          }
+        ]
+      },
+      "streaks": {
+        "takeaways": [
+          "Duolingo's ONLY dark screen is the streak-milestone takeover (deep maroon canvas, glossy embossed badge, date-stamp pill, share icon). Dark = ceremony in their otherwise white system. LANGE is dark by default, so milestone ceremony must come from a different scarcity lever: full-bleed accent flood, badge gloss/bloom, and a collectible date stamp rather than a background change.",
+          "The streak count is typographically fused with the flame — the numeral is cut into or overlaps the flame glyph so number and symbol read as one object. The count IS the mascot of the feature, not a label next to it.",
+          "Miss-day copy never says 'lost' or 'failed'. The week row shows a small gray X, and the caption reads 'Your streak restarts next time you do a lesson!' — failure framed as a pending restart, with the remedy named in the same sentence. The week-row card (7 day-circles, filled checks, today highlighted) is the single most reused component across every streak screen.",
+          "Rewards sit literally AT the end of progress bars: every daily quest row ends in a bronze/silver/gold chest flush against the bar terminus, and post-lesson interstitials ('Daily Quests update!') show ONLY the bars that moved, with a glowing dot sliding along them. The bar animation is the celebration — no confetti needed.",
+          "Consecutive practiced days render on the streak calendar as one continuous flame-gradient capsule spanning the dates, not separate dots — a run is visualized as a single growing object. Month stat chips ('10 days practiced' with a PERFECT badge, '0 freezes used') sit above it, making forgiveness (freezes) a tracked, legitimate resource rather than cheating.",
+          "Time horizons nest visibly: daily quests with an '8 HOURS' countdown, a weekend quest, a monthly quest (11/30 quest points, '19 days'), and a streak challenge timeline with calendar markers at day 7/14/30. The next milestone is always on screen ('3 days — Next milestone' chip in the home calendar dropdown); the far horizon never appears alone.",
+          "The warmest retention loop is cooperative, not competitive: Friends Quest is a SHARED 15-lesson bar with both partners' contributions listed and NUDGE and GIFT buttons — directly portable to LANGE's grower-nurturer relationship, unlike leaderboards which fight GPA's anti-competitive ethos.",
+          "Path nodes are activity-typed (star = lesson, headphones = listening, mic = speaking, book = story, camera = video call), rendered as chunky 3D 'pressed buttons' with a darker bottom rim; the active node alone gets a START tooltip plus a circular progress ring, and each unit recolors the entire path + sticky header (green, purple, red), so scrolling feels like passing through colored chapters."
+        ],
+        "patterns": [
+          {
+            "name": "Winding single path with activity-typed 3D nodes",
+            "description": "One vertical serpentine path per unit. Each node is a thick coin-like button with a darker bottom rim (tactile, pressable). Icons encode modality: star, headphones, microphone, book, video camera, chat bubbles. Future nodes are flat gray silhouettes; completed nodes are saturated; the active node has a START tooltip and a partial progress ring arc. Character vignettes with 1-3 mastery stars sit beside the path; treasure chests and a trophy node punctuate it. A floating arrow button bottom-right jumps back to the active node.",
+            "apply_to_lange": "Render each of the 6 GPA phases as a winding path on the near-black violet canvas. Node types map to GPA activities: ear icon (listening set), picture-card icon (photo comprehension), two-person icon (nurturer session), mouth icon (production, later phases only — their absence in early phases visually teaches 'comprehension before production'). Active node gets a neon ring in the phase accent color that fills with listening MINUTES, not lessons, since LANGE tracks hours. Dim future nodes to 20% violet-gray; keep the jump-back floating button — essential for a 1500-hour path."
+          },
+          {
+            "name": "Sticky unit banner: eyebrow + plain-language goal + guidebook",
+            "description": "A full-width rounded banner pinned at top: tiny all-caps eyebrow 'SECTION 1, UNIT 10', large title stating a human outcome ('Order food and drink', 'Describe your family'), and a notebook/guidebook icon on the right opening unit notes. Banner color matches the current unit's node color exactly.",
+            "apply_to_lange": "Pin 'PHASE 1 · HERE AND NOW' style banners above each phase path, with the title as a relationship outcome ('Understand your nurturer talking about the room around you'), colored per phase (violet, orange, lime rotation). The guidebook icon opens the GPA rationale for that phase — why no text, why listening first — turning method skepticism into an in-context explainer."
+          },
+          {
+            "name": "Count fused with mascot glyph + week-row card",
+            "description": "The streak number is rendered inside or overlapping the flame shape so they form one lockup, with 'day streak!' beneath. Below, a white rounded card holds 7 day-circles (Mo-Su): filled orange checks for done days, gray X for a miss, today's label highlighted. One line of state-aware microcopy under the row, then a single full-width pill CTA.",
+            "apply_to_lange": "Replace fire (cram energy) with growth: fuse the day-count into Nuri's sprout-leaf silhouette in lime #b8f03c — call it a 'growth streak'. Week-row card in a dark elevated card with lime check circles. State-aware microcopy in LANGE's warm voice: teaching state ('A growth streak counts the days you and your language spent together'), miss state ('Your sprout is napping — it wakes up with your next session'). Never 'lost'."
+          },
+          {
+            "name": "Forgiveness as a designed, visible resource",
+            "description": "Missed days show as a soft gray X, copy frames the streak as 'restarts next time you do a lesson'. The streak detail screen tracks 'Freezes used: 0' as a neutral stat chip next to 'Days practiced', and a PERFECT badge rewards zero-freeze months. Streak repair and freezes make the system survivable without shame.",
+            "apply_to_lange": "Go further than Duolingo because GPA is anti-cram: make rest days first-class. Let growers schedule 'fallow days' that render as seed icons (not gray Xs) on the calendar and don't break the growth streak. Track 'days nurtured' per month instead of penalizing gaps. A wilt-then-revive animation (sprout droops after a miss, perks up on return) delivers the pull-back without guilt — on-brand for a relationship, not a debt."
+          },
+          {
+            "name": "Calendar runs as continuous capsules",
+            "description": "On the 847-day streak screen, consecutive practiced days are spanned by a single rounded flame-gradient capsule across the calendar row, wrapping to the next week — a run reads as one unbroken object, not dotted days. Month header carries stat chips ('10 Days practiced' + PERFECT badge).",
+            "apply_to_lange": "Render runs as a glowing vine: consecutive listening days fuse into a lime-to-violet gradient capsule growing across the month grid, with tiny leaf nubs at 7-day joints. Stat chips per month: 'Hours listened' and 'Sessions with [nurturer name]'. The vine metaphor literally matches the Growing Participator brand and makes the calendar the emotional centerpiece of long-horizon progress."
+          },
+          {
+            "name": "Reward at the bar terminus + 'only what moved' interstitial",
+            "description": "Every daily quest row is icon + goal text + fat yellow progress bar with the fraction inside (2/3) + a chest icon flush against the bar's right end. After a lesson, a minimal white interstitial titled 'Daily Quests update!' shows only the 1-2 bars that advanced, with a glowing dot animating the fill. Near-miss screens state exact remaining distance: 'You're 6 XP away from your daily goal!' with itemized earnings below.",
+            "apply_to_lange": "Daily 'tending tasks' (Listen 20 min, Meet 1 picture set, 1 nurturer session) as rows with a seed-packet or sprout-pot icon at the bar end; bars in orange #ff8a1e on dark cards with a neon glow pulse on fill. Post-session interstitial shows only moved bars. Use near-miss framing ONCE ('12 minutes from today's listening goal') but invert Duolingo's escalation: when the goal completes, close warmly — 'A good place to rest. Your sprout grows overnight.' Celebrate-and-stop is the anti-cram move."
+          },
+          {
+            "name": "Nested time horizons with the next milestone always visible",
+            "description": "Daily quests carry an hours-left countdown; a weekend quest and a monthly quest (quest points, 'Day 1 of 7', '19 days') sit above them; the streak challenge shows a horizontal timeline with calendar markers at 7/14/30 days; the home flame dropdown shows chips for 'Current streak' and 'Next milestone: 3 days'. No screen shows only the distant goal.",
+            "apply_to_lange": "Chunk 1500 hours into nested horizons: today's listening goal, this week's nurturer sessions, this phase's hour budget (e.g. 'Phase 1: 62/100 h'), then total hours. Everywhere the 1500 figure appears, pair it with the NEAREST milestone chip ('Next: 50 h — Story Listener badge'). Hour milestones at 10/50/100/250/500/1000/1500 become badge ceremonies; the 1500 number alone should never be a screen's only metric."
+          },
+          {
+            "name": "Cooperative quest with nudge and gift",
+            "description": "Friends Quest: one shared bar ('Complete 15 lessons', 1/15) with both partners' individual contributions listed below ('You: 1 lesson / Sam: 0 lessons') and two warm actions — NUDGE (hands emoji) and GIFT. Reminder screens use a tamagotchi-style device illustration with both avatars peeking over it: '3 days left! Do 9 more lessons to finish this Friends Quest.'",
+            "apply_to_lange": "This is the most LANGE-native pattern found: a shared grower-nurturer bar — 'You and Amara: 3 sessions this week' — where session hours from both calendar bookings fill one bar. Replace NUDGE/GIFT with 'Send thanks' (a gratitude note or voice clip to the nurturer) and 'Book session'. Also surface a relationship streak ('5 weeks growing together') as its own milestone badge track, separate from the solo listening streak. Skip leaderboards entirely."
+          },
+          {
+            "name": "Milestone takeover ceremony with collectible badge",
+            "description": "Full-screen dark maroon takeover: a giant glossy shield-shaped badge containing a character illustration, the streak number breaking out of the badge bottom, a date-stamp pill ('JUL 15, 2024'), gold headline 'You reached a 4 day streak!', share icon top-right. A variant floods the entire screen orange with a white numeral and a 'SHARE +20 GEMS' incentivized share button.",
+            "apply_to_lange": "At hour milestones, take over the screen with a flood of the phase accent color (violet/orange/lime) and a glossy badge showing Nuri's evolution stage — sprout at 10 h, seedling at 50 h, sapling at 100 h, up to a small tree at 1500 h. Include the date pill (makes badges feel archival and collectible) and a share action. Because LANGE is always dark, the ceremony differentiator is the color flood plus badge gloss and bloom, not darkness itself."
+          },
+          {
+            "name": "Mascot as commitment partner, not enforcer",
+            "description": "Streak goal flow: Duo with a calendar asks via speech bubble 'Let's commit to learning with a Streak Goal!', user picks 3/5/7 days (each with a gem reward), CTA reads 'I'M COMMITTED'; follow-up banter 'I bet 7 days will be easy peasy! Right?' with 'I CAN DO IT'. First-person commitment language in the buttons, questions in the bubbles.",
+            "apply_to_lange": "Nuri runs the same flow in GPA terms: 'How many days shall we grow together this week?' with 3/5/7 options, CTA 'LET'S GROW'. Keep buttons first-person/joint and bubbles as questions — never imperatives. Use Nuri speech bubbles on the milestone and miss screens too, so streak pressure always arrives as a relationship voice ('I saved your spot') rather than system warnings."
+          }
+        ],
+        "notable": [
+          {
+            "title": "Dark streak-milestone badge takeover (4-day)",
+            "why": "The single most LANGE-compatible screen found: dark canvas, glossy shield badge, number breaking out of the badge, date-stamp pill, share icon. A direct template for hour-milestone ceremonies with an evolving Nuri badge.",
+            "mobbin_url": "https://mobbin.com/screens/89d9d54a-995e-4729-8122-0668edf2dedf"
+          },
+          {
+            "title": "Full-orange 5-day streak with incentivized share",
+            "why": "Whole-screen accent flood as celebration plus 'SHARE +20 GEMS' — shows how a flat color takeover plus a rewarded share button manufactures ceremony without new layout machinery.",
+            "mobbin_url": "https://mobbin.com/screens/84ec5a7b-37ce-4c38-808d-7c3c91c3c0aa"
+          },
+          {
+            "title": "Streak restart copy after a missed day",
+            "why": "Gray X in the week row + 'Your streak restarts next time you do a lesson!' — the canonical example of naming the remedy instead of the failure. The exact tone LANGE should adapt for its wilt-and-revive mechanic.",
+            "mobbin_url": "https://mobbin.com/screens/1ba25802-c732-4774-8127-ca7029902f46"
+          },
+          {
+            "title": "Learning path home, Unit 10 (green)",
+            "why": "Best single reference for the modern path: sticky unit banner, activity-typed 3D nodes, review tooltip with XP bait ('Video Call: Lily — REVIEW +20 XP'), jump-back floating button, persistent streak in the top bar.",
+            "mobbin_url": "https://mobbin.com/screens/02544e61-aefd-4d89-815e-ffcc83d83539"
+          },
+          {
+            "title": "Korean path with active-node START ring",
+            "why": "Clearest view of the active-node treatment: tooltip + circular progress arc on the only colored node while everything ahead is gray — the focus mechanic LANGE should use to fill node rings with listening minutes.",
+            "mobbin_url": "https://mobbin.com/screens/d9341ae6-0104-4a77-80ab-c5d3d5e2a879"
+          },
+          {
+            "title": "Daily goal near-miss interstitial ('6 XP away')",
+            "why": "Near-miss framing with itemized earnings under a single chest-topped bar. LANGE should borrow the framing once per day, then deliberately invert the escalation with a warm 'good place to rest' close.",
+            "mobbin_url": "https://mobbin.com/screens/b09227b2-c18f-47a8-8f36-a065ea773d7c"
+          },
+          {
+            "title": "Daily Quests list with chest-terminated bars",
+            "why": "Reference for quest-row anatomy: icon + goal + fraction-inside bar + chest at the terminus, with an '8 HOURS' countdown and '1 out of 3 quests today' header — the template for LANGE's tending tasks.",
+            "mobbin_url": "https://mobbin.com/screens/48f5d484-e905-4e64-ae22-626b53a86b07"
+          },
+          {
+            "title": "'Daily Quests update!' minimal interstitial",
+            "why": "Shows only the bars that moved after a lesson, glowing dot animating the fill — proof that progress-bar motion alone carries the celebration. Cheap to build, high payoff on LANGE's dark canvas with neon glow.",
+            "mobbin_url": "https://mobbin.com/screens/8baf328b-3962-4419-a6dd-8eab51ed52e8"
+          },
+          {
+            "title": "847-day streak calendar with capsule runs",
+            "why": "Consecutive days fused into one flame-gradient capsule, plus 'Days practiced' / 'Freezes used' stat chips and a PERFECT badge — the model for LANGE's glowing vine calendar and shame-free forgiveness accounting.",
+            "mobbin_url": "https://mobbin.com/screens/801382ea-9bcc-4fd6-b461-a14b36161486"
+          },
+          {
+            "title": "Friends Quest with NUDGE and GIFT",
+            "why": "Cooperative shared bar with per-person contributions and two warm social actions — the closest existing pattern to a grower-nurturer shared goal, and evidence that co-op beats leaderboards for warmth.",
+            "mobbin_url": "https://mobbin.com/screens/487744f0-3ab6-4b38-b861-4d5b6a69cbaf"
+          },
+          {
+            "title": "Streak Society locked panel",
+            "why": "A long-horizon club gated at 7 days ('join the Streak Society and earn exclusive rewards') shown grayed-out in advance — visible-but-locked future status LANGE can mirror with phase-gated grower titles.",
+            "mobbin_url": "https://mobbin.com/screens/fbef2d10-7767-41e4-8a9f-825e022ead13"
+          },
+          {
+            "title": "Home calendar dropdown with next-milestone chip",
+            "why": "Tapping the flame reveals 'Current streak' and 'Next milestone: 3 days' chips above the month grid — the always-visible nearest-milestone pattern LANGE needs to make 1500 hours feel walkable.",
+            "mobbin_url": "https://mobbin.com/screens/95a35d2c-f86e-4e9b-a552-27c8602e4023"
+          }
+        ]
+      },
+      "mascots": {
+        "takeaways": [
+          "Duo's emotion set is a state machine, not decoration. Across just these screens he appears determined, sparkle-eyed, flexing-muscular, gold-glowing, dejected, anxious-chewing, demon-eyed, deflated, and as a crying ghost — and each pose is bound 1:1 to a system state (perfect score, streak fresh, streak at risk, streak dead 2 weeks). The home-screen widget even shifts its background color blue -> purple -> magenta -> red as streak danger rises, so the character's mood IS the status display.",
+          "Duolingo deliberately uses ONE mascot across 40+ courses. Language identity is carried by a tiny flag chip (see the lock-screen widget: French flag in the corner, Duo owning the rest). The 845-day guilt widget only works because it's the SAME face that has been with you for 845 days — attachment compounds in one character, which is exactly what an app-wide mascot swap would reset every time a grower switches languages.",
+          "The mascot never teaches; the cast does. Duo is meta (interviewer, cheerleader, guilt engine) while the target language is spoken exclusively by the supporting cast — 'Repeat after Falstaff', 'Respond to Lily', Lucy, Vikram, Junior. Exercises are literally titled with cast names, building parasocial familiarity, and Lily's deadpan personality is consistent from flat 2D lesson sprite to cinematic Video Call close-up.",
+          "Celebrations are the mascot breaking the frame: full-bleed crops with motion streaks ('Lesson complete!'), bursting through a badge (League MVP), and full palette swaps — Legendary turns the entire screen black with a gold-recolored Duo. The character itself is the reward asset; there are almost no trophies that aren't Duo in costume.",
+          "Character presence is rationed. In the onboarding flow Duo sits in a fixed top-left anchor with a speech bubble through every preference question, then VANISHES on the name/password/forms screens and returns for 'I'll cheer you on from your home screen!'. The mascot fronts moments of meaning and disappears during chores.",
+          "Failure is absorbed by the character, not pinned on the user: 'You didn't unlock French Foundations 1' shows Duo trudging off with a backpack while the copy says 'Don't worry! Practice makes perfect.' In-app Duo is never passive-aggressive — the guilt-trip register lives exclusively in widgets and notifications.",
+          "Copy and pose are authored as one unit: 'Go ahead, brag! 0 mistakes? You're really good at this.' only lands because Duo has starburst anime eyes; '2 weeks ghosted by you' only lands because Duo is drawn as a literal ghost. Mascot writing is art direction.",
+          "Finch shows the inverse model LANGE's growth metaphor wants: the companion grows BECAUSE of your effort — egg -> baby -> toddler stages gated on user actions ('Achieve 7 full-energy days'), with locked future appearance stages shown as silhouettes. That stage-gated, silhouette-roadmap growth maps almost 1:1 onto the six GPA phases."
+        ],
+        "patterns": [
+          {
+            "name": "Speech-bubble interviewer (mascot-led onboarding)",
+            "description": "Duolingo's onboarding anchors Duo top-left holding a clipboard and pencil, with a grey rounded speech bubble asking each setup question ('What would you like to learn?', 'What's your daily learning goal?'). The anchor position never moves while answer cards change below; the character exits entirely during account-credential forms and returns for the widget pitch. Yazio's yeti does the same with personalization ('Nice to meet you, Alex!').",
+            "apply_to_lange": "Make Nuri the onboarding interviewer: fixed top-left, chunky rounded violet card as the bubble (lime tail), asking language, daily minutes, and 'have you got a nurturer?'. Because GPA forbids text translation, Nuri's bubbles are also where you teach the method's rules in the app's own voice ('We listen before we speak — no reading, no translating'). Drop Nuri off any email/password screen, and bring it back to hand off to the chosen language sibling at the end."
+          },
+          {
+            "name": "Emotion as state machine + color-temperature shift",
+            "description": "Duo's streak widgets codify a discrete emotion ladder: flexing with sweatband (early streak, blue bg), hugging the flame (healthy, warm purple), anxious chewing (at risk, purple), demon-red glowing eyes / deflated lying down ('Last chance!', red bg), crying ghost ('2 weeks ghosted by you', cold blue). Background color and character pose move together as one status system.",
+            "apply_to_lange": "Nuri is a sprout — it has a built-in, gentler neglect vocabulary than Duo's rage: perky leaves -> drooping -> wilted -> dried out. Keep the near-black violet canvas constant and shift the NEON RIM-GLOW instead of the background: lime glow (practiced today), orange glow (haven't listened yet), magenta glow (streak dying). Wilting reads as 'water me' rather than 'I'm furious', which fits GPA's nurture framing, and neon rim-light on a dark canvas is exactly LANGE's aesthetic."
+          },
+          {
+            "name": "Mascot meta, cast diegetic (the Duolingo split)",
+            "description": "Duo never speaks French at you. The target language comes only from named cast members with strong silhouettes and fixed personalities — bear Falstaff ('Repeat after Falstaff'), goth Lily ('Respond to Lily', half-lidded deadpan everywhere from lesson sprite to full-screen Max Video Call with fireworks out the window), grandma Lucy, Vikram. Exercise titles use their names; the Max roleplay drops Lily into a full cafe scene with free text response.",
+            "apply_to_lange": "This is the strongest argument for restructuring 'one mascot per language': don't make the siblings app-chrome — make them diegetic. Nuri (meta) runs streaks, celebrations, and onboarding in ALL languages; each language gets a small recurring cast of picture-card people/AI-nurturer personas who only ever speak the target language. Name your listening sets after them ('Listen with Amara') so growers build familiarity with voices, which is literally the GPA goal."
+          },
+          {
+            "name": "Frame-breaking celebration + palette-swap rewards",
+            "description": "Duo's win screens crop the character past the screen edges with a diagonal motion-streak band and sticker-style white outline ('Lesson complete!'), morph his body (flexing muscles + medal for 'Match complete!'), give him starburst eyes with cheeky copy ('Go ahead, brag!'), and for Legendary swap the whole screen to black with a gold-recolored Duo under a radial glow. Stat chips (XP / accuracy / time) sit in three colored outline cards below the character.",
+            "apply_to_lange": "LANGE is already dark, so the 'Legendary black screen' trick is your default canvas — lean into palette-swap Nuris as the reward tier: lime-neon Nuri for a completed listening set, gold Nuri for finishing a GPA phase, with a radial violet-to-black glow. Use full-bleed crops and a diagonal orange motion streak for ordinary session-complete. Keep the 3-chip stat row (minutes listened / cards mastered / streak) in violet/orange/lime outline cards under the character."
+          },
+          {
+            "name": "Companion that grows on your effort (Finch model)",
+            "description": "Finch's bird evolves egg -> baby -> toddler through quests gated on user behavior ('Evolve Lee into Toddler — achieve 7 full-energy days'), shows locked future growth stages as silhouettes in the appearance screen, lives in a home scene, and gains energy from the user completing their own goals — care is inverted: you do the work to grow the creature.",
+            "apply_to_lange": "This converts 'one mascot per language' from identity-swap into a garden: each language is a PLANT companion that grows through the six GPA phases (Phase 1 seedling -> Phase 6 flowering tree), with future phases shown as locked silhouettes — a literal roadmap of the Growing Participator journey. Your Spanish plant and your Japanese plant grow at different rates; Nuri is the constant gardener tending all of them. Listening minutes water the plant. This is the most research-true reading of GPA's own metaphor."
+          },
+          {
+            "name": "Mascot owns the dead air (loading, empty, failure)",
+            "description": "Duo's loading screens are a tiny whistling Duo with a music note over rotating fact lines; the Stories empty state shows Duo reading a book — the character demonstrates the activity the screen is waiting for. Speak's blue robot peeks over the top edge of the lesson-generation card; Hinge's mascot shows only its eyes over the fold. Failure screens show dejected Duo walking off with consoling copy.",
+            "apply_to_lange": "Give Nuri an idle loop (leaf bobbing, humming) for audio pre-loading, and make every empty state Nuri doing the thing: headphones on in an empty listening library, sorting picture cards in an empty deck. Steal the 'peek over the card edge' trick for AI-nurturer generation waits — on a dark UI, two glowing eyes over a violet card is cheap and charming. On a failed comprehension check, show wilted-but-recovering Nuri and copy that blames the seed, never the grower ('Not rooted yet — let's listen again')."
+          }
+        ],
+        "notable": [
+          {
+            "title": "Duolingo — Legendary: full palette-swap gold Duo on black",
+            "why": "Proves mascot-on-dark works beautifully and that recoloring the mascot itself is the reward — directly transferable to LANGE's near-black violet canvas with gold/neon Nuri tiers.",
+            "mobbin_url": "https://mobbin.com/screens/5f698e13-7b77-4a3f-813f-f06e5ee279c8"
+          },
+          {
+            "title": "Duolingo — '2 weeks ghosted by you' ghost-Duo widget",
+            "why": "The most extreme example of emotion-as-state-machine: lapse length changes the character's literal species. Shows how far pose+copy+color can encode system state.",
+            "mobbin_url": "https://mobbin.com/screens/4336d2a4-365d-4d06-a380-b2836ff5f5f2"
+          },
+          {
+            "title": "Duolingo — demon-eyed red 847-day streak widget",
+            "why": "The guilt endpoint of the widget ladder, and the strongest evidence that attachment must compound in ONE stable face — an app-wide mascot swap per language would break this loop.",
+            "mobbin_url": "https://mobbin.com/screens/7d0f39fd-a349-4ef0-9a3b-d907200515fa"
+          },
+          {
+            "title": "Duolingo — 'Repeat after Falstaff' cast-led speaking drill",
+            "why": "Exercise titled with a cast member's name; the mascot is absent. The cleanest demonstration of the meta/diegetic split LANGE should copy for nurturer personas.",
+            "mobbin_url": "https://mobbin.com/screens/68634e56-78f8-484d-aedb-a2cb6117d216"
+          },
+          {
+            "title": "Duolingo Max — Lily video call, cinematic close-up",
+            "why": "A flat lesson sprite scaled to a full-screen conversation partner with camera language (window, fireworks, CC button) — the ceiling for what an AI nurturer persona screen can be.",
+            "mobbin_url": "https://mobbin.com/screens/28505b1e-64a4-4607-aee8-4983e90ee49b"
+          },
+          {
+            "title": "Duolingo — 'Go ahead, brag!' starburst-eyes perfect score",
+            "why": "Copy and pose authored as one unit, plus the 3-chip stat row layout worth lifting wholesale for LANGE session-complete screens.",
+            "mobbin_url": "https://mobbin.com/screens/854f4d63-c283-41d8-862e-8034d4b7e6a9"
+          },
+          {
+            "title": "Duolingo — 'Lesson complete!' full-bleed motion-streak Duo",
+            "why": "Frame-breaking crop + diagonal speed band + sticker outline = celebratory energy with one static asset. Cheap to reproduce with Nuri on dark.",
+            "mobbin_url": "https://mobbin.com/screens/b2f67911-aff3-46eb-a7b5-e2055efb1772"
+          },
+          {
+            "title": "Duolingo — onboarding flow with Duo as persistent interviewer",
+            "why": "Full 20-screen flow showing the fixed top-left mascot anchor, speech-bubble questions, the exit during credential forms, and the 'I'll cheer you on from your home screen' widget pitch.",
+            "mobbin_url": "https://mobbin.com/flows/b0b4f93f-5637-46ec-9d77-49ecda6b991d"
+          },
+          {
+            "title": "Finch — 'Evolve Lee into Toddler' growth quest",
+            "why": "Companion growth gated on user effort with explicit progress bars — the mechanic to power per-language plant companions that grow through GPA phases.",
+            "mobbin_url": "https://mobbin.com/screens/84e8f220-03a6-432a-8e95-9da55e87d860"
+          },
+          {
+            "title": "Finch — locked growth stages shown as silhouettes",
+            "why": "A silhouette roadmap of future evolution stages — the exact UI for previewing GPA Phases 1-6 as a plant's growth arc per language.",
+            "mobbin_url": "https://mobbin.com/screens/fcb84df8-5abf-430a-887c-5e293655d230"
+          },
+          {
+            "title": "Speak — robot mascot peeking over the lesson-generation card",
+            "why": "Minimal, charming loading-state mascot use (just head and hands over the card edge) — ideal low-cost pattern for LANGE's AI-nurturer generation waits.",
+            "mobbin_url": "https://mobbin.com/screens/4f4cad1c-c29a-48d7-b3ac-6524ff40d44d"
+          },
+          {
+            "title": "Duolingo — Stories empty state, Duo reading a book",
+            "why": "Empty state = character demonstrating the activity. Template for every empty library/deck screen in LANGE.",
+            "mobbin_url": "https://mobbin.com/screens/58194859-0d5d-4d7f-8260-f3fc3aaf9bd2"
+          },
+          {
+            "title": "Duolingo — year-in-review Duo from behind under spotlight",
+            "why": "Rare subdued register: 'You put in the work. It shows.' Proof a playful mascot can also carry quiet, earned moments — useful for GPA phase-completion reflection screens.",
+            "mobbin_url": "https://mobbin.com/screens/1ba1889c-150a-4241-ae78-4a757d3e551c"
+          }
+        ]
+      },
+      "onboarding": {
+        "takeaways": [
+          "Duolingo never renders a question as a static form header: Duo sits top-left and asks every question in a white speech bubble, and the bubble REACTS to the previous answer — pick 'Support my education' and the next screen opens with 'Let's ace those tests!'. The form behaves like a conversation that listened.",
+          "Answer options carry identity, not just data. Daily-goal rows pair '10 min / day' with right-aligned persona labels (Casual / Regular / Serious / Intense), and the CTA mutates from CONTINUE to 'I'M COMMITTED' — the button itself is the commitment device, signed in first person.",
+          "Question copy injects earlier answers ('Why are you learning Vietnamese?'), proving by screen three that the app remembered screen one. Cheap to build, disproportionate emotional payoff.",
+          "Risky choices get de-risked by the character, not body text: a sweatband-wearing jogging Duo says 'You can always change goals later,' and a cyan RECOMMENDED pill sits on the safe card ('Start from scratch'). Reassurance is staged as a friend's aside plus a badge.",
+          "Both Duolingo and Speak end personalization on a future-payoff screen, not a summary: Duolingo lists 'Here's what you can achieve in 3 months!' as three icon+benefit rows; Speak draws an exponential blue curve over a flat 'book' curve, captioned with the user's own goal ('In two months, you'll be able to communicate while traveling in France'). The climax is a promise.",
+          "Full-bleed mascot interstitials ('Now let's help you build a habit of practicing every day.') punctuate the 20-screen flow every 3-4 inputs — zero inputs on those screens, just character + one line. They function as chapter breaks and micro-celebrations so the run never reads as a survey.",
+          "Locals shows the dark-mode pattern LANGE should steal directly: on a near-black canvas, checked languages float to the top of the list with sparkle glyphs beside them, and the yellow pill CTA counts selections ('Continue with 2 languages').",
+          "One thin progress bar persists across the entire onboarding and visibly advances with every tap — even permission asks (widget: 'I'll cheer you on from your home screen!') are framed as forward motion by the mascot rather than interruptions."
+        ],
+        "patterns": [
+          {
+            "name": "Mascot-as-interviewer",
+            "description": "Every question screen shares one template: mascot avatar pinned top-left under the progress bar, a rounded speech bubble containing the question, then a stack of big rounded option rows. The mascot is the questioner, never a decoration; there is no separate heading text.",
+            "apply_to_lange": "Make Nuri ask every onboarding step. Replace the current step headers with Nuri's sprout-bot head in the top-left and a violet-tinted rounded bubble on the near-black canvas ('What should I call you?', 'Which language are we growing?'). For the nurturer branch, swap Nuri's pose (e.g., holding a watering can) so the two roles feel like different conversations with the same friend."
+          },
+          {
+            "name": "Reactive echo copy",
+            "description": "The mascot's bubble changes based on the prior answer (choose 'education' → 'Let's ace those tests!'), and later question text injects earlier selections ('Why are you learning Vietnamese?', 'How much French do you know?').",
+            "apply_to_lange": "After the grower picks a target language, Nuri's next bubble greets them with a real spoken greeting in that language (audio + waving animation, no romanized text — perfectly on-method for GPA's no-translation rule). The known-languages step should read 'Got it, Jacken — we'll grow your Korean from English.' Name, language, and role are already collected; echo all three."
+          },
+          {
+            "name": "Identity-labeled choices with a commitment CTA",
+            "description": "Duolingo's goal picker pairs each duration with a persona label right-aligned in the row (5 min = Casual … 20 min = Intense), and the confirm button reads 'I'M COMMITTED' instead of Continue. A second screen later asks users to 'Commit to my goal' on a streak target while Duo holds a flame.",
+            "apply_to_lange": "Add one new step after immersion: 'How often will you water your Korean?' with rows like 10 min = Seedling, 20 min = Sprout, 40 min = Grove — labels in lime #b8f03c, row highlight in violet glow on selection. Make the CTA an orange #ff8a1e pill reading 'I'm growing' — first-person pledge, on-brand verb."
+          },
+          {
+            "name": "Future-payoff projection",
+            "description": "A pre-finish screen converts the collected answers into a personalized promise: Duolingo's 'Here's what you can achieve in 3 months!' (three icon + bold title + subtitle rows); Speak's chart screen with an exponential curve labeled with the user's stated goal, beating a flat 'textbook' curve.",
+            "apply_to_lange": "Close onboarding with 'Here's your first 6 weeks of growing Korean': three rows themed to GPA outcomes (understand ~300 spoken words, follow picture stories by ear, zero translation needed) or a lime growth curve rising off the near-black canvas with GPA phase names as milestone dots. This is also LANGE's chance to sell why no-text immersion wins — curve A 'growing like a child' vs flat curve B 'memorizing flashcards.'"
+          },
+          {
+            "name": "Mascot interstitial micro-celebrations",
+            "description": "Between question clusters, a full-bleed screen with only the mascot and one line of speech ('Nice job! Now let's build a habit of practicing every day.'). Also used to deliver personalized results in character ('Since you know a few words, let's start at Score 10!').",
+            "apply_to_lange": "After the target-language pick, insert a full-screen beat: Nuri sprouts a third leaf with a small confetti burst in violet/orange/lime and says one line. Better: make Nuri's head-sprout literally gain a leaf per completed step, so the mascot is the progress indicator — then 'plant the seed' on the final screen as the handoff into the first picture-card session."
+          },
+          {
+            "name": "Inline reassurance at the scary step",
+            "description": "At decision points with perceived risk, Duolingo attaches a character aside ('You can always change goals later' from a jogging Duo at the bottom of the screen) and a small cyan RECOMMENDED pill on the safe option card.",
+            "apply_to_lange": "LANGE's scariest moment is the immersion toggle — 'no translations' sounds like a threat to newcomers. Render it as two cards, put a lime RECOMMENDED chip on full immersion, and have a small Nuri at the bottom say 'Full immersion is how babies do it — you can soften this anytime.' Converts the app's most alienating setting into its proudest feature."
+          },
+          {
+            "name": "Dark multi-select with floating selections and a counting CTA",
+            "description": "Locals' 'What languages do you speak?' on a pure dark canvas: checked items jump above the alphabetical list with white check circles and sparkle glyphs; the bottom pill CTA reads 'Continue with 2 languages' and updates live.",
+            "apply_to_lange": "Drop-in upgrade for the known-languages step — it is already the right palette. Selected language rows float to the top with a violet #7c5cff glow and a tiny sparkle, unselected rows stay dim; the CTA pill counts live ('Continue with 2 languages'). The float-to-top motion is the micro-celebration; no extra screen needed."
+          },
+          {
+            "name": "One persistent progress bar across the whole flow",
+            "description": "A single thin rounded bar under the status bar fills continuously across all ~20 Duolingo onboarding screens; every answer, interstitial, and permission ask advances it, framing the entire run as one journey.",
+            "apply_to_lange": "Replace any per-step indicators with one growing element across role → name → language → known languages → immersion → goal → payoff. On-brand version: a thin lime vine that extends and pops a tiny leaf at each completed step — the same growth metaphor as Nuri and the GPA 'growing participator' language, visible from the first tap."
+          }
+        ],
+        "notable": [
+          {
+            "title": "Duolingo — motivation question with reactive Duo bubble ('Let's ace those tests!')",
+            "why": "The clearest single example of the mascot-as-interviewer + reactive echo combo: emoji-led option rows, selected row in tinted blue, and a speech bubble that responds to the previous answer.",
+            "mobbin_url": "https://mobbin.com/screens/477d39a8-ab35-486a-8c90-df3bcf3744ff"
+          },
+          {
+            "title": "Duolingo — daily goal with persona labels and 'I'M COMMITTED' CTA",
+            "why": "Identity-labeled choices (Casual→Intense) plus the CTA-as-pledge. The single highest-leverage copy trick to port to LANGE's goal step.",
+            "mobbin_url": "https://mobbin.com/screens/6acc243d-f046-49fc-9663-329f7d359a0a"
+          },
+          {
+            "title": "Duolingo — 'Why are you learning Vietnamese?'",
+            "why": "Answer injection into question copy — proof the app remembered, three screens in.",
+            "mobbin_url": "https://mobbin.com/screens/72cde60b-12bb-4ba4-9947-6f14f9e3c7d4"
+          },
+          {
+            "title": "Duolingo — 'Help us find your level' with two Duo costume variants",
+            "why": "Options personified by mascot variants (fresh-faced Duo vs graduation-cap Duo) — a model for letting Nuri poses embody grower vs nurturer or beginner vs experienced.",
+            "mobbin_url": "https://mobbin.com/screens/43da02c8-a3f0-4726-8508-4a6ec62c948f"
+          },
+          {
+            "title": "Duolingo — 'Pick a goal' with jogging Duo reassurance",
+            "why": "Anxiety-reduction staged as a character aside ('You can always change goals later') at the exact moment of commitment.",
+            "mobbin_url": "https://mobbin.com/screens/b635d38c-564c-45c5-95bd-71c1ec56d876"
+          },
+          {
+            "title": "Duolingo — 'Here's what you can achieve in 3 months!'",
+            "why": "The canonical future-payoff screen: three icon+benefit rows as the emotional climax before signup.",
+            "mobbin_url": "https://mobbin.com/screens/831ec4df-3eca-46bb-9d33-b3f00311c28b"
+          },
+          {
+            "title": "Speak — two-month projection curve personalized to the user's goal",
+            "why": "Payoff projection as a chart: exponential 'speak' curve beats flat 'book' curve, captioned with the user's own stated goal. Direct template for selling GPA immersion visually.",
+            "mobbin_url": "https://mobbin.com/screens/b87fa9ce-6c41-4fa5-9086-9bc6f263a880"
+          },
+          {
+            "title": "Locals — dark-mode 'What languages do you speak?' multi-select",
+            "why": "The aesthetic twin of LANGE: near-black canvas, selections float to top with sparkles, CTA counts selections live. Drop-in pattern for the known-languages step.",
+            "mobbin_url": "https://mobbin.com/screens/f35fe4e8-ca4a-4df0-b2a2-1603e97a57ea"
+          },
+          {
+            "title": "Duolingo — 'RECOMMENDED' pill on the safe starting option",
+            "why": "Tiny badge that removes decision paralysis on a two-card choice — exactly what LANGE's immersion toggle needs.",
+            "mobbin_url": "https://mobbin.com/screens/dc458c14-804c-47e6-9dd7-c3c1068ec30d"
+          },
+          {
+            "title": "Duolingo — full 20-screen onboarding flow (interstitials, streak commitment, widget pitch, 'Score 10' placement)",
+            "why": "Shows the whole arc and pacing: question clusters broken by mascot interstitials, a personalized placement result delivered in character, and permission asks framed as Duo favors ('I'll cheer you on from your home screen!').",
+            "mobbin_url": "https://mobbin.com/flows/ac9d2f58-868d-4fd3-a79c-9655ce6b1522"
+          },
+          {
+            "title": "Speak — onboarding flow with mid-flow social proof testimonials",
+            "why": "Five-star learner quotes inserted between personalization questions ('Our users agree — here's how Speak helped') — an emotional-commitment beat LANGE could fill with grower/nurturer stories.",
+            "mobbin_url": "https://mobbin.com/flows/60e05ece-3567-4ad8-9dbe-577de850a017"
+          },
+          {
+            "title": "Duolingo — language picker grouped 'For English speakers' with flag chips",
+            "why": "Language selection framed relative to what the user already speaks — relevant to LANGE since GPA explicitly grows the new language out of the known ones.",
+            "mobbin_url": "https://mobbin.com/screens/64a19efc-ba60-44ee-afd2-f8a7e4a59044"
+          }
+        ]
+      },
+      "cards": {
+        "takeaways": [
+          "Duolingo's dark-mode 'Select the correct image' (lemon/sugar/honey/salt) is proof the LANGE formula works: near-black canvas, tiles one step lighter with hairline borders, and ALL color lives in the flat illustration — no outlines, 2-4 saturated shades per object, white reserved for highlights. The art reads like neon without any glow effects.",
+          "Audio is rendered as a tangible object, not an invisible action: Duolingo's match-pairs listening chips show a speaker icon + a frozen blue waveform inside a card, so 'a sound' becomes something you can pick up and match. This is the missing affordance for a no-text app — LANGE can treat the waveform chip as the second card face wherever other apps would show a word.",
+          "Drops gets perfect visual consistency across thousands of cards by constraint, not curation: every illustration is white + a translucent tint of the session's single background color (duotone), drawn as bold silhouettes. Any subject — dog, bank, family photo — automatically matches because the palette is mathematically locked to the theme.",
+          "CapWords' sticker die-cut is the best single trick for AI-generated card batches: every subject (cartoon flower, real photo of a woman, ice-cream photo) gets a thick uniform white outline + soft drop shadow, which normalizes wildly different renders into one 'sticker collection' style. Style drift between generations stops mattering.",
+          "Matched/answered items fade to ghost-gray but never disappear (Duolingo match pairs), preserving the player's spatial memory of the grid; selection is always a tint + border swap, never a size change, so the grid never reflows mid-game.",
+          "Correct/incorrect feedback never navigates away: a colored bottom sheet ('Nice!' / 'Awesome!' + Continue) slides over the same screen while sparkle accents fire on the winning tile only. The card you just answered stays visible — one extra beat of picture+meaning exposure, which is exactly what GPA wants.",
+          "Drops encodes 'comprehension before production' as an interaction grammar: tap-the-right-picture → swipe yes/no (X / check circles) → drag word-bubble onto floating images → only then spell/speak. The picture stays on screen as the anchor through every stage — and CapWords gates speaking behind an explicit 'Hold to speak' mic, a separate deliberate act.",
+          "Encouragement beats penalty UI in card apps: CapWords slides a white note over a skipped card ('You've got this — this word will stay in your practice list'), and Preply shows the SRS contract visually (8 correct in a row → 'Learned' arc). Both make the algorithm feel like a patient nurturer rather than a judge — directly on-brand for LANGE."
+        ],
+        "patterns": [
+          {
+            "name": "2x2 image-choice grid with audio prompt (dark mode)",
+            "description": "Duolingo dark mode: prompt row at top (speaker button in a rounded square + the word), then a 2x2 grid of large rounded-rect tiles, each with a centered flat illustration and a small caption below. Correct tile gets a lime border + lime caption + corner sparkles; a green bottom sheet ('Awesome!') slides up with Continue. Tiles are a slightly lighter dark gray than the canvas with 1px borders.",
+            "apply_to_lange": "This is LANGE's core comprehension game almost verbatim — minus all text. Prompt row becomes a big violet #7c5cff speaker pill (replayable, with Nuri peeking beside it); tiles are #1c1530-ish cards on the near-black violet canvas with hairline violet borders; captions are deleted entirely (GPA: no text). Correct = lime #b8f03c border + sparkle burst on that tile only, wrong = brief orange #ff8a1e shake. Keep the bottom-sheet feedback so the picture stays on screen during the celebration."
+          },
+          {
+            "name": "Audio-as-object waveform chips",
+            "description": "Duolingo's listening match: left column of cards each containing a blue speaker icon + a static waveform squiggle, right column of word cards. Tapping a chip plays the audio and tints the card blue; matched pairs flash green then fade to ghost-gray, staying in place.",
+            "apply_to_lange": "LANGE's no-text replacement for word-text cards everywhere: a chip = speaker icon + chunky waveform in one of the three accents. Game becomes 'match the nurturer's voice to the picture' — waveform chips in one column, picture cards in the other. Give each chip a distinct accent-colored waveform so growers can track which sound they already played. Matched pairs dim to 30% opacity but never vanish."
+          },
+          {
+            "name": "Tone-on-tone topic theming with duotone cards",
+            "description": "Drops gives each session one saturated background color; the card is a slightly darker rounded rect of the same hue; illustrations are white + a translucent tint of the background. The result feels like a single-color 'room' per topic, and every illustration matches by construction.",
+            "apply_to_lange": "Map LANGE's three accents to activity types or GPA phases: violet rooms for listen-and-point, orange for sorting/TPR-style games, lime for review. Generate (or recolor) card art as white-on-transparent monochrome silhouettes and tint them per room — this makes AI-art consistency trivial (only the silhouette matters, the palette is applied by CSS/canvas). Reserve full-color sticker art for the 'collection' views so duotone gameplay cards feel fast and full-color stickers feel like rewards."
+          },
+          {
+            "name": "Swipe-to-sort comprehension card",
+            "description": "Drops intro card: word+illustration centered, swipe up toward an eye-slash icon = 'HIDE', swipe down toward an open-head icon = 'LEARN', with thin arrows labeling both targets. The yes/no variant shows a picture+word pair with two thin outlined circles below — X or check — joined by 'or'.",
+            "apply_to_lange": "Perfect for LANGE's self-assessment loop: audio plays, picture shows, grower swipes toward Nuri ('got it' — Nuri's sprout leaves perk up) or toward a replay zone ('hear it again'). The Drops X/check circles become LANGE's true/false listening game: nurturer audio says a word, one picture shows, grower taps check if they match. Zero text, two targets, one-thumb play."
+          },
+          {
+            "name": "Sticker die-cut card + physical deck stacking",
+            "description": "CapWords: subject is die-cut with a thick uniform white outline and drop shadow, placed on a speckled solid-color card; word + phonetics below. Behind the active card, the next cards peek out rotated and offset in different accent colors, like a held deck; progress reads '2/4' on top.",
+            "apply_to_lange": "Adopt the die-cut outline as LANGE's art-normalization layer: post-process every AI-generated illustration with an automated ~8px light cutout stroke + soft shadow, so hundreds of generations read as one sticker set and pop hard against the dark canvas. Stack the upcoming cards behind the active one, alternating violet/orange/lime card backs with subtle speckle texture — instantly communicates 'deck of picture cards', the literal GPA toolkit object."
+          },
+          {
+            "name": "Arcade match mode with combo + milestone progress",
+            "description": "Duolingo Match Madness: segmented progress bar with milestone numbers (5/10/20/40), a 'COMBO X8' badge with bolt icon, countdown timer top-right that turns red under a minute, and a streak banner ('3 IN A ROW') replacing the header.",
+            "apply_to_lange": "LANGE's optional review arcade for later phases: picture-to-audio matching against a clock, combo counter in orange #ff8a1e that makes Nuri's sprout glow brighter per combo level, lime milestone notches on the progress bar. Keep it out of Phase 1 (GPA early phases should be pressure-free) and frame the timer as a 'growth sprint' unlockable once words are already comprehended."
+          },
+          {
+            "name": "Transparent, gentle SRS messaging",
+            "description": "Preply shows the mastery contract as a visual arc (4→5→6→7→8 → 'Learned') in a dismissible sheet; CapWords slides a white note over a skipped card — '💪 You've got this! Take your time, this word will stay in your practice list' — plus a 'Skip for now' ghost button; Babbel's session summary lists Incorrect and Correct words as tappable speaker-chips for replay.",
+            "apply_to_lange": "Voice these moments through Nuri as the nurturer-bot: a skipped card slides a small note from Nuri ('No rush — this one will sprout later') and the card visibly slips back into the deck instead of disappearing. Session recap = two rows of audio chips (replay-only, no text): lime chips for understood words, orange for 'still growing'. Show a simple seed→sprout→leaf→flower arc per word instead of Preply's number streak — same SRS transparency, in LANGE's growth metaphor."
+          }
+        ],
+        "notable": [
+          {
+            "title": "Duolingo — Select the correct image, dark mode",
+            "why": "The single most LANGE-relevant screen found: a 2x2 picture-choice exercise on a near-black canvas where flat saturated illustrations (lemon, sugar box, honey jar) carry all the color and read like neon. Demonstrates correct-answer treatment (lime border + corner sparkles + green bottom sheet) without leaving the screen.",
+            "mobbin_url": "https://mobbin.com/screens/3178b87a-eefb-4ea7-8516-d132709513d3"
+          },
+          {
+            "title": "Duolingo — Audio waveform match pairs",
+            "why": "Shows audio rendered as a matchable object: speaker icon + static waveform inside a card. This is the template for every place LANGE must replace word-text with sound, and includes the 'Can't listen now' escape hatch at the bottom.",
+            "mobbin_url": "https://mobbin.com/screens/a99d75d5-8b49-4279-a922-7aaf550be73d"
+          },
+          {
+            "title": "Duolingo — Select the correct image (park / doctor / teacher / movie theater)",
+            "why": "Best reference for illustration complexity ceiling: even 'scenes' (a park, a theater) are compressed into one centered symmetrical motif with 3-4 flat colors and zero outlines, still legible at thumbnail size. Defines how far LANGE's AI art prompts can push scene words.",
+            "mobbin_url": "https://mobbin.com/screens/e0da7fb9-980e-46b7-9765-560ce7e6d978"
+          },
+          {
+            "title": "Drops — Swipe card with X/check (le chien)",
+            "why": "Drops' whole system in one screen: tone-on-tone blue card on blue canvas, white duotone dog silhouette, word below, thin outlined X-or-check circles, topic + '5/14' progress in a slim bottom bar. The constrained duotone palette is the cheapest path to consistency across hundreds of AI-generated cards.",
+            "mobbin_url": "https://mobbin.com/screens/b774dae4-c827-414c-bd02-78751bfde5f4"
+          },
+          {
+            "title": "Drops — Drag word onto floating image circles",
+            "why": "Chrome-free matching: outlined circles containing duotone illustrations float on the canvas and the word-bubble is dragged onto the right one. For LANGE this becomes drag-the-audio-bubble onto the right picture — playful, physical, textless.",
+            "mobbin_url": "https://mobbin.com/screens/4d721edb-ffe9-4ac5-9f53-d062984b3c2e"
+          },
+          {
+            "title": "Drops — Hide / Learn swipe intro",
+            "why": "A two-direction swipe with labeled icon targets (eye-slash up = hide, open-head down = learn) that lets learners curate their own deck mid-session. Maps directly to a grower telling Nuri 'got it' vs 'play it again' without any text input.",
+            "mobbin_url": "https://mobbin.com/screens/ab072212-9d34-481a-a6ee-58bb36dec254"
+          },
+          {
+            "title": "CapWords — Sticker flashcard deck (cornet de glace)",
+            "why": "The art-direction unlock: a photoreal ice cream die-cut with a thick white sticker outline sits on a speckled card and still feels cohesive next to cartoon stickers. Also shows deck stacking (rotated colored cards peeking behind) and 'Hold to speak' production gating.",
+            "mobbin_url": "https://mobbin.com/screens/5e470252-8072-4fec-96ce-6e099bc776bd"
+          },
+          {
+            "title": "CapWords — Encouragement insert on skipped card",
+            "why": "Warmest failure-state in the corpus: a white note slides over the card — 'You've got this! Take your time, this word will stay in your practice list' — with a 'Skip for now' ghost button. The exact nurturer tone LANGE should give Nuri for SRS moments.",
+            "mobbin_url": "https://mobbin.com/screens/63161279-c356-427a-b4b4-0df679f77438"
+          },
+          {
+            "title": "Memrise — Native-speaker video card",
+            "why": "A real human toasting on video as the card face with the phrase overlaid. Argues for a premium LANGE card tier where nurturer-recorded video replaces illustration — the strongest possible comprehension input under GPA, since gesture and context ride along with the audio.",
+            "mobbin_url": "https://mobbin.com/screens/7a3f0273-9cd2-4596-a93b-af8245eaa82a"
+          },
+          {
+            "title": "Babbel — Reviewing a lesson (flow)",
+            "why": "End-to-end review session worth studying for LANGE's recap: photo flashcards, then a summary that splits Incorrect/Correct into tappable speaker-chips for instant audio replay — an audio-first session recap that needs no translations.",
+            "mobbin_url": "https://mobbin.com/flows/78c61a08-f401-4bf0-a9fc-21caf3b675d4"
+          },
+          {
+            "title": "Duolingo — Match Madness combo mode",
+            "why": "The arcade layer: combo multiplier badge, milestone-segmented progress (5/10/20/40), red countdown. Reference for a late-phase LANGE 'growth sprint' review mode once comprehension is established.",
+            "mobbin_url": "https://mobbin.com/screens/5da952d5-cf7f-494e-b276-bd46beef1989"
+          }
+        ]
+      }
+    },
+    "naming": {
+      "concept_verdict": "A per-language mascot family is a proven, commercially validated pattern — greenlight the concept. Duolingo's expansion from one owl to a cast (Duo, Lily, Zari, Lin, Falstaff) is the closest comp: character-led content earns ~3.5x the engagement rate of rival language apps on TikTok, and the Lily-only series \"Living With Lily\" pulled 10.5M views and ~100k new followers (adweek.com, rivaliq.com). Sanrio (450+ characters; Hello Kitty at ~$84B all-time, the #2 media franchise ever) and LINE Friends/BT21 (140+ stores across 12 markets) prove a same-universe character family scales into merchandise and brand love. One caveat from the Duolingo playbook: variants should get distinct personalities and silhouettes (accessory, posture, quirk), not just palette swaps — that's what makes each character independently meme-able. Name-wise, 7 of 9 pass clean; 1 needs a tweak (Brote → Brotito/Retoño) and 1 must change (Rostik collides with Rostic's, now Russia's largest fast-food chain).",
+      "name_checks": [
+        {
+          "lang": "English/default",
+          "name": "Nuri",
+          "ok": true,
+          "notes": "Clean everywhere checked. Real given name meaning 'my light' (Turkish/Arabic), 'world' (Korean); Korea's national space rocket is also Nuri — all positive or neutral associations. In Indonesian 'nuri' means parrot, which is harmless-to-cute. No competing famous mascot found."
+        },
+        {
+          "lang": "Spanish",
+          "name": "Brote",
+          "ok": false,
+          "notes": "The botanical meaning 'sprout' is real, but in contemporary Spanish the word's dominant collocations are clinical: 'brote' = disease outbreak ('brote de COVID', brote epidémico — see RAE/Collins and es.wikipedia.org/wiki/Brote_epidémico) and 'brote psicótico' = psychotic episode, a household phrase (lanacion.com.ar, psicologiaymente.com). Post-pandemic, an unprompted 'Brote' reads 'outbreak/episode' before 'sprout'. Not obscene, and the cute sprout visual disambiguates, but it's needlessly confusing.",
+          "replacement": "Brotito (affectionate diminutive — keeps the sprout root, kills the clinical reading, fits the cute register) or Retoño ('sprout/offspring'; 'mi retoño' is a tender term for one's little one)."
+        },
+        {
+          "lang": "French",
+          "name": "Brin",
+          "ok": true,
+          "notes": "Clean. 'Brin' = sprig/blade ('brin d'herbe', 'brin de muguet'), and the idioms are all warm or poetic: 'un brin de' = a little bit of, 'un brin de causette' = a friendly chat, 'un beau brin de fille' is a compliment (Le Robert, Collins, Lawless French). No negative slang found. Sergey Brin name overlap is neutral and won't register for a sprout character."
+        },
+        {
+          "lang": "German",
+          "name": "Sprossi",
+          "ok": true,
+          "notes": "Clean. 'Spross' = shoot/sprout and figuratively an affectionate 'offspring/scion' (Duden, DWDS); the -i ending is the standard German cute-nickname pattern (Schatzi, Hasi). Secondary meanings of 'Sprosse' (ladder rung, bean sprouts) are harmless. No famous competing brand or mascot named Sprossi found."
+        },
+        {
+          "lang": "Italian",
+          "name": "Gemma",
+          "ok": true,
+          "notes": "Passes, with one conscious-decision flag. In Italian botany 'gemma' is literally the bud, and it's a beloved classic given name (Saint Gemma Galgani). No negative meanings. The flag: Google's open AI model family is named Gemma (deepmind.google/models/gemma), so in an AI-flavored app, tech-aware users may briefly think of Google's LLM — confusing but not damaging, and the consumer audience mostly won't. If you want full distance, 'Gemmina' or a Germoglio-derived name works, but Gemma is the warmer, more nameable choice."
+        },
+        {
+          "lang": "Portuguese",
+          "name": "Broto",
+          "ok": true,
+          "notes": "Passes. 'Broto' = sprout, and the BR slang meaning is affectionate, not embarrassing: 1950s-60s gíria for a cute/attractive young person ('broto legal', also 'brotinho'; qualeagiria.com.br, Priberam). The slang is dated/retro-charming and still playfully understood — a flirty-cute connotation that suits a mascot. Unlike Spanish, Portuguese does NOT use 'broto' for disease outbreaks (that's 'surto'), so the Spanish problem doesn't carry over."
+        },
+        {
+          "lang": "Russian",
+          "name": "Rostik",
+          "ok": false,
+          "notes": "Hard fail on trademark-famous collision. Rostic's (Ростикс) is the brand all Russian KFCs rebranded to after Yum!'s exit — over 1,300 outlets, now Russia's largest fast-food chain by location count as of early 2026 (intellinews.com, themoscowtimes.com), and the original 1993 chain's mascot was literally a chick named Rostik. In the Russian market 'Rostik' = fried chicken, full stop. The росток (sprout) pun is lovely but unusable here.",
+          "replacement": "Listik (Листик, 'little leaf' — matches the two-leaf sprout head, clean of brand collisions, naturally cute diminutive). Plain 'Rostok' (Росток = sprout) is semantically perfect but phonetically adjacent to Ростикс, so prefer Listik."
+        },
+        {
+          "lang": "Japanese",
+          "name": "Futaba",
+          "ok": true,
+          "notes": "Passes. 双葉 is exactly the seedling's first two leaves — a perfect semantic match — and a common, warm given name. The namespace is crowded but nobody owns it: Futaba Sakura of Persona 5 is the most famous bearer (a positive, nerd-beloved character), plus Futaba Channel (2chan imageboard), Futaba Corp (RC hobby gear), Futabasha publisher, and assorted anime Futabas. Because futaba is an ordinary common noun (like naming a mascot 'Sprout' in English), Japanese users read the word, not any one character. No negative meanings."
+        },
+        {
+          "lang": "Chinese",
+          "name": "Yaya",
+          "ok": true,
+          "notes": "Passes. 芽芽 (yáyá) follows the natural Chinese cute-name reduplication pattern, and the in-market homophone is overwhelmingly positive: Ya Ya 丫丫 the giant panda, whose 2023 homecoming from Memphis Zoo drew 430M+ Weibo views and national affection (nbcnews.com, aljazeera.com) — being 'panda-adjacent cute' helps a mascot. Out-of-market meanings are benign: Greek yiayia / Spanish yaya = grandma, Tagalog yaya = nanny (Wiktionary) — warm caregiver words that even rhyme with the 'nurturer' theme, not embarrassments. Recommendation: always render as 芽芽 with pinyin in the app so the bud meaning anchors first."
+        }
+      ],
+      "precedents": [
+        "Duolingo character cast (Duo, Lily, Zari, Lin, Falstaff) — character-led TikTok content earns ~3.5x the engagement rate of competing language apps; 'Living With Lily' YouTube Shorts series hit 10.5M views and added ~100k followers in its first run (rivaliq.com/blog/duolingo-tiktok-marketing-strategy, adweek.com/brand-marketing/duolingo-duo-owl-marketing-strategy)",
+        "Sanrio — 450+ character family built around one design language; Hello Kitty alone has grossed ~$84B, the second-highest-grossing media franchise of all time (en.wikipedia.org/wiki/Sanrio)",
+        "LINE Friends / BT21 — character family scaled to 140+ retail stores across 12 markets by 2019; BT21 line drew 30,000 visitors on launch day (prnewswire.com LINE FRIENDS releases)",
+        "Olympic Games mascots — every host market gets its own bespoke mascot (Bing Dwen Dwen, Miraitowa, the Phryges), the longest-running proof that per-market mascot variants drive local affection and merchandise",
+        "Same-species variant model (Pokémon's Eevee evolutions, Care Bears, Tamagotchi colorways) — one recognizable silhouette with per-variant color/accessory/personality is an established, merchandisable pattern, which is exactly the Nuri-family approach"
+      ]
+    }
+  }
+}

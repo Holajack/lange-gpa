@@ -14,8 +14,10 @@ import { useApp } from "@/lib/store";
 import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
 import { phaseById } from "@/lib/phases";
 import { LANGUAGES, langByCode } from "@/lib/languages";
+import { mascotForLang } from "@/lib/mascots";
 import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
+import { MascotImage } from "@/components/MascotImage";
 import { Card, Pill, SectionTitle, Tag } from "@/components/ui";
 import type { Nurturer } from "@/lib/types";
 
@@ -176,6 +178,8 @@ export default function SchedulePage() {
 
   const targetLang = profile?.targetLang ?? "es";
   const target = langByCode(targetLang);
+  /** The target language's toy sibling — the AI nurturer's face and name */
+  const sibling = mascotForLang(targetLang);
   const phase = phaseById(profile?.phase ?? 1);
   const defaultActivity = phase.activities[0]?.name ?? "Growing session";
 
@@ -278,14 +282,20 @@ export default function SchedulePage() {
                   >
                     <Card hover className="flex items-center gap-3 p-4">
                       {isAI ? (
-                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-lime/10 ring-2 ring-lime/40">
-                          <Mascot size={36} mood="happy" float={false} />
+                        <span
+                          className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full"
+                          style={{
+                            background: `color-mix(in srgb, ${sibling.color} 12%, transparent)`,
+                            boxShadow: `inset 0 0 0 2px color-mix(in srgb, ${sibling.color} 45%, transparent)`,
+                          }}
+                        >
+                          <MascotImage mascot={sibling} size={38} float={false} />
                         </span>
                       ) : (
                         <Avatar name={n?.name ?? "?"} color={n?.color ?? "#7c5cff"} size={44} ring />
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-display text-sm font-bold">{n?.name ?? b.nurturerId}</p>
+                        <p className="truncate font-display text-sm font-bold">{isAI ? sibling.name : n?.name ?? b.nurturerId}</p>
                         <p className="truncate text-xs text-muted">
                           {fmtDate(b.date)} · {b.time} — {b.activity}
                         </p>
@@ -335,7 +345,9 @@ export default function SchedulePage() {
                     style={{ boxShadow: "var(--shadow-glow-violet)" }}
                   >
                     <span className="font-display text-sm font-bold">{h}</span>
-                    <span className="max-w-full truncate text-[10px] opacity-90">{bn?.name.split(" ")[0] ?? "—"}</span>
+                    <span className="max-w-full truncate text-[10px] opacity-90">
+                      {booked.nurturerId === "ai" ? sibling.name : bn?.name.split(" ")[0] ?? "—"}
+                    </span>
                   </motion.div>
                 ) : (
                   <motion.button
@@ -364,7 +376,7 @@ export default function SchedulePage() {
         >
           <SectionTitle sub={`${target.flag} ${target.name}`}>{t("availableNurturers")}</SectionTitle>
 
-          {/* AI nurturer — Nuri */}
+          {/* AI nurturer — the target language's toy sibling */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -373,18 +385,24 @@ export default function SchedulePage() {
             <div
               className="rounded-[30px] p-[2px]"
               style={{
-                background: "linear-gradient(135deg, var(--color-violet), var(--color-lime))",
-                boxShadow: "0 0 44px -14px rgba(124, 92, 255, 0.55)",
+                background: `linear-gradient(135deg, ${sibling.color}, ${sibling.accent})`,
+                boxShadow: `0 0 44px -14px color-mix(in srgb, ${sibling.color} 55%, transparent)`,
               }}
             >
               <div className="card relative overflow-hidden p-5" style={{ borderColor: "transparent" }}>
-                <div className="orb right-[-70px] top-[-70px] h-[180px] w-[180px] bg-lime/15" />
+                <div
+                  className="orb right-[-70px] top-[-70px] h-[180px] w-[180px]"
+                  style={{ background: `color-mix(in srgb, ${sibling.accent} 15%, transparent)` }}
+                />
                 <div className="relative flex items-center gap-4">
-                  <Mascot size={64} mood="happy" />
+                  <MascotImage mascot={sibling} size={64} float glow />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-display text-lg font-bold">Nuri</p>
-                      <span className="rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-canvas">
+                      <p className="font-display text-lg font-bold">{sibling.name}</p>
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-canvas"
+                        style={{ background: sibling.accent }}
+                      >
                         AI
                       </span>
                       <span className="ml-auto flex items-center gap-1.5 rounded-full bg-mint/10 px-2.5 py-1 text-[11px] font-semibold text-mint">
@@ -392,17 +410,23 @@ export default function SchedulePage() {
                         24/7
                       </span>
                     </div>
-                    <p className="truncate text-xs text-muted">{aiLabel}</p>
+                    <p className="truncate text-xs text-muted">
+                      {aiLabel} · {sibling.toy}
+                    </p>
                   </div>
                 </div>
                 <p className="relative mt-3 text-sm leading-relaxed text-muted">
-                  Nuri — always awake, endlessly patient. Runs the same GPA games, speaks only {target.name}.
+                  “{sibling.nativeHello}” {sibling.name} is always awake, endlessly patient — runs the same GPA games,
+                  speaks only {target.name}.
                 </p>
                 <div className="relative mt-4 flex items-center gap-2">
                   <Link
                     href="/session?nurturer=ai"
-                    className="pill bg-lime px-5 py-2 text-sm font-semibold text-canvas"
-                    style={{ boxShadow: "0 0 30px -10px rgba(184, 240, 60, 0.7)" }}
+                    className="pill px-5 py-2 text-sm font-semibold text-canvas"
+                    style={{
+                      background: sibling.accent,
+                      boxShadow: `0 0 30px -10px color-mix(in srgb, ${sibling.accent} 70%, transparent)`,
+                    }}
                   >
                     ▶ Start now
                   </Link>
@@ -483,19 +507,33 @@ export default function SchedulePage() {
                           type="button"
                           onClick={() => setSheet((s) => (s ? { ...s, nurturerId: n.id } : s))}
                           className={`flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-3 py-2.5 transition ${
-                            sel ? (isAI ? "bg-lime/10 ring-2 ring-lime" : "bg-violet/15 ring-2 ring-violet") : "hover:bg-white/5"
+                            sel ? (isAI ? "" : "bg-violet/15 ring-2 ring-violet") : "hover:bg-white/5"
                           }`}
+                          style={
+                            sel && isAI
+                              ? {
+                                  background: `color-mix(in srgb, ${sibling.color} 10%, transparent)`,
+                                  boxShadow: `inset 0 0 0 2px ${sibling.color}`,
+                                }
+                              : undefined
+                          }
                         >
                           <div className="relative">
                             {isAI ? (
-                              <span className="grid h-12 w-12 place-items-center rounded-full bg-lime/10">
-                                <Mascot size={40} mood="happy" float={false} />
+                              <span
+                                className="grid h-12 w-12 place-items-center overflow-hidden rounded-full"
+                                style={{ background: `color-mix(in srgb, ${sibling.color} 12%, transparent)` }}
+                              >
+                                <MascotImage mascot={sibling} size={42} float={false} />
                               </span>
                             ) : (
                               <Avatar name={n.name} color={n.color} size={48} ring={sel} />
                             )}
                             {isAI ? (
-                              <span className="absolute -right-1 -top-1 rounded-full bg-lime px-1.5 py-px text-[8px] font-extrabold text-canvas">
+                              <span
+                                className="absolute -right-1 -top-1 rounded-full px-1.5 py-px text-[8px] font-extrabold text-canvas"
+                                style={{ background: sibling.accent }}
+                              >
                                 AI
                               </span>
                             ) : (
@@ -505,7 +543,7 @@ export default function SchedulePage() {
                             )}
                           </div>
                           <span className={`text-[11px] font-semibold ${sel ? "text-ink" : "text-muted"}`}>
-                            {n.name.split(" ")[0]}
+                            {isAI ? sibling.name : n.name.split(" ")[0]}
                           </span>
                         </button>
                       );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Onest } from "next/font/google";
 import { AppProvider } from "@/lib/store";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${bricolage.variable} ${onest.variable}`}>
       <body className="grain min-h-screen">
-        <AppProvider>{children}</AppProvider>
+        <Providers>
+          <AppProvider>{children}</AppProvider>
+        </Providers>
       </body>
     </html>
   );
