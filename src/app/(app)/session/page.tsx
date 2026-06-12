@@ -28,6 +28,7 @@ import {
   PhoneOff,
   Play,
   RotateCcw,
+  ShieldCheck,
   Square,
   Video,
   VideoOff,
@@ -61,6 +62,8 @@ import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
 import { Card, Pill, Tag } from "@/components/ui";
 import { useRecorder } from "./useRecorder";
+import { ConsentDialog } from "./ConsentDialog";
+import { CardFace } from "./CardFace";
 import type { LangCode, Nurturer } from "@/lib/types";
 
 /** MascotImage is built by the mascot agent (registry contract). The cast
@@ -212,8 +215,11 @@ function SessionRoom() {
 
   // ---- recording: the talking picture dictionary ----
   const rec = useRecorder();
-  const { stop: recStop } = rec;
+  const { stop: recStop, start: recStart } = rec;
   const [camWanted, setCamWanted] = useState(false);
+  /** consent is remembered for THIS session only — deliberately never persisted */
+  const [recConsented, setRecConsented] = useState(false);
+  const [consentOpen, setConsentOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // ---- derived flow facts ----
@@ -497,6 +503,19 @@ function SessionRoom() {
     // partner's device in real time; for now both partners share one screen.
   };
 
+  /** consent gate — nothing records until everyone in the room has said yes */
+  const requestRecording = useCallback(() => {
+    if (rec.status === "recording") return;
+    if (recConsented) void recStart(camWanted);
+    else setConsentOpen(true);
+  }, [rec.status, recConsented, recStart, camWanted]);
+
+  const acceptConsent = useCallback(() => {
+    setRecConsented(true); // this session only — never persisted
+    setConsentOpen(false);
+    void recStart(camWanted);
+  }, [recStart, camWanted]);
+
   if (!profile) return null;
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
@@ -659,6 +678,11 @@ function SessionRoom() {
                     <Download size={14} /> {rec.clip.filename}
                   </a>
                 </div>
+                <p className="mt-3 rounded-xl bg-white/4 px-3 py-2 text-xs leading-relaxed text-muted">
+                  🌀 The re-living loop: press play and{" "}
+                  <span className="font-semibold text-ink">point at each card as you hear it</span> — same voice, same
+                  laughter, no translation. The replay is where the words take root.
+                </p>
               </motion.div>
             )}
 
@@ -699,19 +723,35 @@ function SessionRoom() {
       >
         {/* top bar */}
         <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-2 p-4">
-          <button
-            type="button"
-            onClick={() => (rec.status === "recording" ? rec.stop() : void rec.start(camWanted))}
-            title={rec.status === "recording" ? "Stop recording" : "Start recording (mic)"}
-            className={`pill flex items-center gap-2 px-4 py-1.5 text-xs font-bold backdrop-blur ${
-              rec.status === "recording" ? "bg-black/45 text-ink" : "bg-black/30 text-muted"
-            }`}
-          >
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${rec.status === "recording" ? "animate-pulse bg-coral" : "bg-white/25"}`}
-            />
-            REC{rec.status === "recording" ? ` ${fmtClock(rec.elapsed)}` : ""}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => (rec.status === "recording" ? rec.stop() : requestRecording())}
+              title={
+                rec.status === "recording"
+                  ? "Stop recording"
+                  : recConsented
+                    ? "Start recording (mic)"
+                    : "Recording asks for consent first"
+              }
+              className={`pill flex items-center gap-2 px-4 py-1.5 text-xs font-bold backdrop-blur ${
+                rec.status === "recording" ? "bg-black/45 text-ink" : "bg-black/30 text-muted"
+              }`}
+            >
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${rec.status === "recording" ? "animate-pulse bg-coral" : "bg-white/25"}`}
+              />
+              REC{rec.status === "recording" ? ` ${fmtClock(rec.elapsed)}` : ""}
+            </button>
+            {recConsented && (
+              <span
+                title="Recording consent given — this session only; everything stays on this device"
+                className="pill flex items-center gap-1 bg-black/30 px-2.5 py-1.5 text-[10px] font-bold text-lime backdrop-blur"
+              >
+                <ShieldCheck size={12} /> consented
+              </span>
+            )}
+          </div>
           <Tag className="hidden bg-black/45 text-ink backdrop-blur sm:inline-flex">🌱 {activity}</Tag>
           <div className="flex items-center gap-2">
             <button
@@ -838,7 +878,7 @@ function SessionRoom() {
                               : "border-line bg-white/4"
                     }`}
                   >
-                    <span aria-hidden>{c.emoji}</span>
+                    <CardFace itemId={c.id} emoji={c.emoji} imgClassName="h-full w-full rounded-xl p-1.5" />
                     {fb?.kind === "correct" && (
                       <>
                         <span className="popin absolute right-1.5 top-1.5 text-base">✨</span>
@@ -956,7 +996,7 @@ function SessionRoom() {
                   }`}
                   title={c.word}
                 >
-                  <span className="text-xl leading-none">{c.emoji}</span>
+                  <CardFace itemId={c.id} emoji={c.emoji} className="text-xl leading-none" imgClassName="h-7 w-7 rounded-lg" />
                   <span className="w-full truncate text-[9px] font-medium text-muted">{c.word}</span>
                 </div>
               );
@@ -1078,7 +1118,8 @@ function SessionRoom() {
           <div className="min-w-0 flex-1">
             <p className="font-display text-sm font-bold">🎥 Talking picture dictionary</p>
             <p className="text-xs text-muted">
-              Record the session and re-live every card later — same voice, same laughter, zero translation.
+              Record the session and re-live every card later — same voice, same laughter, zero translation. Consent
+              first, and it never leaves this device.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1099,7 +1140,7 @@ function SessionRoom() {
               </Pill>
             ) : (
               <Pill
-                onClick={() => void rec.start(camWanted)}
+                onClick={requestRecording}
                 className="gap-2 bg-white/10 px-5 py-2.5 text-sm font-semibold text-ink"
               >
                 <span className="h-2.5 w-2.5 rounded-full bg-coral" /> {rec.clip ? "Record again" : "Start recording"}
@@ -1151,6 +1192,17 @@ function SessionRoom() {
           Real-time remote sync lands with the Convex backend.
         </p>
       )}
+
+      {/* --------------------------- consent-first gate --------------------------- */}
+      <ConsentDialog
+        open={consentOpen}
+        human={!isAI}
+        camera={camWanted}
+        nurturerName={nurturerName}
+        growerName={growerName}
+        onAccept={acceptConsent}
+        onDecline={() => setConsentOpen(false)}
+      />
 
       {/* --------------------------- switch-roles modal --------------------------- */}
       <AnimatePresence>

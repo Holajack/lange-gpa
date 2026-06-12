@@ -1,10 +1,29 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { LangCode, Profile, SessionBooking } from "./types";
-import { makeT } from "./i18n";
+import { makeBlendedT, makeT } from "./i18n";
+import { AWARD_REQUEST_EVENT, awardAchievement, evaluateAchievements } from "./achievements";
 
 const KEY = "lange.profile.v1";
+
+/**
+ * GRADUATED IMMERSION — the system slowly stops speaking your language.
+ *
+ * Phase 1 growers see the whole app in their own language. Every phase after
+ * that flips one more tier of UI strings into the target language — nav tabs
+ * and greetings first, then buttons, then section labels, until by Phase 5
+ * the chrome speaks only the host language. Faking fluency gets harder every
+ * phase: the app itself becomes part of the host world, the GPA wall of
+ * noise quietly turning into a window. The manual immersion toggle still
+ * forces the full target-language UI at any stage.
+ *
+ *   P1 → 0 (native UI) · P2 → 1 · P3 → 2 · P4 → 3 · P5+ → 4 (full target)
+ */
+export function getImmersionStage(profile: Profile): 0 | 1 | 2 | 3 | 4 {
+  if (profile.phase >= 5) return 4;
+  return (profile.phase - 1) as 0 | 1 | 2 | 3;
+}
 
 const DEFAULT_WEEK = [35, 20, 45, 30, 55, 0, 0];
 
@@ -142,13 +161,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const resetAll = useCallback(() => persist(null), [persist]);
 
+  /* ---- achievements: re-check after every profile change (hours,
+     completions, bookings) + detect the first real role switch ---- */
+  const lastRole = useRef<Profile["role"] | null>(null);
+  useEffect(() => {
+    if (!profile) return;
+    if (lastRole.current !== null && lastRole.current !== profile.role) {
+      awardAchievement("first-role-switch");
+    }
+    lastRole.current = profile.role;
+    evaluateAchievements(profile);
+  }, [profile]);
+
+  /* ---- self-report bridge: pages dispatch `lange:award` to grant manual
+     badges (first recording saved, first joke understood…) ---- */
+  useEffect(() => {
+    const onAward = (e: Event) => {
+      const id = (e as CustomEvent<{ id?: string }>).detail?.id;
+      if (id) awardAchievement(id);
+    };
+    window.addEventListener(AWARD_REQUEST_EVENT, onAward);
+    return () => window.removeEventListener(AWARD_REQUEST_EVENT, onAward);
+  }, []);
+
   const uiLang: LangCode = profile
     ? profile.immersion && profile.role !== "nurturer"
       ? profile.targetLang
       : profile.knownLangs[0] ?? "en"
     : "en";
 
-  const t = useMemo(() => makeT(uiLang), [uiLang]);
+  const t = useMemo(() => {
+    if (!profile) return makeT("en");
+    const native = profile.knownLangs[0] ?? "en";
+    if (profile.role === "nurturer") return makeT(native);
+    // manual immersion ON keeps today's behavior: the full target-language UI
+    if (profile.immersion) return makeT(profile.targetLang);
+    // otherwise the UI flips per-key, tier by tier, as the phases pass
+    const stage = getImmersionStage(profile);
+    return stage > 0 ? makeBlendedT(native, profile.targetLang, stage) : makeT(native);
+  }, [profile]);
 
   const value: Store = {
     profile,

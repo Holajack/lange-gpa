@@ -56,6 +56,7 @@ const SPOTS: Partial<Record<LangCode, Spot>> = {
   ru: { city: "Moscow", lat: 55.75, lon: 37.62 },
   ja: { city: "Tokyo", lat: 35.68, lon: 139.69 },
   zh: { city: "Beijing", lat: 39.9, lon: 116.4 },
+  ht: { city: "Port-au-Prince", lat: 18.5944, lon: -72.3074 },
 };
 
 const spotOf = (lang: LangCode): Spot => SPOTS[lang] ?? { city: "London", lat: 51.5, lon: -0.12 };
@@ -110,6 +111,11 @@ const CULTURE: Partial<Record<LangCode, string[]>> = {
     "Breakfast at the street stall: a jianbing folded hot off the griddle — point, watch, taste, remember.",
     "A grandmother deals you into the mahjong table — tiles click, and numbers come alive right in your hands.",
     "Dumpling night: flour everywhere, every fold narrated — family words learned around one crowded table.",
+  ],
+  ht: [
+    "On January 1 every table holds soup joumou — the freedom soup first tasted the morning of 1804, now UNESCO heritage. Your nurturer ladles slowly and names what floats past: joumou, diri, bannann, epis.",
+    "Life runs through the mache — machann under bright umbrellas, mangoes and sugarcane in pyramids, prices settled by cheerful argument. Point at anything and the whole market becomes your picture-card deck, tasting allowed.",
+    "A story opens with Krik? — and waits for your Krak! Then come the kont, the riddles, and the proverb that carries the country: dèyè mòn gen mòn, behind mountains there are more mountains.",
   ],
 };
 

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Check, Clock, Mic, RefreshCw } from "lucide-react";
 
-import { useApp } from "@/lib/store";
+import { useApp, getImmersionStage } from "@/lib/store";
+import { ACHIEVEMENTS, ACHIEVEMENT_EVENT, achievementById, useAchievements } from "@/lib/achievements";
+import { immersionShare } from "@/lib/i18n";
 import { langByCode } from "@/lib/languages";
 import { phaseById, phaseProgress } from "@/lib/phases";
 import { NURTURERS, nurturersForLang } from "@/lib/nurturers";
@@ -94,6 +96,8 @@ const todayIndex = () => (new Date().getDay() + 6) % 7;
 export default function DashboardPage() {
   const { profile, uiLang, t } = useApp();
   const [speaking, setSpeaking] = useState(false);
+  const { earned, award } = useAchievements();
+  const [toastId, setToastId] = useState<string | null>(null);
 
   /** Localized 2-letter day names Mon→Sun (2024-01-01 was a Monday). */
   const dayNames = useMemo(() => {
@@ -103,6 +107,28 @@ export default function DashboardPage() {
       return (raw.charAt(0).toUpperCase() + raw.slice(1)).slice(0, 2);
     });
   }, [uiLang]);
+
+  /** Pressed-flower date pills, e.g. "JUN 12, 2026". */
+  const badgeDate = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(uiLang, { month: "short", day: "numeric", year: "numeric" });
+    return (iso: string) => fmt.format(new Date(iso)).replace(/\./g, "").toUpperCase();
+  }, [uiLang]);
+
+  /* quiet toast for new badges, from anywhere in the app */
+  useEffect(() => {
+    const onAchievement = (e: Event) => {
+      const id = (e as CustomEvent<{ id?: string }>).detail?.id;
+      if (id) setToastId(id);
+    };
+    window.addEventListener(ACHIEVEMENT_EVENT, onAchievement);
+    return () => window.removeEventListener(ACHIEVEMENT_EVENT, onAchievement);
+  }, []);
+
+  useEffect(() => {
+    if (!toastId) return;
+    const timer = setTimeout(() => setToastId(null), 4200);
+    return () => clearTimeout(timer);
+  }, [toastId]);
 
   useEffect(() => () => stopSpeaking(), []);
 
@@ -150,6 +176,26 @@ export default function DashboardPage() {
   const nextActivities = phase.activities
     .filter((a) => !profile.completed.includes(a.id))
     .slice(0, 2);
+
+  /* Growth shelf data */
+  const shelf = ACHIEVEMENTS.filter((a) => earned[a.id]).sort((a, b) =>
+    (earned[a.id] ?? "").localeCompare(earned[b.id] ?? "")
+  );
+  const nextBadge = ACHIEVEMENTS.find((a) => a.kind === "hours" && !earned[a.id]);
+  const RING_R = 17;
+  const RING_C = 2 * Math.PI * RING_R;
+  const ringFill = nextBadge?.hours
+    ? Math.min(1, Math.max(0, profile.hoursLogged / nextBadge.hours))
+    : 0;
+
+  /* Immersion meter: how much of the UI now speaks the target language */
+  const stage = profile.immersion && profile.role !== "nurturer" ? 4 : getImmersionStage(profile);
+  const immersionPct = Math.round(immersionShare(profile.targetLang, stage) * 100);
+  const appSpeaksLine = t("appSpeaks")
+    .replace("{pct}", `${immersionPct}%`)
+    .replace("{language}", lang.nativeName);
+
+  const toastAch = toastId ? achievementById(toastId) : null;
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
@@ -615,6 +661,107 @@ export default function DashboardPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* ============ Growth shelf ============ */}
+      <motion.div variants={fadeUp}>
+        <div className="card card-hover relative overflow-hidden p-5">
+          <div className="orb -left-14 -top-16 h-40 w-40 bg-lime/15" />
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-muted">🏅 {t("growthShelf")}</p>
+            {/* self-reported milestone — only the grower knows when it happened */}
+            {!earned["first-joke"] && (
+              <button
+                type="button"
+                onClick={() => award("first-joke")}
+                className="pill bg-white/6 px-3.5 py-1.5 text-xs font-semibold text-muted hover:text-ink"
+              >
+                😂 {t("firstJoke")}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-stretch gap-2.5">
+            {/* earned badges — dated like pressed flowers */}
+            {shelf.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-3 rounded-2xl bg-raised-2 py-2.5 pl-3 pr-4"
+                title={a.sub}
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/6 text-xl">
+                  {a.emoji}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-tight">{a.title}</p>
+                  <span className="mt-1 inline-block rounded-full bg-violet/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-violet-soft">
+                    {badgeDate(earned[a.id])}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* next hour badge — gray silhouette with a progress ring */}
+            {nextBadge && (
+              <div
+                className="flex items-center gap-3 rounded-2xl border border-dashed border-line py-2.5 pl-3 pr-4"
+                title={nextBadge.sub}
+              >
+                <div className="relative h-11 w-11 shrink-0">
+                  <svg viewBox="0 0 40 40" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden>
+                    <circle cx="20" cy="20" r={RING_R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.5" />
+                    <circle
+                      cx="20"
+                      cy="20"
+                      r={RING_R}
+                      fill="none"
+                      stroke="var(--color-lime)"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${ringFill * RING_C} ${RING_C}`}
+                      className="transition-[stroke-dasharray] duration-700 ease-out"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-xl opacity-40 grayscale">
+                    {nextBadge.emoji}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-tight text-muted">{nextBadge.title}</p>
+                  <p className="mt-0.5 text-[10px] font-bold tracking-wide text-muted">
+                    {Math.min(profile.hoursLogged, nextBadge.hours ?? 0)} / {nextBadge.hours} {t("hours")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* immersion meter — the app slowly stops speaking your language */}
+          <div className="mt-5 rounded-2xl bg-raised-2 p-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <p className="text-sm font-semibold">🌍 {appSpeaksLine}</p>
+              <span className="font-display text-sm font-bold text-lime">{immersionPct}%</span>
+            </div>
+            <ProgressBar value={immersionPct} color="var(--color-lime)" height={8} />
+            <p className="mt-2 text-xs text-muted">{t("immersionWarm")}</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ============ Achievement toast ============ */}
+      {toastAch && (
+        <div
+          key={toastAch.id}
+          role="status"
+          className="popin fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-line bg-raised-2 py-2.5 pl-3.5 pr-6 shadow-xl"
+        >
+          <span className="text-2xl">{toastAch.emoji}</span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold leading-tight">{toastAch.title}</p>
+            <p className="text-[11px] leading-tight text-muted">{toastAch.sub}</p>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

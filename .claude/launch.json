@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "start", "-p", "3100"],
       "port": 3100
+    },
+    {
+      "name": "lange-dev",
+      "runtimeExecutable": "/Users/jackenholland/.nvm/versions/node/v22.22.0/bin/npx",
+      "runtimeArgs": ["next", "dev", "-p", "3101"],
+      "port": 3101
     }
   ]
 }

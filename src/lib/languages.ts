@@ -15,10 +15,11 @@ export const LANGUAGES: Language[] = [
   { code: "tr", name: "Turkish", nativeName: "Türkçe", flag: "🇹🇷", tts: "tr-TR" },
   { code: "uk", name: "Ukrainian", nativeName: "Українська", flag: "🇺🇦", tts: "uk-UA" },
   { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", tts: "hi-IN" },
+  { code: "ht", name: "Haitian Creole", nativeName: "Kreyòl ayisyen", flag: "🇭🇹", tts: "ht-HT" },
 ];
 
 export const langByCode = (code: LangCode): Language =>
   LANGUAGES.find((l) => l.code === code) ?? LANGUAGES[0];
 
 /** Languages with full in-app immersion content (vocab decks + UI strings) */
-export const FULL_CONTENT_LANGS: LangCode[] = ["en", "es", "ru", "fr", "de", "pt", "it", "ja", "zh"];
+export const FULL_CONTENT_LANGS: LangCode[] = ["en", "es", "ru", "fr", "de", "pt", "it", "ja", "zh", "ht"];

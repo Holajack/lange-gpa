@@ -46,6 +46,8 @@ export const PARTICIPANTS: Participant[] = [
   { id: "camila", name: "Camila Reyes", role: "both", city: "Mexico City", country: "Mexico", lat: 19.4326, lng: -99.1332, growingLang: "ja", knownLangs: ["es"], phase: 1, bio: "Muralist painting her first hundred Japanese words onto her studio wall — one picture at a time, GPA style.", tags: ["art", "exchange"], color: "#ff8a1e", online: true },
   { id: "emile", name: "Émile Garnier", role: "both", city: "Montreal", country: "Canada", lat: 45.5017, lng: -73.5673, growingLang: "ru", knownLangs: ["fr", "en"], phase: 3, bio: "Hockey coach riding along with his nurturer's taxi stories. Trades French rink talk for Russian winter talk.", tags: ["sport", "exchange"], color: "#7c5cff", online: false },
   { id: "fatima", name: "Fatima El Mansouri", role: "both", city: "Casablanca", country: "Morocco", lat: 33.5731, lng: -7.5898, growingLang: "it", knownLangs: ["ar", "fr"], phase: 2, bio: "Pastry chef folding Italian into her mornings the way she folds dough. Nurtures Arabic and French in return.", tags: ["baking", "exchange"], color: "#b8f03c", online: true },
+  { id: "bethany", name: "Bethany Miller", role: "grower", city: "Springfield", country: "United States", lat: 37.209, lng: -93.2923, growingLang: "ht", knownLangs: ["en"], phase: 1, bio: "Missionary nurse packing for Port-au-Prince. Her picture cards are clinic shelves and market stalls — she wants the words ready before the plane lands.", tags: ["mission prep", "food"], color: "#ffd234", online: true },
+  { id: "marjorie", name: "Marjorie Étienne", role: "both", city: "Brooklyn", country: "United States", lat: 40.6782, lng: -73.9442, growingLang: "ht", knownLangs: ["en"], phase: 2, bio: "Second-generation Brooklynite growing back into her grandmother's Kreyòl — every Sunday phone call is a session. Happily nurtures English in return.", tags: ["family roots", "exchange"], color: "#7c5cff", online: true },
 ];
 
 /**
@@ -75,6 +77,8 @@ export const NURTURER_COORDS: Record<string, { lat: number; lng: number }> = {
   zhangmin: { lat: 24.8801, lng: 102.8329 }, // Kunming
   maggie: { lat: 53.8008, lng: -1.5491 },    // Leeds
   dwayne: { lat: 33.749, lng: -84.388 },     // Atlanta
+  yolande: { lat: 18.5944, lng: -72.3074 },  // Port-au-Prince
+  frantz: { lat: 19.7592, lng: -72.1982 },   // Cap-Haïtien
 };
 
 /** Country names for the nurturers' cities (for "City, Country" labels). */
@@ -94,4 +98,6 @@ export const NURTURER_COUNTRIES: Record<string, string> = {
   zhangmin: "China",
   maggie: "United Kingdom",
   dwayne: "United States",
+  yolande: "Haiti",
+  frantz: "Haiti",
 };

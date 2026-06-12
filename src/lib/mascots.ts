@@ -26,6 +26,7 @@ export const MASCOTS: MascotDef[] = [
   { id: "listik", name: "Listik", lang: "ru", toy: "Matryoshka doll", color: "#e02f26", accent: "#f5e6cf", image: "/mascots/listik.png", nativeHello: "Привет!" },
   { id: "futaba", name: "Futaba", lang: "ja", toy: "Daruma doll", color: "#ff7fae", accent: "#e8b54a", image: "/mascots/futaba.png", nativeHello: "こんにちは！" },
   { id: "yaya", name: "Yaya", lang: "zh", toy: "Panda", color: "#f0ece4", accent: "#e82e2e", image: "/mascots/yaya.png", nativeHello: "你好！" },
+  { id: "tiboujon", name: "Ti Boujon", lang: "ht", toy: "Tanbou (Haitian barrel drum)", color: "#00209f", accent: "#d21034", image: "/mascots/tiboujon.png", nativeHello: "Bonjou!" },
 ];
 
 /** Exact lang match, else Nuri — the family's original sibling. */

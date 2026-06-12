@@ -338,6 +338,7 @@ const WHERE_IS: Partial<Record<LangCode, string>> = {
   de: "Wo ist…?",
   pt: "Onde está…?",
   it: "Dov'è…?",
+  ht: "Kote…?",
 };
 
 function CardTable({ contentLang }: { contentLang: LangCode }) {
@@ -513,6 +514,7 @@ const TIMER_CUES: Partial<Record<LangCode, { play: string; record: string; done:
   it: { play: "Si gioca!", record: "Si registra!", done: "Fatto!" },
   ja: { play: "あそぼう！", record: "ろくおんしよう！", done: "おしまい！" },
   zh: { play: "开始玩吧！", record: "开始录音！", done: "完成了！" },
+  ht: { play: "Ann jwe!", record: "Ann anrejistre!", done: "Nou fini!" },
 };
 
 function MeetingTimer({ contentLang }: { contentLang: LangCode }) {

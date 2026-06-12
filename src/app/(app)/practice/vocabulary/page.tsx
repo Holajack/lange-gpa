@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { VOCAB_DOMAINS, domainById } from "@/lib/vocab";
+import { getCardImage, whenCardsReady } from "@/lib/cards";
 import { speak, stopSpeaking } from "@/lib/tts";
 import type { VocabDomain, VocabItem } from "@/lib/types";
 import { useApp } from "@/lib/store";
@@ -119,6 +120,19 @@ function Game({ domain }: { domain: VocabDomain }) {
   const advanceTimer = useRef<number | null>(null);
   const toastTimer = useRef<number | null>(null);
   const loggedRef = useRef(false);
+
+  // pre-generated card illustrations load async — tick once the manifest
+  // lands so getCardImage() swaps emoji placeholders for real pictures
+  const [, setCardsReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void whenCardsReady().then(() => {
+      if (active) setCardsReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const finished = round >= TOTAL_ROUNDS;
   const correctCount = results.filter((r) => r === "correct").length;
@@ -244,6 +258,7 @@ function Game({ domain }: { domain: VocabDomain }) {
           {choices.map((item, i) => {
             const isTarget = target !== null && item.id === target.id;
             const showWord = revealed && isTarget;
+            const cardImage = getCardImage(item.id);
             return (
               <motion.button
                 key={item.id}
@@ -261,7 +276,19 @@ function Game({ domain }: { domain: VocabDomain }) {
                 ].join(" ")}
                 style={showWord ? { boxShadow: "0 0 50px -12px rgba(184,240,60,0.7)" } : undefined}
               >
-                <span className="text-6xl leading-none">{item.emoji}</span>
+                {cardImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- static public/ asset, no optimization needed
+                  <img
+                    src={cardImage}
+                    alt=""
+                    width={96}
+                    height={96}
+                    draggable={false}
+                    className="h-24 w-24 select-none rounded-xl object-contain"
+                  />
+                ) : (
+                  <span className="text-6xl leading-none">{item.emoji}</span>
+                )}
                 {/* the written word is revealed only after the ear succeeds */}
                 {showWord ? (
                   <motion.span

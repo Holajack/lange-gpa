@@ -101,6 +101,46 @@ export const STRINGS: Dict = {
   forumSub: { en: "Growers and nurturers helping each other belong.", es: "Cultivadores y nutridores ayudándose a pertenecer.", ru: "Растущие и наставники помогают друг другу.", fr: "Apprenants et accompagnants qui s'entraident.", de: "Wachsende und Begleiter helfen einander.", pt: "Cultivadores e nutridores se ajudando.", it: "Coltivatori e nutritori che si aiutano.", ja: "育つ人とナーチャラーが支え合う場所。", zh: "成长者和培育者互相帮助的地方。" },
   newPost: { en: "New post", es: "Nueva publicación", ru: "Новый пост", fr: "Nouveau message", de: "Neuer Beitrag", pt: "Nova publicação", it: "Nuovo post", ja: "新しい投稿", zh: "发新帖" },
   reply: { en: "Reply", es: "Responder", ru: "Ответить", fr: "Répondre", de: "Antworten", pt: "Responder", it: "Rispondi", ja: "返信", zh: "回复" },
+
+  // ---- growth shelf ----
+  growthShelf: { en: "Growth shelf", es: "Estante de crecimiento", ru: "Полка роста", fr: "Étagère de croissance", de: "Wachstumsregal", pt: "Estante de crescimento", it: "Mensola della crescita", ja: "成長のたな", zh: "成长架" },
+  appSpeaks: { en: "Your app is {pct} {language} now", es: "Tu app ya está al {pct} en {language}", ru: "Твоё приложение уже на {pct} — {language}", fr: "Ton appli est déjà à {pct} en {language}", de: "Deine App spricht jetzt zu {pct} {language}", pt: "Seu app já está {pct} em {language}", it: "La tua app ormai è al {pct} in {language}", ja: "アプリの{pct}はもう{language}", zh: "你的应用已有{pct}是{language}" },
+  immersionWarm: { en: "Bit by bit, it stops speaking your language — because you're starting not to need it.", es: "Poco a poco deja de hablar tu idioma — porque empiezas a no necesitarlo.", ru: "Понемногу оно перестаёт говорить на твоём языке — потому что он тебе всё меньше нужен.", fr: "Petit à petit, elle cesse de parler ta langue — parce que tu commences à ne plus en avoir besoin.", de: "Stück für Stück hört sie auf, deine Sprache zu sprechen — weil du sie immer weniger brauchst.", pt: "Aos poucos ele para de falar a sua língua — porque você está deixando de precisar dela.", it: "Poco a poco smette di parlare la tua lingua — perché inizi a non averne bisogno.", ja: "すこしずつ、母語で話さなくなる——もう、いらなくなってきたから。", zh: "它正一点点不再说你的母语——因为你开始不需要了。" },
+  firstJoke: { en: "I understood my first joke", es: "Entendí mi primer chiste", ru: "Я понял(а) первую шутку", fr: "J'ai compris ma première blague", de: "Ich habe meinen ersten Witz verstanden", pt: "Entendi minha primeira piada", it: "Ho capito la mia prima battuta", ja: "はじめてジョークがわかった", zh: "我听懂了第一个笑话" },
+};
+
+/* ---------------------------------------------------------------- *
+ *  Graduated immersion tiers
+ * ---------------------------------------------------------------- */
+
+/**
+ * Which immersion stage flips each key into the target language.
+ *   tier 1 — nav tabs & greetings: the first words to go host-language
+ *   tier 2 — buttons & short labels
+ *   tier 3 — section titles & stat labels
+ *   tier 4 — everything, including explanations and long copy
+ * Keys missing from this map default to tier 4 (last to flip).
+ */
+export const KEY_TIERS: Record<string, 1 | 2 | 3 | 4> = {
+  // tier 1 — nav & greetings
+  courses: 1, dashboard: 1, schedule: 1, forum: 1, world: 1, hello: 1, today: 1,
+  // tier 2 — buttons & short labels
+  continue: 2, back: 2, start: 2, next: 2, done: 2, play: 2, listen: 2, speak: 2,
+  repeat: 2, book: 2, cancel: 2, online: 2, minutes: 2, hours: 2, words: 2,
+  phaseWord: 2, openPhase: 2, endSession: 2, timeLeft: 2, reply: 2, newPost: 2, nurture: 2,
+  // tier 3 — section titles & stat labels
+  student: 3, nurturerWord: 3, aiNurturer: 3, correct: 3, tryAgain: 3, dayStreak: 3,
+  immersionOn: 3, joinSpeakingClub: 3, yourNurturer: 3, trainings: 3,
+  practiceSpeaking: 3, fastRepeat: 3, minPractice: 3, weeklyActivity: 3,
+  hoursLogged: 3, wordsMet: 3, activitiesDone: 3, vocabulary: 3, listening: 3,
+  speaking: 3, literacy: 3, food: 3, traveling: 3, sport: 3, animals: 3,
+  health: 3, home: 3, work: 3, family: 3, body: 3, nature: 3,
+  milestonesWord: 3, activitiesWord: 3, currentPhase: 3, scheduleTitle: 3,
+  upcoming: 3, bookSession: 3, availableNurturers: 3, sessionRoom: 3,
+  showCards: 3, forumTitle: 3, growthShelf: 3,
+  // tier 4 — long copy & explanations
+  trainingsSub: 4, chooseCategory: 4, coursesTitle: 4, coursesSub: 4,
+  noSessions: 4, forumSub: 4, appSpeaks: 4, immersionWarm: 4, firstJoke: 4,
 };
 
 export function t(key: string, lang: LangCode): string {
@@ -111,3 +151,33 @@ export function t(key: string, lang: LangCode): string {
 
 /** Build a translate function bound to one language */
 export const makeT = (lang: LangCode) => (key: string) => t(key, lang);
+
+/**
+ * Graduated-immersion translator: per KEY, speak the target language once the
+ * grower's stage has reached that key's tier (and a translation exists);
+ * otherwise fall back to the native language, then English.
+ * Stage 0 = fully native UI · stage 4 = fully target UI.
+ */
+export const makeBlendedT =
+  (native: LangCode, target: LangCode, stage: number) =>
+  (key: string): string => {
+    const entry = STRINGS[key];
+    if (!entry) return key;
+    const tier = KEY_TIERS[key] ?? 4;
+    const hit = entry[target];
+    if (tier <= stage && hit) return hit;
+    return entry[native] ?? entry.en ?? key;
+  };
+
+/**
+ * How much of the UI speaks the target language at a given stage, 0..1 —
+ * the dashboard's immersion meter.
+ */
+export function immersionShare(target: LangCode, stage: number): number {
+  if (stage <= 0) return 0;
+  const keys = Object.keys(STRINGS);
+  const flipped = keys.filter(
+    (k) => (KEY_TIERS[k] ?? 4) <= stage && STRINGS[k][target] !== undefined
+  ).length;
+  return keys.length === 0 ? 0 : flipped / keys.length;
+}

@@ -16,8 +16,8 @@ import type { LangCode, Profile } from "@/lib/types";
 
 /* ---------------------------------- lang --------------------------------- */
 
-/** The nine core languages with full picture decks. */
-export type ContentLang = "en" | "es" | "ru" | "fr" | "de" | "pt" | "it" | "ja" | "zh";
+/** The core languages with full picture decks. */
+export type ContentLang = "en" | "es" | "ru" | "fr" | "de" | "pt" | "it" | "ja" | "zh" | "ht";
 
 /**
  * Resolve the practice-content language once per page.

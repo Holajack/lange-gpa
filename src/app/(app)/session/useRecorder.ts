@@ -90,6 +90,8 @@ export function useRecorder() {
             hasVideo: withCamera,
             filename: `lange-session-${new Date().toISOString().slice(0, 10)}.webm`,
           });
+          // a finished clip is a real GPA milestone — the talking picture dictionary
+          window.dispatchEvent(new CustomEvent("lange:award", { detail: { id: "first-recording" } }));
           teardownStream();
         };
         rec.start();

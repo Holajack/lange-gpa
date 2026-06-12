@@ -40,6 +40,22 @@ export default defineSchema({
   }).index("by_grower", ["growerClerkId"]),
 
   /**
+   * Pre-launch interest list (the /early page).
+   * One row per email — `waitlist:join` dedupes on the by_email index,
+   * refreshing name/langInterest instead of inserting twice.
+   */
+  waitlist: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    /** LangCode the visitor is hoping to grow into, e.g. "ru". */
+    langInterest: v.optional(v.string()),
+    /** Where the signup came from, e.g. "early". */
+    source: v.optional(v.string()),
+    /** Client timestamp (ms since epoch). */
+    ts: v.number(),
+  }).index("by_email", ["email"]),
+
+  /**
    * Realtime event log for live two-device GPA sessions.
    * Event types (see the CONVEX_SYNC marker in the session room):
    *   "reveal"      — nurturer reveals a picture card to the grower

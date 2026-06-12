@@ -21,6 +21,8 @@ export const NURTURERS: Nurturer[] = [
   { id: "zhangmin", name: "Zhang Min", langs: ["zh"], city: "Kunming", bio: "Grandmother and mahjong fan. Learns your name in one session, deals you into the family table by the next.", tags: ["family", "games", "phase 1–3"], sessions: 356, rating: 5.0, online: true, color: "#ffd234" },
   { id: "maggie", name: "Maggie Whitlow", langs: ["en"], city: "Leeds", bio: "Tea-shop owner. Pours, points and natters — scones, teapots and weather talk until her counter is your first hundred words.", tags: ["cozy", "food", "phase 1–2"], sessions: 248, rating: 4.9, online: true, color: "#a78bfa" },
   { id: "dwayne", name: "Dwayne Carter", langs: ["en"], city: "Atlanta", bio: "School bus driver. Twenty years of morning routes — seats, stops and the same jokes daily, so the words show up right on time.", tags: ["humor", "routines", "phase 1–3"], sessions: 173, rating: 4.8, online: true, color: "#3ddc84" },
+  { id: "yolande", name: "Yolande Pierre-Louis", langs: ["ht"], city: "Port-au-Prince", bio: "Machann at the Iron Market. Point at any mango, any sack of spice — she names it, bags it, and quizzes you back on your next visit. No English, ever; her scale does the explaining.", tags: ["market life", "food", "phase 1–2"], sessions: 226, rating: 4.9, online: true, color: "#ffd234" },
+  { id: "frantz", name: "Frantz Delva", langs: ["ht"], city: "Cap-Haïtien", bio: "Taptap driver. His painted bus is a rolling picture-card deck — saints, parrots and proverbs on every panel, named stop by stop while the whole route chimes in.", tags: ["routines", "humor", "phase 1–3"], sessions: 158, rating: 4.8, online: true, color: "#ff5d5d" },
 ];
 
 export const nurturerById = (id: string) => NURTURERS.find((n) => n.id === id);

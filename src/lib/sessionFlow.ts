@@ -96,6 +96,14 @@ export const CUES: Partial<Record<LangCode, CueSet>> = {
     praise: "Well done!",
     begin: "Let's begin!",
   },
+  ht: {
+    greeting: "Bonjou! Mwen rele Ti Boujon.",
+    listen: "Koute.",
+    again: "Ankò.",
+    point: "Montre m.",
+    praise: "Bravo! Ou fè sa byen!",
+    begin: "Ann kòmanse!",
+  },
 };
 
 /** "Where is …?" — the one question that powers all of Phase 1. */
@@ -109,6 +117,7 @@ export const QUESTION_TEMPLATES: Partial<Record<LangCode, (word: string) => stri
   ru: (word) => `Где ${word}?`,
   ja: (word) => `${word}はどこ？`,
   zh: (word) => `${word}在哪里？`,
+  ht: (word) => `Kote ${word}?`,
 };
 
 export function questionFor(lang: LangCode, word: string): string {

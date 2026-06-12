@@ -50,6 +50,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Che cos'è questo?",
       ja: "これは何ですか？",
       zh: "这是什么？",
+      ht: "Kisa sa a ye?",
     },
   },
   {
@@ -65,6 +66,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Che cos'è quello?",
       ja: "あれは何ですか？",
       zh: "那是什么？",
+      ht: "E sa a, kisa l ye?",
     },
   },
   {
@@ -80,6 +82,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Che cosa sta facendo?",
       ja: "何をしていますか？",
       zh: "他在做什么？",
+      ht: "Kisa l ap fè?",
     },
   },
   {
@@ -95,6 +98,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Chi è lui?",
       ja: "あの人は誰ですか？",
       zh: "他是谁？",
+      ht: "Ki moun li ye?",
     },
   },
   {
@@ -110,6 +114,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Non lo so",
       ja: "わかりません",
       zh: "我不知道",
+      ht: "Mwen pa konnen.",
     },
   },
   {
@@ -125,6 +130,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Ancora una volta, per favore",
       ja: "もう一度お願いします",
       zh: "请再说一遍",
+      ht: "Di l ankò, souple.",
     },
   },
   {
@@ -140,6 +146,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Più lentamente, per favore",
       ja: "ゆっくりお願いします",
       zh: "请说慢一点",
+      ht: "Pale pi dousman, souple.",
     },
   },
   {
@@ -155,6 +162,7 @@ const POWER_PHRASES: PowerPhrase[] = [
       it: "Che cosa significa?",
       ja: "どういう意味ですか？",
       zh: "是什么意思？",
+      ht: "Kisa sa vle di?",
     },
   },
 ];
