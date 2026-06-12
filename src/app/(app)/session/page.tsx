@@ -568,14 +568,14 @@ function SessionRoom() {
             <div className="mt-8 space-y-3 text-left">
               {(isAI
                 ? [
-                    ["🤖", `${mascot.name} speaks only ${lang.name} — and never gets tired of repeating.`],
-                    ["🃏", "The Dirty Dozen: ~12 picture cards, one at a time. Every new card is earned through review."],
-                    ["👉", "You point, tap and play. Understanding comes first — no pressure to speak."],
+                    ["🤖", `${mascot.name} ${t("sesIntroSpeaksOnly")} ${lang.name} — ${t("sesIntroNeverTired")}`],
+                    ["🃏", t("sesIntroDeckAi")],
+                    ["👉", t("sesIntroPointTap")],
                   ]
                 : [
-                    ["🗣️", `${nurturer.name.split(" ")[0]} speaks only ${lang.name} — a wall of noise becoming a window.`],
-                    ["🃏", "The Dirty Dozen: ~12 picture cards, one at a time. The nurturer's tray paces every reveal."],
-                    ["🎥", "Record it — your talking picture dictionary to re-live afterwards."],
+                    ["🗣️", `${nurturer.name.split(" ")[0]} ${t("sesIntroSpeaksOnly")} ${lang.name} — ${t("sesIntroWallToWindow")}`],
+                    ["🃏", t("sesIntroDeckHuman")],
+                    ["🎥", t("sesIntroRecordIt")],
                   ]
               ).map(([emoji, text], i) => (
                 <motion.div
@@ -600,7 +600,7 @@ function SessionRoom() {
               <Pill onClick={() => setStage("live")} className="bg-violet px-10 py-4 text-lg font-semibold text-white">
                 <span style={{ textShadow: "none" }}>▶ {t("start")} · 30:00</span>
               </Pill>
-              <p className="text-xs text-muted">Demo: inside the room, hit ⚡ ×60 to fast-forward the clock.</p>
+              <p className="text-xs text-muted">Demo: inside the room, hit ⚡ ×60 to fast-forward the clock.</p>{/* demo toggle copy — left as-is per task */}
             </motion.div>
           </Card>
         </motion.div>
@@ -630,8 +630,8 @@ function SessionRoom() {
             </motion.div>
             <h1 className="headline mt-4 text-4xl">{t("done")} 🎉</h1>
             <p className="mt-2 text-sm text-muted">
-              Another {elapsedMin} {t("minutes")} lived inside {sessionLangInfo.flag} {sessionLangInfo.name} —{" "}
-              {flow.introduced} cards met, comprehension first.
+              {t("sesEndAnother")} {elapsedMin} {t("minutes")} {t("sesEndLivedInside")} {sessionLangInfo.flag} {sessionLangInfo.name} —{" "}
+              {flow.introduced} {t("sesEndCardsMet")}
             </p>
 
             <div className="mt-8 grid grid-cols-3 gap-3">
@@ -662,7 +662,7 @@ function SessionRoom() {
                 className="mt-6 rounded-2xl bg-white/4 p-4 text-left"
               >
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted">
-                  🎥 Your talking picture dictionary
+                  🎥 {t("sesPictureDictYours")}
                 </p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                   {rec.clip.hasVideo ? (
@@ -679,9 +679,8 @@ function SessionRoom() {
                   </a>
                 </div>
                 <p className="mt-3 rounded-xl bg-white/4 px-3 py-2 text-xs leading-relaxed text-muted">
-                  🌀 The re-living loop: press play and{" "}
-                  <span className="font-semibold text-ink">point at each card as you hear it</span> — same voice, same
-                  laughter, no translation. The replay is where the words take root.
+                  🌀 {t("sesRelivingLoopLead")}{" "}
+                  <span className="font-semibold text-ink">{t("sesRelivingLoopPoint")}</span> {t("sesRelivingLoopTail")}
                 </p>
               </motion.div>
             )}
@@ -729,10 +728,10 @@ function SessionRoom() {
               onClick={() => (rec.status === "recording" ? rec.stop() : requestRecording())}
               title={
                 rec.status === "recording"
-                  ? "Stop recording"
+                  ? t("sesStopRecording")
                   : recConsented
-                    ? "Start recording (mic)"
-                    : "Recording asks for consent first"
+                    ? t("sesStartRecordingMic")
+                    : t("sesRecordingAsksConsent")
               }
               className={`pill flex items-center gap-2 px-4 py-1.5 text-xs font-bold backdrop-blur ${
                 rec.status === "recording" ? "bg-black/45 text-ink" : "bg-black/30 text-muted"
@@ -741,14 +740,14 @@ function SessionRoom() {
               <span
                 className={`h-2.5 w-2.5 rounded-full ${rec.status === "recording" ? "animate-pulse bg-coral" : "bg-white/25"}`}
               />
-              REC{rec.status === "recording" ? ` ${fmtClock(rec.elapsed)}` : ""}
+              {t("sesRecLabel")}{rec.status === "recording" ? ` ${fmtClock(rec.elapsed)}` : ""}
             </button>
             {recConsented && (
               <span
-                title="Recording consent given — this session only; everything stays on this device"
+                title={t("sesConsentGivenTip")}
                 className="pill flex items-center gap-1 bg-black/30 px-2.5 py-1.5 text-[10px] font-bold text-lime backdrop-blur"
               >
-                <ShieldCheck size={12} /> consented
+                <ShieldCheck size={12} /> {t("sesConsented")}
               </span>
             )}
           </div>
@@ -782,7 +781,7 @@ function SessionRoom() {
               className="absolute inset-x-0 top-16 z-30 flex justify-center px-4"
             >
               <div className="pill bg-lemon px-5 py-2.5 text-sm font-bold text-canvas" style={{ boxShadow: "var(--shadow-pop)" }}>
-                🔁 Half-time{isAI ? " — keep going, you're doing great!" : " — try Switch roles: now YOU nurture."}
+                🔁 {t("sesHalfTime")}{isAI ? ` — ${t("sesHalfTimeAi")}` : ` — ${t("sesHalfTimeHuman")}`}
               </div>
             </motion.div>
           )}
@@ -814,14 +813,14 @@ function SessionRoom() {
               )}
             </p>
             <p className="text-xs text-muted">
-              {isAI ? "✨" : "📍"} {swapped ? "Language exchange" : isAI ? "LANGE" : nurturer.city} ·{" "}
+              {isAI ? "✨" : "📍"} {swapped ? t("sesLanguageExchange") : isAI ? "LANGE" : nurturer.city} ·{" "}
               {sessionLangInfo.flag} {sessionLangInfo.name}
             </p>
           </div>
           <Wavebars active={speaking} color={accent} />
           <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Tag className="bg-white/6">🪴 {nurturerName} nurtures</Tag>
-            <Tag className="bg-white/6">🌱 {growerName} grows</Tag>
+            <Tag className="bg-white/6">🪴 {nurturerName} {t("sesNurtures")}</Tag>
+            <Tag className="bg-white/6">🌱 {growerName} {t("sesGrows")}</Tag>
             <Tag className="bg-lemon/15 text-lemon">⭐ {points}</Tag>
           </div>
         </div>
@@ -846,13 +845,13 @@ function SessionRoom() {
         {/* grower stage — ONLY introduced cards live here */}
         <div className="px-4 pb-4 pt-3 sm:px-6 sm:pb-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted">
-            🌱 Grower stage · {t("showCards")} {flow.introduced}/{flow.deck.length}
+            🌱 {t("sesGrowerStage")} · {t("showCards")} {flow.introduced}/{flow.deck.length}
           </p>
 
           {introduced.length === 0 ? (
             <div className="mt-3 grid h-40 place-items-center rounded-2xl border border-dashed border-line bg-white/3">
               <p className="text-sm text-muted">
-                👂 {isAI ? `${mascot.name} is getting the first card…` : "Waiting for the first card…"}
+                👂 {isAI ? `${mascot.name} ${t("sesGettingFirstCard")}` : t("sesWaitingFirstCard")}
               </p>
             </div>
           ) : (
@@ -900,28 +899,28 @@ function SessionRoom() {
           <div className="mt-3 min-h-[40px] rounded-2xl bg-white/4 px-4 py-2.5 text-center">
             {iceberg ? (
               <p className="popin text-xs font-semibold text-orange">
-                It&apos;s in your iceberg 🧊 — you&apos;ll meet it again.{" "}
-                {isAI ? `${mascot.name} says it once more…` : "Your nurturer says it once more…"}
+                {t("prcIceberg")} 🧊 — {t("sesMeetItAgain")}{" "}
+                {isAI ? `${mascot.name} ${t("sesSaysItOnceMore")}` : t("sesNurturerSaysOnceMore")}
               </p>
             ) : feedback?.kind === "correct" ? (
               <p className="popin text-xs font-semibold text-lime">{t("correct")} ✨</p>
             ) : flow.phase === "review" ? (
               <p className="text-xs text-muted">
-                👂 {t("listen")}… 👉 tap the card you hear ·{" "}
+                👂 {t("listen")}… 👉 {t("sesTapCardYouHear")} ·{" "}
                 <span className="font-semibold text-ink">
                   {reviewAsked + 1}/{flow.reviewTotal}
                 </span>
-                {flow.fullReview && <span className="ml-1 text-lemon">big round — every card!</span>}
+                {flow.fullReview && <span className="ml-1 text-lemon">{t("sesBigRoundEveryCard")}</span>}
               </p>
             ) : flow.phase === "intro" ? (
               <p className="text-xs text-muted">
-                👀 New card! Just listen — echo it if it feels good. 🦜 No pressure to speak.
+                👀 {t("sesNewCardJustListen")} 🦜 {t("sesNoPressureSpeak")}
               </p>
             ) : flow.phase === "review-done" ? (
-              <p className="popin text-xs font-semibold text-lime">✅ Round complete — next card unlocked.</p>
+              <p className="popin text-xs font-semibold text-lime">✅ {t("sesRoundCompleteUnlocked")}</p>
             ) : deckDone ? (
               <p className="popin text-xs font-semibold text-lemon">
-                🎉 Dirty Dozen complete — {points} ⭐. Keep reviewing or end the session.
+                🎉 {t("sesDeckCompleteGrower")} — {points} ⭐. {t("sesKeepReviewingOrEnd")}
               </p>
             ) : (
               <p className="text-xs text-muted">🔊 {t("listen")}… 👉</p>
@@ -938,10 +937,10 @@ function SessionRoom() {
                 className={`gap-2 px-5 py-2.5 text-sm font-semibold ${paused ? "bg-lime text-canvas" : "bg-white/10 text-ink"}`}
               >
                 {paused ? <Play size={15} /> : <Pause size={15} />}
-                {paused ? "Resume" : "Pause"}
+                {paused ? t("sesResume") : t("prcPause")}
               </Pill>
               <Pill onClick={hearAgain} className="gap-2 bg-white/10 px-5 py-2.5 text-sm font-semibold text-ink">
-                <RotateCcw size={15} /> Hear again
+                <RotateCcw size={15} /> {t("sesHearAgain")}
               </Pill>
             </>
           )}
@@ -961,7 +960,7 @@ function SessionRoom() {
       {!isAI && (
         <Card className="border border-amber/20 p-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Tag className="bg-amber/15 font-bold text-amber">🤫 Nurturer only — keep the screen angled</Tag>
+            <Tag className="bg-amber/15 font-bold text-amber">🤫 {t("sesNurturerOnly")}</Tag>
             <AnimatePresence mode="wait">
               <motion.p
                 key={jokeIdx}
@@ -971,7 +970,7 @@ function SessionRoom() {
                 transition={{ duration: 0.35 }}
                 className="ml-auto rounded-full bg-violet/12 px-3 py-1 text-[11px] font-medium text-violet-soft"
               >
-                🎭 {JOKE_PROMPTS[jokeIdx]}
+                🎭 {t(`sesJoke${jokeIdx % JOKE_PROMPTS.length}`)}
               </motion.p>
             </AnimatePresence>
           </div>
@@ -1009,13 +1008,13 @@ function SessionRoom() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">
-                    Say it twice — slower the second time
+                    {t("sesSayItTwice")}
                   </p>
                   <p className="headline mt-1 text-2xl">
                     {cues ? `${cues.listen} ` : ""}«{newest.word}»{cues ? ` … ${cues.again} «${newest.word}»` : ""}
                   </p>
                   <p className="mt-1 text-xs text-muted">
-                    {newest.emoji} then invite an echo — no pressure, comprehension first.
+                    {newest.emoji} {t("sesInviteEcho")}
                   </p>
                 </div>
                 <button
@@ -1031,18 +1030,18 @@ function SessionRoom() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">
-                    Ask aloud — question {reviewAsked + 1}/{flow.reviewTotal}
-                    {flow.fullReview ? " · full sweep" : ""}
+                    {t("sesAskAloudQuestion")} {reviewAsked + 1}/{flow.reviewTotal}
+                    {flow.fullReview ? ` · ${t("sesFullSweep")}` : ""}
                   </p>
                   <p className="headline mt-1 text-2xl">
                     {cues ? `${cues.point} ` : ""}«{questionFor(sessionLang, target.word)}»
                   </p>
                   <p className="mt-1 text-xs text-muted">
-                    answer: <span className="text-base">{target.emoji}</span>{" "}
-                    <span className="font-semibold text-ink">{target.word}</span> — highlighted in your tray
+                    {t("sesAnswerLabel")}: <span className="text-base">{target.emoji}</span>{" "}
+                    <span className="font-semibold text-ink">{target.word}</span> — {t("sesHighlightedInTray")}
                     {missId === target.id && (
                       <span className="ml-2 font-semibold text-orange">
-                        miss! re-say it slowly: {cues ? `${cues.again} ` : ""}«{target.word}»
+                        {t("sesMissReSaySlowly")}: {cues ? `${cues.again} ` : ""}«{target.word}»
                       </span>
                     )}
                   </p>
@@ -1058,18 +1057,17 @@ function SessionRoom() {
               </div>
             ) : flow.phase === "review-done" ? (
               <p className="text-sm text-lime">
-                ✅ Round complete — praise time{cues ? `: «${cues.praise}»` : ""}! The next card is unlocked.
+                ✅ {t("sesRoundCompletePraise")}{cues ? `: «${cues.praise}»` : ""}! {t("sesNextCardUnlocked")}
               </p>
             ) : deckDone ? (
               <p className="text-sm text-lemon">
-                🎉 Dirty Dozen done{cues ? ` — «${cues.praise}»` : ""}. Run free review rounds or end the session.
+                🎉 {t("sesDeckDoneTray")}{cues ? ` — «${cues.praise}»` : ""}. {t("sesRunFreeRoundsOrEnd")}
               </p>
             ) : flow.phase === "intro" || flow.introduced > 0 ? (
-              <p className="text-sm text-muted">Reveal a card or run a review round.</p>
+              <p className="text-sm text-muted">{t("sesRevealOrReview")}</p>
             ) : (
               <p className="text-sm text-muted">
-                Reveal the first card to begin{cues ? ` — «${cues.begin}»` : ""}. Card 1 is free: introduce, let them
-                echo.
+                {t("sesRevealFirstToBegin")}{cues ? ` — «${cues.begin}»` : ""}. {t("sesCardOneIsFree")}
               </p>
             )}
           </div>
@@ -1084,29 +1082,29 @@ function SessionRoom() {
               {(reviewNeeded || flow.phase === "review") && (
                 <ProgressRing value={flow.phase === "review" ? reviewAsked / Math.max(1, flow.reviewTotal) : 0} />
               )}
-              🃏 Reveal next card
+              🃏 {t("sesRevealNextCard")}
             </Pill>
             <Pill
               onClick={onStartReview}
               disabled={flow.phase === "review" || flow.introduced === 0}
               className="gap-2 bg-lime px-5 py-2.5 text-sm font-semibold text-canvas"
             >
-              🔁 Review round
+              🔁 {t("sesReviewRound")}
               {reviewNeeded && (
                 <span className="rounded-full bg-canvas/15 px-2 py-0.5 text-[11px] font-extrabold">
-                  {reviewLen} {reviewLen === 1 ? "ask" : "asks"}
-                  {flow.introduced % 3 === 0 ? " · all cards" : ""}
+                  {reviewLen} {reviewLen === 1 ? t("sesAskSingular") : t("sesAskPlural")}
+                  {flow.introduced % 3 === 0 ? ` · ${t("sesAllCards")}` : ""}
                 </span>
               )}
             </Pill>
             {reviewNeeded && (
-              <p className="text-xs text-muted">🔒 review first — every new card is earned through play</p>
+              <p className="text-xs text-muted">🔒 {t("sesReviewFirstEarned")}</p>
             )}
             <Pill
               onClick={() => setSwitchStep("confirm")}
               className="ml-auto gap-2 bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink"
             >
-              <ArrowLeftRight size={15} /> Switch roles
+              <ArrowLeftRight size={15} /> {t("sesSwitchRoles")}
             </Pill>
           </div>
         </Card>
@@ -1116,10 +1114,9 @@ function SessionRoom() {
       <Card className="p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="font-display text-sm font-bold">🎥 Talking picture dictionary</p>
+            <p className="font-display text-sm font-bold">🎥 {t("sesPictureDict")}</p>
             <p className="text-xs text-muted">
-              Record the session and re-live every card later — same voice, same laughter, zero translation. Consent
-              first, and it never leaves this device.
+              {t("sesPictureDictBlurb")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1127,7 +1124,7 @@ function SessionRoom() {
               type="button"
               onClick={() => setCamWanted((v) => !v)}
               disabled={rec.status === "recording"}
-              title={rec.status === "recording" ? "Stop recording to change the camera" : "Toggle camera capture"}
+              title={rec.status === "recording" ? t("sesStopToChangeCamera") : t("sesToggleCamera")}
               className={`grid h-10 w-10 place-items-center rounded-full transition hover:scale-105 disabled:opacity-40 ${
                 camWanted ? "bg-violet text-white" : "bg-white/10 text-muted"
               }`}
@@ -1136,15 +1133,15 @@ function SessionRoom() {
             </button>
             {rec.status === "recording" ? (
               <Pill onClick={rec.stop} className="gap-2 bg-coral px-5 py-2.5 text-sm font-semibold text-white">
-                <Square size={13} /> Stop · {fmtClock(rec.elapsed)}
+                <Square size={13} /> {t("sesStop")} · {fmtClock(rec.elapsed)}
               </Pill>
             ) : (
               <Pill
                 onClick={requestRecording}
                 className="gap-2 bg-white/10 px-5 py-2.5 text-sm font-semibold text-ink"
               >
-                <span className="h-2.5 w-2.5 rounded-full bg-coral" /> {rec.clip ? "Record again" : "Start recording"}
-                {camWanted ? " · mic + cam" : " · mic"}
+                <span className="h-2.5 w-2.5 rounded-full bg-coral" /> {rec.clip ? t("sesRecordAgain") : t("sesStartRecording")}
+                {camWanted ? ` · ${t("sesMicCam")}` : ` · ${t("sesMic")}`}
               </Pill>
             )}
           </div>
@@ -1152,13 +1149,12 @@ function SessionRoom() {
 
         {rec.status === "denied" && (
           <p className="mt-3 rounded-xl bg-orange/10 px-3 py-2 text-xs text-orange">
-            🙈 Mic/camera permission was denied — no problem, the session keeps growing without its recording. Allow
-            access in the browser bar to try again.
+            🙈 {t("sesPermissionDenied")}
           </p>
         )}
         {rec.status === "unsupported" && (
           <p className="mt-3 rounded-xl bg-orange/10 px-3 py-2 text-xs text-orange">
-            This browser can&apos;t record — the session continues without its talking picture dictionary.
+            {t("sesBrowserCantRecord")}
           </p>
         )}
 
@@ -1187,9 +1183,9 @@ function SessionRoom() {
       {/* ------------------------- single-device banner ------------------------- */}
       {!isAI && (
         <p className="px-1 text-center text-xs text-muted">
-          🪑 Single-device demo: both partners share this screen for language exchange.
+          🪑 {t("sesSingleDeviceDemo")}
           {/* CONVEX_SYNC: real-time remote role/deck sync between two devices ships with the Convex backend */}{" "}
-          Real-time remote sync lands with the Convex backend.
+          {t("sesRealtimeSyncSoon")}
         </p>
       )}
 
@@ -1225,28 +1221,27 @@ function SessionRoom() {
               <Card className="p-6">
                 {switchStep === "confirm" ? (
                   <>
-                    <h3 className="headline text-2xl">Switch roles? 🔁</h3>
+                    <h3 className="headline text-2xl">{t("sesSwitchRolesTitle")} 🔁</h3>
                     <p className="mt-3 text-sm leading-relaxed text-muted">
-                      Language exchange, the GPA way: growing flows both directions.{" "}
-                      <span className="font-semibold text-ink">{growerName}</span> becomes the nurturer of{" "}
-                      <span className="font-semibold text-ink">their strong language</span>, and{" "}
-                      <span className="font-semibold text-ink">{nurturerName}</span> becomes the grower — same Dirty
-                      Dozen, fresh deck, no translation.
+                      {t("sesSwitchRolesLead")}{" "}
+                      <span className="font-semibold text-ink">{growerName}</span> {t("sesSwitchRolesBecomesNurturer")}{" "}
+                      <span className="font-semibold text-ink">{t("sesSwitchRolesStrongLang")}</span>, {t("sesSwitchRolesAnd")}{" "}
+                      <span className="font-semibold text-ink">{nurturerName}</span> {t("sesSwitchRolesBecomesGrower")}
                     </p>
                     <div className="mt-6 flex justify-end gap-3">
                       <Pill onClick={() => setSwitchStep("closed")} className="bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink">
-                        Cancel
+                        {t("cancel")}
                       </Pill>
                       <Pill onClick={() => setSwitchStep("lang")} className="bg-violet px-5 py-2.5 text-sm font-semibold text-white">
-                        Continue →
+                        {t("continue")} →
                       </Pill>
                     </div>
                   </>
                 ) : (
                   <>
-                    <h3 className="headline text-2xl">Pick the new growing language 🌍</h3>
+                    <h3 className="headline text-2xl">{t("sesPickNewLang")} 🌍</h3>
                     <p className="mt-2 text-sm text-muted">
-                      The language {growerName} will now nurture {nurturerName} into:
+                      {t("sesPickNewLangSubA")} {growerName} {t("sesPickNewLangSubB")} {nurturerName} {t("sesPickNewLangSubC")}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {FULL_CONTENT_LANGS.map((code) => {
@@ -1267,7 +1262,7 @@ function SessionRoom() {
                     </div>
                     <div className="mt-6 flex justify-end">
                       <Pill onClick={() => setSwitchStep("closed")} className="bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink">
-                        Cancel
+                        {t("cancel")}
                       </Pill>
                     </div>
                   </>

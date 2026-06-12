@@ -47,35 +47,36 @@ import type { LangCode, Language, PhaseId, Profile, Role } from "@/lib/types";
 
 const STEP_COUNT = 9;
 
-/** Why this language — single-select; stored as a readable phrase. */
+/** Why this language — single-select; stored as a readable phrase.
+ *  `labelKey` resolves through the immersion translator at render time. */
 const MOTIVATIONS = [
-  { id: "family roots", emoji: "🌳", label: "Family roots" },
-  { id: "travel", emoji: "🧳", label: "Travel" },
-  { id: "someone I love", emoji: "💛", label: "Someone I love" },
-  { id: "work", emoji: "💼", label: "Work" },
-  { id: "faith", emoji: "🕊️", label: "Faith" },
-  { id: "the joy of it", emoji: "✨", label: "The joy of it" },
+  { id: "family roots", emoji: "🌳", labelKey: "dshMotFamilyRoots" },
+  { id: "travel", emoji: "🧳", labelKey: "dshMotTravel" },
+  { id: "someone I love", emoji: "💛", labelKey: "dshMotSomeoneILove" },
+  { id: "work", emoji: "💼", labelKey: "dshMotWork" },
+  { id: "faith", emoji: "🕊️", labelKey: "dshMotFaith" },
+  { id: "the joy of it", emoji: "✨", labelKey: "dshMotJoy" },
 ] as const;
 
 /** What you love — multi-select picture-card worlds. */
 const INTERESTS = [
-  { id: "food", emoji: "🍲", label: "Food" },
-  { id: "music", emoji: "🎶", label: "Music" },
-  { id: "sport", emoji: "⚽", label: "Sport" },
-  { id: "nature", emoji: "🌿", label: "Nature" },
-  { id: "family", emoji: "👨‍👩‍👧", label: "Family" },
-  { id: "craft", emoji: "🧵", label: "Craft" },
-  { id: "games", emoji: "🎲", label: "Games" },
-  { id: "stories", emoji: "📚", label: "Stories" },
-  { id: "travel", emoji: "🗺️", label: "Travel" },
-  { id: "faith", emoji: "🙏", label: "Faith" },
+  { id: "food", emoji: "🍲", labelKey: "dshIntFood" },
+  { id: "music", emoji: "🎶", labelKey: "dshIntMusic" },
+  { id: "sport", emoji: "⚽", labelKey: "dshIntSport" },
+  { id: "nature", emoji: "🌿", labelKey: "dshIntNature" },
+  { id: "family", emoji: "👨‍👩‍👧", labelKey: "dshIntFamily" },
+  { id: "craft", emoji: "🧵", labelKey: "dshIntCraft" },
+  { id: "games", emoji: "🎲", labelKey: "dshIntGames" },
+  { id: "stories", emoji: "📚", labelKey: "dshIntStories" },
+  { id: "travel", emoji: "🗺️", labelKey: "dshIntTravel" },
+  { id: "faith", emoji: "🙏", labelKey: "dshIntFaith" },
 ] as const;
 
 /** Daily watering rhythms — minutes → growing identity. */
 const PACES = [
-  { minutes: 10, emoji: "🌱", identity: "Seedling" },
-  { minutes: 20, emoji: "🌿", identity: "Sprout" },
-  { minutes: 40, emoji: "🌳", identity: "Grove" },
+  { minutes: 10, emoji: "🌱", identityKey: "dshPaceSeedling" },
+  { minutes: 20, emoji: "🌿", identityKey: "dshPaceSprout" },
+  { minutes: 40, emoji: "🌳", identityKey: "dshPaceGrove" },
 ] as const;
 
 /** First word a grower meets — pure target language, meaning carried by voice. */
@@ -268,11 +269,13 @@ function TargetCard({
   lang,
   selected,
   full,
+  fullLabel,
   onClick,
 }: {
   lang: Language;
   selected: boolean;
   full: boolean;
+  fullLabel: string;
   onClick: () => void;
 }) {
   return (
@@ -290,7 +293,7 @@ function TargetCard({
       <span className="text-xs text-muted">{lang.name}</span>
       {full && (
         <span className="mt-1 rounded-full bg-lime/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-lime">
-          full immersion
+          {fullLabel}
         </span>
       )}
       <CheckBadge on={selected} />
@@ -399,12 +402,16 @@ function PaceRow({
   minutes,
   emoji,
   identity,
+  minLabel,
+  perDay,
   selected,
   onClick,
 }: {
   minutes: number;
   emoji: string;
   identity: string;
+  minLabel: string;
+  perDay: string;
   selected: boolean;
   onClick: () => void;
 }) {
@@ -425,7 +432,7 @@ function PaceRow({
       <span className="flex items-center gap-3.5">
         <span className="text-2xl">{emoji}</span>
         <span className="font-semibold">
-          {minutes} min <span className="font-normal text-muted">/ day</span>
+          {minutes} {minLabel} <span className="font-normal text-muted">{perDay}</span>
         </span>
       </span>
       <span className="headline text-xl text-lime">{identity}</span>
@@ -536,9 +543,11 @@ function PlanVisual() {
  */
 function PlacementPanel({
   lang,
+  t,
   onDone,
 }: {
   lang: LangCode;
+  t: (key: string) => string;
   /** earned phase + whether this sitting counts as a real attempt */
   onDone: (earned: PhaseId, attempted: boolean) => void;
 }) {
@@ -643,19 +652,15 @@ function PlacementPanel({
       {/* ---------- intro: warm invitation ---------- */}
       {stage === "intro" && (
         <motion.section key="pl-intro" custom={1} variants={stepVariants} initial="enter" animate="center" exit="exit">
-          <NuriSays mood="think">Show us your roots — ears only, no reading.</NuriSays>
+          <NuriSays mood="think">{t("dshPlRootsNuri")}</NuriSays>
           <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-            Grown in <span className="text-violet-soft">{target.nativeName}</span> before?
+            {t("dshPlGrownInPre")}<span className="text-violet-soft">{target.nativeName}</span>{t("dshPlGrownInPost")}
           </motion.h1>
           <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-            Then let’s listen. You’ll hear {target.name} and point at pictures — comprehension
-            only, no reading, no translating. Pass the first gate and your iceberg starts at
-            Phase 2; pass the second and it starts at Phase 3. That’s the cap — deeper phases
-            must be lived, not tested into.
+            {t("dshPlIntroBody").replace("{language}", target.name)}
           </motion.p>
           <motion.p variants={item} className="mt-3 max-w-xl text-sm text-muted">
-            One replay per question, so trust your iceberg. And skipping is always fine —
-            Phase 1 is where the deepest trees start.
+            {t("dshPlOneReplay")}
           </motion.p>
           <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-3">
             <button
@@ -664,14 +669,14 @@ function PlacementPanel({
               className="pill bg-violet px-7 py-3 font-semibold text-white"
               style={{ boxShadow: "var(--shadow-glow-violet)" }}
             >
-              👂 I’m ready — let’s listen
+              👂 {t("dshPlReadyListen")}
             </button>
             <button
               type="button"
               onClick={() => onDone(1, false)}
               className="pill bg-white/6 px-6 py-3 text-sm font-semibold text-muted hover:text-ink"
             >
-              Skip — start fresh at Phase 1
+              {t("dshPlSkipFresh")}
             </button>
           </motion.div>
         </motion.section>
@@ -689,7 +694,7 @@ function PlacementPanel({
         >
           <motion.div variants={item} className="flex items-center justify-between gap-4">
             <p className="text-xs font-bold uppercase tracking-widest text-muted">
-              Gate {gate.gate} · {gate.gate === 1 ? "words by ear" : "questions by ear"}
+              {t("dshPlGate")} {gate.gate} · {gate.gate === 1 ? t("dshPlWordsByEar") : t("dshPlQuestionsByEar")}
             </p>
             <div className="flex items-center gap-1.5">
               {gate.rounds.map((_, i) => (
@@ -720,17 +725,17 @@ function PlacementPanel({
               <div>
                 <p className="font-semibold">
                   {round.kind === "tpr-chain"
-                    ? "Two steps — tap the actions in order."
+                    ? t("dshPlTwoSteps")
                     : round.kind === "tpr"
-                      ? "Listen, then tap the action."
-                      : "Listen, then tap the picture."}
+                      ? t("dshPlTapAction")
+                      : t("dshPlTapPicture")}
                 </p>
                 <p className="mt-1 text-xs text-muted">
                   {speaking
-                    ? "Listen…"
+                    ? t("dshPlListening")
                     : replays >= MAX_REPLAYS_PER_ROUND
-                      ? "No more replays — trust your iceberg."
-                      : "One replay if you need it."}
+                      ? t("dshPlNoMoreReplays")
+                      : t("dshPlOneReplayIfNeed")}
                 </p>
               </div>
             </div>
@@ -781,8 +786,8 @@ function PlacementPanel({
               className="text-xs font-semibold text-muted transition-colors hover:text-ink"
             >
               {earned > 1
-                ? `Stop here — keep my Phase ${earned} start`
-                : "Stop here — Phase 1 is where the deepest trees start"}
+                ? t("dshPlStopKeep").replace("{phase}", String(earned))
+                : t("dshPlStopPhase1")}
             </button>
           </motion.div>
         </motion.section>
@@ -791,15 +796,14 @@ function PlacementPanel({
       {/* ---------- bridge: Phase 2 earned, Gate 2 offered ---------- */}
       {stage === "bridge" && (
         <motion.section key="pl-bridge" custom={1} variants={stepVariants} initial="enter" animate="center" exit="exit">
-          <NuriSays mood="cheer">Your roots are real — Phase 2 is yours.</NuriSays>
+          <NuriSays mood="cheer">{t("dshPlBridgeNuri")}</NuriSays>
           <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-            Your iceberg starts at <span className="text-orange">Phase 2 🌿</span>
+            {t("dshPlBridgeHeadPre")}<span className="text-orange">{t("dshPlBridgeHeadPhase")}</span>
           </motion.h1>
           <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-            You heard {results[0]?.correct} of {results[0]?.total} — that’s a lived Phase 1.
-            Care to go deeper? Gate 2 listens for whole questions on bigger boards, plus
-            two-step actions. Pass it and you start at Phase 3 — the deepest start a test can
-            honestly give.
+            {t("dshPlBridgeBody")
+              .replace("{correct}", String(results[0]?.correct ?? 0))
+              .replace("{total}", String(results[0]?.total ?? 0))}
           </motion.p>
           <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-3">
             <button
@@ -808,14 +812,14 @@ function PlacementPanel({
               className="pill bg-violet px-7 py-3 font-semibold text-white"
               style={{ boxShadow: "var(--shadow-glow-violet)" }}
             >
-              🪴 Try Gate 2
+              🪴 {t("dshPlTryGate2")}
             </button>
             <button
               type="button"
               onClick={() => onDone(2, true)}
               className="pill bg-lime px-6 py-3 text-sm font-bold text-canvas"
             >
-              Start at Phase 2 🌿
+              {t("dshPlStartPhase2")} 🌿
             </button>
           </motion.div>
         </motion.section>
@@ -826,28 +830,26 @@ function PlacementPanel({
         <motion.section key="pl-result" custom={1} variants={stepVariants} initial="enter" animate="center" exit="exit">
           {earned > 1 ? (
             <>
-              <NuriSays mood="cheer">No reading, no translating — just your ears. Proven.</NuriSays>
+              <NuriSays mood="cheer">{t("dshPlResultProven")}</NuriSays>
               <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                Your iceberg starts at{" "}
+                {t("dshPlIcebergStartsAt")}{" "}
                 <span className="text-lime">
-                  Phase {earned} {phaseById(earned).emoji}
+                  {t("phaseWord")} {earned} {phaseById(earned).emoji}
                 </span>
               </motion.h1>
               <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                {phaseById(earned).name} — {phaseById(earned).tagline.toLowerCase()}. Your garden
-                opens at hour {phaseById(earned).startHour} of the journey, words already living
-                under the waterline.
+                {phaseById(earned).name} — {phaseById(earned).tagline.toLowerCase()}.{" "}
+                {t("dshPlGardenOpens").replace("{hour}", String(phaseById(earned).startHour))}
               </motion.p>
             </>
           ) : (
             <>
-              <NuriSays mood="happy">Phase 1 is where the deepest trees start.</NuriSays>
+              <NuriSays mood="happy">{t("dshPlPhase1Deepest")}</NuriSays>
               <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                Let’s grow it from the first hello 🌱
+                {t("dshPlGrowFromHello")} 🌱
               </motion.h1>
               <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                Today the words washed past — exactly how every grower begins. A hundred hours
-                of play with a nurturer, and this same listen will feel like home.
+                {t("dshPlWordsWashed")}
               </motion.p>
             </>
           )}
@@ -857,10 +859,10 @@ function PlacementPanel({
             {results.map((r) => (
               <div key={r.gate} className="card flex items-center justify-between gap-4 px-5 py-3.5 text-sm">
                 <span className="font-semibold">
-                  Gate {r.gate} · {r.gate === 1 ? "words by ear" : "questions by ear"}
+                  {t("dshPlGate")} {r.gate} · {r.gate === 1 ? t("dshPlWordsByEar") : t("dshPlQuestionsByEar")}
                 </span>
                 <span className={r.passed ? "font-bold text-lime" : "text-muted"}>
-                  {r.correct} / {r.total} · {r.pct}%{r.passed ? " · passed" : ""}
+                  {r.correct} / {r.total} · {r.pct}%{r.passed ? ` · ${t("dshPlPassed")}` : ""}
                 </span>
               </div>
             ))}
@@ -874,8 +876,8 @@ function PlacementPanel({
               style={{ boxShadow: "0 0 50px -12px rgba(184,240,60,0.55)" }}
             >
               {earned > 1
-                ? `Continue as a Phase ${earned} grower ${phaseById(earned).emoji}`
-                : "Continue — deepest roots 🌱"}
+                ? `${t("dshPlContinueAs").replace("{phase}", String(earned))} ${phaseById(earned).emoji}`
+                : `${t("dshPlContinueDeepest")} 🌱`}
             </button>
           </motion.div>
         </motion.section>
@@ -1027,7 +1029,7 @@ function OnboardingFlow() {
   const preview: ReactNode =
     trimmed.length === 0 ? null : nurturerOnly ? (
       <>
-        <span className="font-semibold text-ink">{trimmed}</span> — nurturing{" "}
+        <span className="font-semibold text-ink">{trimmed}</span> — {t("dshOnbPreviewNurturing")}{" "}
         <span className="font-semibold text-orange">
           {nurtureLangs.map((c) => langByCode(c).nativeName).join(" · ") || "…"}
         </span>{" "}
@@ -1035,10 +1037,10 @@ function OnboardingFlow() {
       </>
     ) : (
       <>
-        <span className="font-semibold text-ink">{trimmed}</span> — growing into{" "}
+        <span className="font-semibold text-ink">{trimmed}</span> — {t("dshOnbPreviewGrowingInto")}{" "}
         <span className="font-semibold text-violet-soft">{target?.nativeName ?? "…"}</span>{" "}
         {target?.flag}
-        {role === "both" && <> · nurturing on the side 🤝</>} 🌱
+        {role === "both" && <> · {t("dshOnbPreviewBothSide")} 🤝</>} 🌱
       </>
     );
 
@@ -1072,7 +1074,7 @@ function OnboardingFlow() {
             transition={{ delay: 0.15 }}
             className="card mt-6 flex flex-wrap items-center justify-between gap-3 px-5 py-4"
           >
-            <p className="text-sm font-medium">Your garden is already growing 🌱</p>
+            <p className="text-sm font-medium">{t("dshOnbGardenGrowing")} 🌱</p>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -1086,7 +1088,7 @@ function OnboardingFlow() {
                 onClick={resetAll}
                 className="pill bg-white/8 px-4 py-2 text-xs font-semibold text-muted hover:text-ink"
               >
-                Start over
+                {t("dshOnbStartOver")}
               </button>
             </div>
           </motion.div>
@@ -1097,6 +1099,7 @@ function OnboardingFlow() {
           {placementOpen && target ? (
             <PlacementPanel
               lang={target.code}
+              t={t}
               onDone={(earnedPhase, attempted) => {
                 setPlacementOpen(false);
                 if (attempted) {
@@ -1126,22 +1129,21 @@ function OnboardingFlow() {
                     variants={item}
                     className="headline mt-2 text-center text-4xl sm:text-5xl"
                   >
-                    I’m Nuri. 👋
+                    {t("dshOnbImNuri")} 👋
                   </motion.h1>
                   <motion.p
                     variants={item}
                     className="mx-auto mt-4 max-w-md text-center leading-relaxed text-muted"
                   >
-                    LANGE grows you into a language the way children grow into their first —
-                    with a real person, picture cards, and{" "}
-                    <span className="font-semibold text-lime">zero translation</span>.
+                    {t("dshOnbTaglinePre")}{" "}
+                    <span className="font-semibold text-lime">{t("dshOnbZeroTranslation")}</span>{t("dshOnbTaglinePost")}
                   </motion.p>
 
                   <div className="mt-9 grid gap-3 sm:grid-cols-2">
                     <RoleCard
                       emoji="🌱"
-                      title="I want to grow into a language"
-                      desc="Step into a new world — real voices and pictures carry you from first words to belonging."
+                      title={t("dshOnbRoleGrowerTitle")}
+                      desc={t("dshOnbRoleGrowerDesc")}
                       selected={role === "grower"}
                       accent="var(--color-violet)"
                       glow="var(--shadow-glow-violet)"
@@ -1149,8 +1151,8 @@ function OnboardingFlow() {
                     />
                     <RoleCard
                       emoji="🤝"
-                      title="I want to nurture growers"
-                      desc="Share the language you live in. No teaching degree — just you and thirty friendly minutes."
+                      title={t("dshOnbRoleNurturerTitle")}
+                      desc={t("dshOnbRoleNurturerDesc")}
                       selected={role === "nurturer"}
                       accent="var(--color-orange)"
                       glow="var(--shadow-glow-orange)"
@@ -1168,7 +1170,7 @@ function OnboardingFlow() {
                           : "border-line bg-white/4 text-muted hover:text-ink"
                       }`}
                     >
-                      🌱🤝 A bit of both, please
+                      🌱🤝 {t("dshOnbBothPlease")}
                       {role === "both" && <Check size={14} strokeWidth={3} />}
                     </button>
                   </motion.div>
@@ -1178,12 +1180,12 @@ function OnboardingFlow() {
               {/* ============ 1 · known languages ============ */}
               {step === 1 && (
                 <>
-                  <NuriSays mood="happy">Your roots feed everything you’ll grow.</NuriSays>
+                  <NuriSays mood="happy">{t("dshOnbRootsFeed")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    Which languages do you already live in?
+                    {t("dshOnbKnownHead")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    Pick every language that feels like home — choose as many as you like.
+                    {t("dshOnbKnownSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
                     {LANGUAGES.map((l) => (
@@ -1201,12 +1203,12 @@ function OnboardingFlow() {
               {/* ============ 2 · target world / nurture langs ============ */}
               {step === 2 && !nurturerOnly && (
                 <>
-                  <NuriSays mood="think">Pick a world — I’ll come with you.</NuriSays>
+                  <NuriSays mood="think">{t("dshOnbPickWorldNuri")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    Which world will you grow into?
+                    {t("dshOnbTargetHead")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    One to start. Pictures and voices will carry the meaning — never translation.
+                    {t("dshOnbTargetSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {LANGUAGES.filter((l) => !knownLangs.includes(l.code)).map((l) => (
@@ -1215,6 +1217,7 @@ function OnboardingFlow() {
                         lang={l}
                         selected={targetLang === l.code}
                         full={FULL_CONTENT_LANGS.includes(l.code)}
+                        fullLabel={t("dshOnbFullImmersion")}
                         onClick={() => pickTarget(l.code)}
                       />
                     ))}
@@ -1234,24 +1237,23 @@ function OnboardingFlow() {
                           <p className="text-sm font-medium">
                             {placedPhase > 1 ? (
                               <>
-                                🧊 Your iceberg starts at{" "}
+                                🧊 {t("dshPlIcebergStartsAt")}{" "}
                                 <span className="font-bold text-lime">
-                                  Phase {placedPhase} {phaseById(placedPhase).emoji}
+                                  {t("phaseWord")} {placedPhase} {phaseById(placedPhase).emoji}
                                 </span>
                               </>
                             ) : (
-                              <>🌱 Phase 1 — where the deepest trees start</>
+                              <>🌱 {t("dshOnbPhase1Deepest")}</>
                             )}
                           </p>
                         ) : (
                           <>
                             <div>
                               <p className="font-semibold">
-                                🌳 Grown in {target.nativeName} before?
+                                🌳 {t("dshPlGrownInPre")}{target.nativeName}{t("dshPlGrownInPost")}
                               </p>
                               <p className="mt-1 text-sm text-muted">
-                                Show us your roots — a short listen, ears only. It can only move
-                                your start up.
+                                {t("dshOnbShowRootsHint")}
                               </p>
                             </div>
                             <button
@@ -1259,7 +1261,7 @@ function OnboardingFlow() {
                               onClick={() => setPlacementOpen(true)}
                               className="pill border border-line bg-white/5 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
                             >
-                              👂 Show my roots
+                              👂 {t("dshOnbShowMyRoots")}
                             </button>
                           </>
                         )}
@@ -1271,12 +1273,12 @@ function OnboardingFlow() {
 
               {step === 2 && nurturerOnly && (
                 <>
-                  <NuriSays mood="happy">Your everyday words are a grower’s treasure.</NuriSays>
+                  <NuriSays mood="happy">{t("dshOnbNurtureTreasure")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    Which of your languages can you nurture?
+                    {t("dshOnbNurtureHead")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    Growers will meet these worlds through your voice. Pick all that apply.
+                    {t("dshOnbNurtureSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
                     {knownLangs.map((code) => {
@@ -1298,20 +1300,19 @@ function OnboardingFlow() {
               {/* ============ 3 · place (optional) ============ */}
               {step === 3 && (
                 <>
-                  <NuriSays mood="happy">Every garden grows somewhere.</NuriSays>
+                  <NuriSays mood="happy">{t("dshOnbGardenSomewhere")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    Where are you {nurturerOnly ? "nurturing" : "growing"} from?
+                    {nurturerOnly ? t("dshOnbPlaceHeadNurture") : t("dshOnbPlaceHeadGrow")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    So kindred {nurturerOnly ? "growers" : "voices"} can find you on the world map.
-                    Totally optional — skip ahead if you’d rather not say.
+                    {nurturerOnly ? t("dshOnbPlaceSubNurture") : t("dshOnbPlaceSubGrow")}
                   </motion.p>
                   <motion.div variants={item} className="card mt-8 grid gap-5 p-6 sm:grid-cols-2">
-                    <PlaceInput label="City" value={city} placeholder="e.g. Porto" onChange={setCity} />
+                    <PlaceInput label={t("dshOnbCityLabel")} value={city} placeholder={t("dshOnbCityPlaceholder")} onChange={setCity} />
                     <PlaceInput
-                      label="Country"
+                      label={t("dshOnbCountryLabel")}
                       value={country}
-                      placeholder="e.g. Portugal"
+                      placeholder={t("dshOnbCountryPlaceholder")}
                       onChange={setCountry}
                     />
                   </motion.div>
@@ -1320,7 +1321,7 @@ function OnboardingFlow() {
                     className="mt-4 flex items-center gap-2 text-xs text-muted"
                   >
                     <MapPin size={14} className="shrink-0 text-lime" />
-                    Shown at city level only — never your exact location.
+                    {t("dshOnbCityLevelNote")}
                   </motion.p>
                 </>
               )}
@@ -1328,27 +1329,25 @@ function OnboardingFlow() {
               {/* ============ 4 · why this language (optional) ============ */}
               {step === 4 && (
                 <>
-                  <NuriSays mood="think">There’s no wrong reason — only yours.</NuriSays>
+                  <NuriSays mood="think">{t("dshOnbNoWrongReason")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
                     {nurturerOnly || !target ? (
-                      <>Why nurture?</>
+                      <>{t("dshOnbWhyNurture")}</>
                     ) : (
                       <>
-                        Why <span className="text-violet-soft">{target.nativeName}</span>?
+                        {t("dshOnbWhyPre")}<span className="text-violet-soft">{target.nativeName}</span>{t("dshOnbWhyPost")}
                       </>
                     )}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    {nurturerOnly
-                      ? "What draws you to share your world? It helps growers feel who you are."
-                      : "Your reason shapes the journey — and helps a nurturer meet you where you are."}
+                    {nurturerOnly ? t("dshOnbMotSubNurture") : t("dshOnbMotSubGrow")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {MOTIVATIONS.map((m) => (
                       <MotivationCard
                         key={m.id}
                         emoji={m.emoji}
-                        label={m.label}
+                        label={t(m.labelKey)}
                         selected={motivation === m.id}
                         onClick={() => setMotivation((cur) => (cur === m.id ? null : m.id))}
                       />
@@ -1360,20 +1359,19 @@ function OnboardingFlow() {
               {/* ============ 5 · what you love (optional) ============ */}
               {step === 5 && (
                 <>
-                  <NuriSays mood="happy">Words grow fastest where love already lives.</NuriSays>
+                  <NuriSays mood="happy">{t("dshOnbLoveLives")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    What do you love?
+                    {t("dshOnbWhatLoveHead")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    These become picture-card worlds a nurturer can start from. Pick as many — or
-                    as few — as you like.
+                    {t("dshOnbWhatLoveSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
                     {INTERESTS.map((i) => (
                       <InterestChip
                         key={i.id}
                         emoji={i.emoji}
-                        label={i.label}
+                        label={t(i.labelKey)}
                         selected={interests.includes(i.id)}
                         onClick={() => toggleInterest(i.id)}
                       />
@@ -1385,12 +1383,12 @@ function OnboardingFlow() {
               {/* ============ 6 · watering rhythm + exchange (optional) ============ */}
               {step === 6 && (
                 <>
-                  <NuriSays mood="cheer">Little and often beats much and rarely.</NuriSays>
+                  <NuriSays mood="cheer">{t("dshOnbLittleOften")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    How often will you water it?
+                    {t("dshOnbWaterHead")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
-                    Pick a rhythm that fits your real life — you can always change it later.
+                    {t("dshOnbWaterSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 grid gap-3">
                     {PACES.map((p) => (
@@ -1398,7 +1396,9 @@ function OnboardingFlow() {
                         key={p.minutes}
                         minutes={p.minutes}
                         emoji={p.emoji}
-                        identity={p.identity}
+                        identity={t(p.identityKey)}
+                        minLabel={t("minutes")}
+                        perDay={t("dshOnbPerDay")}
                         selected={dailyMinutes === p.minutes}
                         onClick={() =>
                           setDailyMinutes((cur) => (cur === p.minutes ? null : p.minutes))
@@ -1411,15 +1411,15 @@ function OnboardingFlow() {
                     className="card mt-6 flex items-center justify-between gap-4 p-5"
                   >
                     <div>
-                      <p className="font-semibold">🤝 Open to language exchange</p>
+                      <p className="font-semibold">🤝 {t("wldOpenToExchange")}</p>
                       <p className="mt-1 text-sm text-muted">
-                        You nurture your language, they nurture theirs.
+                        {t("dshOnbExchangeSub")}
                       </p>
                     </div>
                     <Toggle
                       on={exchange}
                       onClick={() => setExchange((v) => !v)}
-                      label="Open to language exchange"
+                      label={t("wldOpenToExchange")}
                       knob="🤝"
                     />
                   </motion.div>
@@ -1429,9 +1429,9 @@ function OnboardingFlow() {
               {/* ============ 7 · name ============ */}
               {step === 7 && (
                 <>
-                  <NuriSays mood="happy">Almost there — what may I call you?</NuriSays>
+                  <NuriSays mood="happy">{t("dshOnbAlmostThere")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    What should we call you?
+                    {t("dshOnbNameHead")}
                   </motion.h1>
                   <motion.div variants={item} className="card mt-8 px-6 py-10">
                     <input
@@ -1440,7 +1440,7 @@ function OnboardingFlow() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") next();
                       }}
-                      placeholder="Your name"
+                      placeholder={t("dshOnbNamePlaceholder")}
                       maxLength={24}
                       autoFocus
                       className="headline w-full bg-transparent text-center text-4xl text-ink caret-violet outline-none placeholder:text-white/15 sm:text-5xl"
@@ -1466,15 +1466,13 @@ function OnboardingFlow() {
               {/* ============ 8 · immersion moment (growers) ============ */}
               {step === 8 && !nurturerOnly && target && (
                 <>
-                  <NuriSays mood="cheer">From here, the pictures do the explaining.</NuriSays>
+                  <NuriSays mood="cheer">{t("dshOnbPicturesExplain")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    From now on, LANGE speaks{" "}
-                    <span className="text-violet-soft">{target.nativeName}</span>.
+                    {t("dshOnbLangeSpeaksPre")}{" "}
+                    <span className="text-violet-soft">{target.nativeName}</span>{t("dshOnbLangeSpeaksPost")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                    Menus, buttons, practice — the app itself becomes part of your new world.
-                    Pictures carry the meaning, and the {target.flag} flag button in the top bar
-                    flips immersion on and off anytime.
+                    {t("dshOnbImmersionBody").replace("{flag}", target.flag)}
                   </motion.p>
 
                   {/* first word — audio only, no translation */}
@@ -1486,7 +1484,7 @@ function OnboardingFlow() {
                       <span className="text-5xl">{target.flag}</span>
                       <div>
                         <p className="headline text-3xl sm:text-4xl">{HELLO[target.code]}</p>
-                        <p className="mt-1 text-xs text-muted">your first word — tap to hear it</p>
+                        <p className="mt-1 text-xs text-muted">{t("dshOnbFirstWordTap")}</p>
                       </div>
                     </div>
                     <button
@@ -1507,12 +1505,12 @@ function OnboardingFlow() {
                   >
                     <div>
                       <p className="flex items-center gap-2 font-semibold">
-                        <Sparkles size={16} className="text-lime" /> Immersion mode
+                        <Sparkles size={16} className="text-lime" /> {t("dshOnbImmersionMode")}
                       </p>
                       <p className="mt-1 text-sm text-muted">
                         {immersion
-                          ? `Brave choice — LANGE will greet you in ${target.nativeName} from your very first day.`
-                          : "Off for now — you can dive in later with the flag button."}
+                          ? t("dshOnbImmersionOnLine").replace("{language}", target.nativeName)
+                          : t("dshOnbImmersionOffLine")}
                       </p>
                     </div>
                     <Toggle on={immersion} onClick={() => setImmersion((v) => !v)} />
@@ -1520,7 +1518,7 @@ function OnboardingFlow() {
 
                   {role === "both" && (
                     <motion.p variants={item} className="mt-4 text-center text-xs text-muted">
-                      Your nurturer toolkit will be waiting on the dashboard too 🤝
+                      {t("dshOnbToolkitWaiting")} 🤝
                     </motion.p>
                   )}
                 </>
@@ -1529,29 +1527,28 @@ function OnboardingFlow() {
               {/* ============ 8 · nurturer toolkit ============ */}
               {step === 8 && nurturerOnly && (
                 <>
-                  <NuriSays mood="cheer">Here’s what’s in your pocket.</NuriSays>
+                  <NuriSays mood="cheer">{t("dshOnbInYourPocket")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    Your nurturer toolkit
+                    {t("dshOnbToolkitHead")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                    Everything for a friendly thirty-minute growing session — you’re a host, not a
-                    teacher. The grower listens, points, and plays; you speak and smile.
+                    {t("dshOnbToolkitBody")}
                   </motion.p>
                   <div className="mt-8 grid gap-3">
                     <ToolkitCard
                       visual={<DeckVisual />}
-                      title="Picture card decks"
-                      desc="Wordless decks for the Dirty Dozen and beyond — meaning travels by image and your voice, never by translation."
+                      title={t("dshOnbToolDecksTitle")}
+                      desc={t("dshOnbToolDecksDesc")}
                     />
                     <ToolkitCard
                       visual={<PlanVisual />}
-                      title="Session plans"
-                      desc="Ready-made plans for all six GPA phases, so every meeting knows exactly where it’s going."
+                      title={t("dshOnbToolPlansTitle")}
+                      desc={t("dshOnbToolPlansDesc")}
                     />
                     <ToolkitCard
                       visual={<TimerVisual />}
-                      title="30-minute meeting timer"
-                      desc="A gentle timer that paces listen → point → play, and reminds you to record for re-living at home."
+                      title={t("dshOnbToolTimerTitle")}
+                      desc={t("dshOnbToolTimerDesc")}
                     />
                   </div>
                 </>
@@ -1585,9 +1582,9 @@ function OnboardingFlow() {
                 style={valid ? { boxShadow: "var(--shadow-glow-violet)" } : undefined}
               >
                 {step === 6 && dailyMinutes !== null ? (
-                  <>{nurturerOnly ? "I’m nurturing 🤝" : "I’m growing 🌱"}</>
+                  <>{nurturerOnly ? `${t("dshOnbImNurturing")} 🤝` : `${t("dshOnbImGrowing")} 🌱`}</>
                 ) : inviteStepEmpty ? (
-                  <>Skip for now</>
+                  <>{t("dshOnbSkipForNow")}</>
                 ) : (
                   <>{t("continue")}</>
                 )}{" "}
@@ -1601,7 +1598,7 @@ function OnboardingFlow() {
                 className="pill bg-lime px-8 py-3 font-bold text-canvas disabled:pointer-events-none disabled:opacity-35"
                 style={{ boxShadow: "0 0 50px -12px rgba(184,240,60,0.55)" }}
               >
-                {nurturerOnly ? "Open my toolkit 🤝" : "Start growing 🌱"}
+                {nurturerOnly ? `${t("dshOnbOpenToolkit")} 🤝` : `${t("dshOnbStartGrowing")} 🌱`}
               </button>
             )}
           </motion.div>

@@ -54,37 +54,13 @@ const fadeUp: Variants = {
  *  The nurturer's craft — golden rules (from the GPA meeting plans)
  * ---------------------------------------------------------------- */
 
-const GOLDEN_RULES: { emoji: string; title: string; body: string }[] = [
-  {
-    emoji: "✌️",
-    title: "Start with two, add one at a time",
-    body: "Never one, never three. Say a new word once — at most twice — then go straight back to asking, in random order.",
-  },
-  {
-    emoji: "🎯",
-    title: "Ask the newest, weakest word most often",
-    body: "Weight your questions toward what is still wobbly. If someone overloads, drop back to two cards and rebuild.",
-  },
-  {
-    emoji: "🔁",
-    title: "Recast, never correct",
-    body: "“No, that's the horse… where's the cow?” Errors are fixed naturally, inside the play — never as a lesson.",
-  },
-  {
-    emoji: "👉",
-    title: "Never force speech",
-    body: "Pointing IS the answer in Phase 1. Comprehension comes first; talking emerges later, on its own, like a child's.",
-  },
-  {
-    emoji: "🧸",
-    title: "You are a playmate, not a teacher",
-    body: "Stay connected as a person, keep the game moving fast, and laugh a lot. Play, not study.",
-  },
-  {
-    emoji: "🎙️",
-    title: "Record the last two minutes",
-    body: "A talking picture dictionary over today's cards — so your grower can re-live the meeting at home.",
-  },
+const GOLDEN_RULES: { emoji: string; titleKey: string; bodyKey: string }[] = [
+  { emoji: "✌️", titleKey: "nurGoldenRule1Title", bodyKey: "nurGoldenRule1Body" },
+  { emoji: "🎯", titleKey: "nurGoldenRule2Title", bodyKey: "nurGoldenRule2Body" },
+  { emoji: "🔁", titleKey: "nurGoldenRule3Title", bodyKey: "nurGoldenRule3Body" },
+  { emoji: "👉", titleKey: "nurGoldenRule4Title", bodyKey: "nurGoldenRule4Body" },
+  { emoji: "🧸", titleKey: "nurGoldenRule5Title", bodyKey: "nurGoldenRule5Body" },
+  { emoji: "🎙️", titleKey: "nurGoldenRule6Title", bodyKey: "nurGoldenRule6Body" },
 ];
 
 /* ---------------------------------------------------------------- *
@@ -109,10 +85,14 @@ const KIND_EMOJI: Record<PhaseActivity["kind"], string> = {
 interface PlanBlock {
   id: string;
   emoji: string;
-  title: string;
+  /** activity blocks carry literal (dynamic) text; fixed blocks carry i18n keys */
+  title?: string;
+  titleKey?: string;
   minutes: number;
-  how: string;
+  how?: string;
+  howKey?: string;
   tag?: string;
+  tagKey?: string;
   practiceHref?: string;
 }
 
@@ -163,10 +143,10 @@ function buildPlan(phase: Phase, length: MeetingLength, roll: number): PlanBlock
     {
       id: "warmup",
       emoji: "🔁",
-      title: "Warm-up review",
+      titleKey: "nurWarmupReview",
       minutes: WARMUP_MIN,
-      how: "Recycled cards from last time. Quick random questions — no new words yet. Every old word stays in play forever.",
-      tag: "every meeting",
+      howKey: "nurWarmupHow",
+      tagKey: "nurEveryMeeting",
     },
     ...picks.map((a, i) => ({
       id: a.id,
@@ -180,15 +160,16 @@ function buildPlan(phase: Phase, length: MeetingLength, roll: number): PlanBlock
     {
       id: "closing",
       emoji: "🎙️",
-      title: "Closing recording",
+      titleKey: "nurClosingRecording",
       minutes: CLOSING_MIN,
-      how: "Talking Picture Dictionary: record yourself naming today's cards, one by one, so your grower can re-live the meeting at home.",
-      tag: "every meeting",
+      howKey: "nurClosingHow",
+      tagKey: "nurEveryMeeting",
     },
   ];
 }
 
 function SessionPlanner() {
+  const { t } = useApp();
   const [phaseId, setPhaseId] = useState<number>(1);
   const [length, setLength] = useState<MeetingLength>(30);
   const [roll, setRoll] = useState(0);
@@ -203,16 +184,14 @@ function SessionPlanner() {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="headline text-2xl lg:text-3xl">🗺️ Session Planner</h2>
-          <p className="mt-1 text-sm text-muted">
-            Pick your grower&apos;s phase and the meeting length — get a ready-to-run plan.
-          </p>
+          <h2 className="headline text-2xl lg:text-3xl">🗺️ {t("nurSessionPlanner")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("nurSessionPlannerSub")}</p>
         </div>
         <Pill
           onClick={() => setRoll((r) => r + 1)}
           className="gap-2 bg-orange px-5 py-2.5 text-sm font-semibold text-canvas"
         >
-          <Shuffle size={15} /> Shuffle activities
+          <Shuffle size={15} /> {t("nurShuffleActivities")}
         </Pill>
       </div>
 
@@ -253,14 +232,14 @@ function SessionPlanner() {
                 length === m ? "bg-white/14 text-ink" : "bg-white/5 text-muted hover:text-ink"
               }`}
             >
-              {m} min
+              {m} {t("minutes")}
             </button>
           ))}
         </div>
       </div>
 
       <p className="mt-4 text-sm font-semibold" style={{ color: phase.color }}>
-        {phase.emoji} Phase {phase.id} · {phase.name} — {phase.tagline}
+        {phase.emoji} {t("phaseWord")} {phase.id} · {phase.name} — {phase.tagline}
       </p>
 
       {/* the plan */}
@@ -290,19 +269,25 @@ function SessionPlanner() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-display text-[15px] font-bold">
-                      {i + 1}. {block.title}
+                      {i + 1}. {block.titleKey ? t(block.titleKey) : block.title}
                     </span>
-                    {block.tag && <Tag className="text-[10px] uppercase tracking-wide">{block.tag}</Tag>}
+                    {(block.tagKey || block.tag) && (
+                      <Tag className="text-[10px] uppercase tracking-wide">
+                        {block.tagKey ? t(block.tagKey) : block.tag}
+                      </Tag>
+                    )}
                     {block.practiceHref && (
                       <Link
                         href={block.practiceHref}
                         className="text-xs font-semibold text-orange hover:underline"
                       >
-                        open in app →
+                        {t("nurOpenInApp")} →
                       </Link>
                     )}
                   </div>
-                  <p className="mt-1 text-[13px] leading-relaxed text-muted">{block.how}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                    {block.howKey ? t(block.howKey) : block.how}
+                  </p>
                 </div>
                 <span className="pill shrink-0 bg-white/8 px-3 py-1.5 font-display text-sm font-bold tabular-nums">
                   {block.minutes}′
@@ -316,10 +301,11 @@ function SessionPlanner() {
       {/* minute math */}
       <div className="mt-4 flex items-center justify-between rounded-2xl bg-orange/10 px-4 py-3">
         <p className="text-xs font-semibold text-muted">
-          {WARMUP_MIN}′ review + {total - WARMUP_MIN - CLOSING_MIN}′ play + {CLOSING_MIN}′ recording
+          {WARMUP_MIN}′ {t("nurMathReview")} + {total - WARMUP_MIN - CLOSING_MIN}′ {t("nurMathPlay")} + {CLOSING_MIN}′{" "}
+          {t("nurMathRecording")}
         </p>
         <p className="font-display text-sm font-extrabold text-orange tabular-nums">
-          = {total} / {length} min ✓
+          = {total} / {length} {t("minutes")} ✓
         </p>
       </div>
     </Card>
@@ -342,6 +328,7 @@ const WHERE_IS: Partial<Record<LangCode, string>> = {
 };
 
 function CardTable({ contentLang }: { contentLang: LangCode }) {
+  const { t } = useApp();
   const [domainId, setDomainId] = useState(VOCAB_DOMAINS[0].id);
   const [index, setIndex] = useState(0);
   const [showWord, setShowWord] = useState(false);
@@ -375,16 +362,14 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="headline text-2xl lg:text-3xl">🃏 Card Table</h2>
-          <p className="mt-1 text-sm text-muted">
-            Point your screen at the camera — one giant picture card at a time.
-          </p>
+          <h2 className="headline text-2xl lg:text-3xl">🃏 {t("nurCardTable")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("nurCardTableSub")}</p>
         </div>
         <Pill
           onClick={() => setDeckRoll((r) => r + 1)}
           className="gap-2 bg-white/8 px-4 py-2 text-xs font-semibold text-ink"
         >
-          <Shuffle size={13} /> Shuffle deck
+          <Shuffle size={13} /> {t("nurShuffleDeck")}
         </Pill>
       </div>
 
@@ -424,7 +409,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
                 {showWord ? (
                   <p className="font-display text-2xl font-extrabold tracking-tight">{word}</p>
                 ) : (
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted">👂 ears before eyes</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted">👂 {t("nurEarsBeforeEyes")}</p>
                 )}
               </motion.div>
             )}
@@ -467,7 +452,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={() => setShowWord((s) => !s)}
-          title={showWord ? "Hide word" : "Show word"}
+          title={showWord ? t("nurHideWord") : t("nurShowWord")}
           className={`grid h-12 w-12 place-items-center rounded-full transition hover:scale-105 active:scale-95 ${
             showWord ? "bg-lemon text-canvas" : "bg-white/8 text-muted"
           }`}
@@ -485,8 +470,8 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
       </div>
 
       <p className="mt-4 rounded-2xl bg-white/4 px-4 py-3 text-center text-xs leading-relaxed text-muted">
-        Name it. Point. Ask <span className="font-bold text-ink">&ldquo;{whereIs}&rdquo;</span>. Shuffle in old cards —
-        newest and weakest most often.
+        {t("nurCardTableTipBefore")} <span className="font-bold text-ink">&ldquo;{whereIs}&rdquo;</span>.{" "}
+        {t("nurCardTableTipAfter")}
       </p>
     </Card>
   );
@@ -497,9 +482,9 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
  * ---------------------------------------------------------------- */
 
 const SEGMENTS = [
-  { id: "review", label: "Review", emoji: "🔁", minutes: 5, color: "#ffd234" },
-  { id: "play", label: "Play", emoji: "🃏", minutes: 20, color: "#ff8a1e" },
-  { id: "record", label: "Record", emoji: "🎙️", minutes: 5, color: "#7c5cff" },
+  { id: "review", labelKey: "nurSegReview", emoji: "🔁", minutes: 5, color: "#ffd234" },
+  { id: "play", labelKey: "nurSegPlay", emoji: "🃏", minutes: 20, color: "#ff8a1e" },
+  { id: "record", labelKey: "nurSegRecord", emoji: "🎙️", minutes: 5, color: "#7c5cff" },
 ] as const;
 
 const TIMER_TOTAL = SEGMENTS.reduce((s, x) => s + x.minutes, 0) * 60; // 1800s
@@ -518,6 +503,7 @@ const TIMER_CUES: Partial<Record<LangCode, { play: string; record: string; done:
 };
 
 function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
+  const { t } = useApp();
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const [fast, setFast] = useState(false);
@@ -582,10 +568,8 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="headline text-2xl lg:text-3xl">⏱️ Meeting Timer</h2>
-          <p className="mt-1 text-sm text-muted">
-            Running the call somewhere else? Keep the GPA shape: 5 review · 20 play · 5 record.
-          </p>
+          <h2 className="headline text-2xl lg:text-3xl">⏱️ {t("nurMeetingTimer")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("nurMeetingTimerSub")}</p>
         </div>
         <button
           type="button"
@@ -603,7 +587,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
           {mm}:{ss}
         </p>
         <p className="text-sm font-bold" style={{ color: current.color }}>
-          {done ? "🎉 Meeting complete — send the recording!" : `${current.emoji} ${current.label} time`}
+          {done ? `🎉 ${t("nurMeetingComplete")}` : `${current.emoji} ${t(current.labelKey)} ${t("nurTimeSuffix")}`}
         </p>
       </div>
 
@@ -618,7 +602,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
               key={seg.id}
               className="relative h-full overflow-hidden rounded-full"
               style={{ width: `${(seg.minutes / 30) * 100}%`, background: seg.color + "22" }}
-              title={`${seg.label} · ${seg.minutes} min`}
+              title={`${t(seg.labelKey)} · ${seg.minutes} ${t("minutes")}`}
             >
               <div
                 className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-linear"
@@ -631,7 +615,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
       <div className="mt-2 flex gap-1 text-[11px] font-semibold text-muted">
         {SEGMENTS.map((seg) => (
           <span key={seg.id} className="text-center" style={{ width: `${(seg.minutes / 30) * 100}%` }}>
-            {seg.emoji} {seg.label} · {seg.minutes}′
+            {seg.emoji} {t(seg.labelKey)} · {seg.minutes}′
           </span>
         ))}
       </div>
@@ -645,7 +629,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
           }`}
         >
           {running ? <Pause size={18} /> : <Play size={18} />}
-          {running ? "Pause" : done ? "Again" : elapsed > 0 ? "Resume" : "Start meeting"}
+          {running ? t("nurPause") : done ? t("nurAgain") : elapsed > 0 ? t("nurResume") : t("nurStartMeeting")}
         </Pill>
         <button
           type="button"
@@ -657,9 +641,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
         </button>
       </div>
 
-      <p className="mt-4 text-center text-xs text-muted">
-        At each boundary the timer calls the next segment out loud — in your language, of course.
-      </p>
+      <p className="mt-4 text-center text-xs text-muted">{t("nurTimerFootnote")}</p>
     </Card>
   );
 }
@@ -669,6 +651,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
  * ---------------------------------------------------------------- */
 
 function GrowerGate() {
+  const { t } = useApp();
   return (
     <div className="flex min-h-[70vh] items-center justify-center">
       <motion.div
@@ -682,21 +665,18 @@ function GrowerGate() {
           <div className="flex justify-center">
             <Mascot size={150} mood="think" />
           </div>
-          <h1 className="headline mt-4 text-3xl lg:text-4xl">The nurturer&apos;s bench 🪑</h1>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">
-            This is the nurturer&apos;s bench. Reach Phase 6 — or flip your role in onboarding — to unlock it.
-            The circle closes when you nurture the next grower through their first hundred hours.
-          </p>
+          <h1 className="headline mt-4 text-3xl lg:text-4xl">{t("nurBenchTitle")} 🪑</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">{t("nurBenchBody")}</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/courses/ever-growing"
               className="pill bg-orange px-7 py-3.5 font-semibold text-canvas"
               style={{ boxShadow: "var(--shadow-glow-orange)" }}
             >
-              🌍 See Phase 6
+              🌍 {t("nurSeePhase6")}
             </Link>
             <Link href="/onboarding" className="pill bg-white/8 px-7 py-3.5 font-semibold text-ink">
-              Flip my role →
+              {t("nurFlipMyRole")} →
             </Link>
           </div>
         </Card>
@@ -710,7 +690,7 @@ function GrowerGate() {
  * ---------------------------------------------------------------- */
 
 export default function NurturePage() {
-  const { profile } = useApp();
+  const { profile, t } = useApp();
 
   // nurture language: first nurtureLang, falling back to the target language
   const [lang, setLang] = useState<LangCode | null>(null);
@@ -733,12 +713,9 @@ export default function NurturePage() {
       <motion.header variants={fadeUp} className="relative pt-2">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-orange">🍊 For nurturers</p>
-            <h1 className="headline mt-1 text-4xl lg:text-5xl">Nurturer Studio</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted lg:text-base">
-              You don&apos;t need training — you need this bench. The golden rules, a ready meeting plan,
-              a picture-card table and a timer: everything a playmate needs, nothing a teacher would.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest text-orange">🍊 {t("nurForNurturers")}</p>
+            <h1 className="headline mt-1 text-4xl lg:text-5xl">{t("nurStudioTitle")}</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted lg:text-base">{t("nurStudioSub")}</p>
           </div>
 
           {/* nurture language picker */}
@@ -779,21 +756,17 @@ export default function NurturePage() {
               🗣️
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="headline text-2xl lg:text-3xl">Speak ONLY your language</h2>
-              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted">
-                Never translate — not even one word. Pictures and your hands carry the meaning. Your grower
-                stands outside a wall of noise, and every sentence you speak in your own language opens a
-                window in it.
-              </p>
+              <h2 className="headline text-2xl lg:text-3xl">{t("nurRuleZeroTitle")}</h2>
+              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted">{t("nurRuleZeroBody")}</p>
             </div>
-            <Tag className="bg-orange/15 text-orange">rule №1 — the only unbreakable one</Tag>
+            <Tag className="bg-orange/15 text-orange">{t("nurRuleZeroTag")}</Tag>
           </div>
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GOLDEN_RULES.map((rule, i) => (
             <motion.div
-              key={rule.title}
+              key={rule.titleKey}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
@@ -803,8 +776,8 @@ export default function NurturePage() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange/15 text-xl" aria-hidden>
                   {rule.emoji}
                 </span>
-                <h3 className="font-display mt-3 text-lg font-extrabold leading-snug">{rule.title}</h3>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{rule.body}</p>
+                <h3 className="font-display mt-3 text-lg font-extrabold leading-snug">{t(rule.titleKey)}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{t(rule.bodyKey)}</p>
               </Card>
             </motion.div>
           ))}

@@ -438,7 +438,7 @@ export default function DashboardPage() {
               <div className="card-hover flex h-full flex-col gap-2 rounded-[24px] bg-lemon p-5 text-canvas">
                 <span className="text-3xl">👂</span>
                 <h3 className="headline text-lg leading-tight">{t("listening")}</h3>
-                <p className="text-xs font-semibold opacity-75">TPR · Listen &amp; Do</p>
+                <p className="text-xs font-semibold opacity-75">{t("dshListenSub")}</p>
                 <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-bold">
                   {t("play")} <ArrowRight size={13} strokeWidth={3} />
                 </span>
@@ -450,7 +450,7 @@ export default function DashboardPage() {
               <div className="card-hover flex h-full flex-col gap-2 rounded-[24px] bg-orange p-5 text-canvas">
                 <span className="text-3xl">🗣️</span>
                 <h3 className="headline text-lg leading-tight">{t("speaking")}</h3>
-                <p className="text-xs font-semibold opacity-75">Power Phrases</p>
+                <p className="text-xs font-semibold opacity-75">{t("prcSpeakName")}</p>
                 <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-bold">
                   {t("play")} <ArrowRight size={13} strokeWidth={3} />
                 </span>

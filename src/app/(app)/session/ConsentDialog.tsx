@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import { Card, Pill } from "@/components/ui";
+import { useApp } from "@/lib/store";
 
 /**
  * ConsentDialog — the consent-first gate in front of the session recorder.
@@ -38,6 +39,7 @@ export function ConsentDialog({
   onAccept: () => void;
   onDecline: () => void;
 }) {
+  const { t } = useApp();
   const [agree, setAgree] = useState(false);
 
   // a fresh ask every time the dialog opens — consent is never pre-ticked
@@ -64,29 +66,29 @@ export function ConsentDialog({
             onClick={(e) => e.stopPropagation()}
           >
             <Card className="p-6">
-              <h3 className="headline text-2xl">Record this session? 🎙️</h3>
+              <h3 className="headline text-2xl">{t("sesConsentTitle")} 🎙️</h3>
               <p className="mt-2 text-sm text-muted">
-                Consent first — a recording is a gift to your future self, never a requirement.
+                {t("sesConsentIntro")}
               </p>
 
               <div className="mt-5 space-y-2.5">
                 {[
                   [
                     "🎙️",
-                    "What gets recorded",
+                    t("sesConsentWhatTitle"),
                     camera
-                      ? "Microphone and camera — you switched the camera on."
-                      : "Microphone audio only. The camera stays off unless you switch it on later — this same agreement covers it.",
+                      ? t("sesConsentWhatCam")
+                      : t("sesConsentWhatMic"),
                   ],
                   [
                     "📖",
-                    "Why",
-                    "It becomes your talking picture dictionary — replay the session afterwards and re-live every card in the same voice.",
+                    t("sesConsentWhyTitle"),
+                    t("sesConsentWhyBody"),
                   ],
                   [
                     "🔒",
-                    "Where it lives",
-                    "This device only. Nothing uploads, nothing syncs — close the tab and it's gone unless you download it.",
+                    t("sesConsentWhereTitle"),
+                    t("sesConsentWhereBody"),
                   ],
                 ].map(([emoji, title, body]) => (
                   <div key={title} className="flex items-start gap-3 rounded-2xl bg-white/4 px-4 py-3">
@@ -108,29 +110,28 @@ export function ConsentDialog({
                     className="mt-0.5 h-4 w-4 shrink-0 accent-violet"
                   />
                   <span className="text-sm leading-relaxed">
-                    Both of us agree to be recorded —{" "}
-                    <span className="font-semibold text-ink">{nurturerName}</span> (nurturer) and{" "}
-                    <span className="font-semibold text-ink">{growerName}</span> (grower).
+                    {t("sesConsentBothAgree")} —{" "}
+                    <span className="font-semibold text-ink">{nurturerName}</span> ({t("sesConsentNurturerRole")}) {t("sesConsentAndWord")}{" "}
+                    <span className="font-semibold text-ink">{growerName}</span> ({t("sesConsentGrowerRole")}).
                   </span>
                 </label>
               )}
 
               <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
                 <Pill onClick={onDecline} className="bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink">
-                  Not now
+                  {t("sesConsentNotNow")}
                 </Pill>
                 <Pill
                   onClick={onAccept}
                   disabled={human && !agree}
                   className="gap-2 bg-violet px-5 py-2.5 text-sm font-semibold text-white"
                 >
-                  <ShieldCheck size={15} /> Agree — start recording
+                  <ShieldCheck size={15} /> {t("sesConsentAgreeStart")}
                 </Pill>
               </div>
 
               <p className="mt-3 text-center text-[11px] leading-relaxed text-muted">
-                Declining changes nothing — the session is exactly the same without a recording. A yes lasts this
-                session only and is never stored.
+                {t("sesConsentFootnote")}
               </p>
             </Card>
           </motion.div>
