@@ -48,6 +48,22 @@ const LANGS = {
       begin: "Let's begin!",
     },
   },
+  // Haitian Creole — NO native ElevenLabs model exists for Kreyòl ayisyen;
+  // multilingual_v2 reads it through its French-leaning engine, so this is a
+  // BOOTSTRAP voice (Jessica — warm/playful, suits Ti Boujon) to be replaced
+  // by native-speaker recordings dropped into public/audio/ht/ later.
+  ht: {
+    voiceId: "cgSgspJ2msm6clMCkdW9",
+    question: (word) => `Kote ${word}?`,
+    cues: {
+      greeting: "Bonjou! Mwen rele Ti Boujon.",
+      listen: "Koute.",
+      again: "Ankò.",
+      point: "Montre m.",
+      praise: "Bravo! Ou fè sa byen!",
+      begin: "Ann kòmanse!",
+    },
+  },
 };
 
 async function readApiKey() {
