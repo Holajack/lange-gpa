@@ -123,12 +123,16 @@ export interface ForumPost {
 export interface VocabItem {
   id: string;
   emoji: string;     // the "picture card" — meaning carried by image, never translation
+  /** authentic Phase-1 meeting this card is introduced in (Rough-and-Ready Dozen order) */
+  meeting?: number;
   words: Partial<Record<LangCode, string>>;
 }
 
 export interface VocabDomain {
   id: string;
   emoji: string;
+  /** authentic Phase-1 meeting this set first appears in */
+  meeting?: number;
   /** names shown in each UI language */
   names: Partial<Record<LangCode, string>>;
   color: string;
