@@ -1,7 +1,8 @@
 export type Role = "grower" | "nurturer" | "both";
 
 export type LangCode =
-  | "en" | "es" | "ru" | "fr" | "de" | "pt" | "it" | "ja" | "zh" | "ar" | "ko" | "tr" | "uk" | "hi" | "ht";
+  | "en" | "es" | "ru" | "fr" | "de" | "pt" | "it" | "ja" | "zh" | "ar" | "ko" | "tr" | "uk" | "hi" | "ht"
+  | "vi" | "id" | "pl" | "th";
 
 export interface Language {
   code: LangCode;

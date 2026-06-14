@@ -20,7 +20,7 @@
  * blocking completion (GPA is invitation, not interrogation).
  */
 
-import { Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Volume2 } from "lucide-react";
@@ -96,6 +96,10 @@ const HELLO: Record<LangCode, string> = {
   uk: "Привіт!",
   hi: "नमस्ते",
   ht: "Bonjou!",
+  vi: "Xin chào!",
+  id: "Halo!",
+  pl: "Cześć!",
+  th: "สวัสดี",
 };
 
 /* ------------------------------------------------------------------ */
@@ -904,6 +908,20 @@ function OnboardingFlow() {
   });
   const [knownLangs, setKnownLangs] = useState<LangCode[]>(["en"]);
   const [targetLang, setTargetLang] = useState<LangCode | null>(null);
+
+  // Welcome the world in its own language: preselect the visitor's known
+  // language from the browser so a non-English speaker starts at home.
+  const browserDetected = useRef(false);
+  useEffect(() => {
+    if (browserDetected.current) return;
+    browserDetected.current = true;
+    const codes = (typeof navigator !== "undefined" ? navigator.languages ?? [navigator.language] : []) as string[];
+    const known = new Set(LANGUAGES.map((l) => l.code));
+    const hit = codes
+      .map((c) => c.slice(0, 2).toLowerCase() as LangCode)
+      .find((c) => known.has(c) && c !== "en");
+    if (hit) setKnownLangs([hit]);
+  }, []);
   const [nurtureLangs, setNurtureLangs] = useState<LangCode[]>([]);
   const [name, setName] = useState("");
   const [immersion, setImmersion] = useState(true);

@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { LangCode, Profile, SessionBooking } from "./types";
 import { makeBlendedT, makeT } from "./i18n";
+import { langByCode } from "./languages";
 import { AWARD_REQUEST_EVENT, awardAchievement, evaluateAchievements } from "./achievements";
 
 const KEY = "lange.profile.v1";
@@ -190,6 +191,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ? profile.targetLang
       : profile.knownLangs[0] ?? "en"
     : "en";
+
+  // Reflect the UI language onto <html> — drives lang attr + right-to-left
+  // layout for Arabic and any future RTL interface language.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const el = document.documentElement;
+    el.lang = uiLang;
+    el.dir = langByCode(uiLang).rtl ? "rtl" : "ltr";
+  }, [uiLang]);
 
   const t = useMemo(() => {
     if (!profile) return makeT("en");

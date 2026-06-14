@@ -16,6 +16,10 @@ export const LANGUAGES: Language[] = [
   { code: "uk", name: "Ukrainian", nativeName: "Українська", flag: "🇺🇦", tts: "uk-UA" },
   { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", tts: "hi-IN" },
   { code: "ht", name: "Haitian Creole", nativeName: "Kreyòl ayisyen", flag: "🇭🇹", tts: "ht-HT" },
+  { code: "vi", name: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳", tts: "vi-VN" },
+  { code: "id", name: "Indonesian", nativeName: "Bahasa Indonesia", flag: "🇮🇩", tts: "id-ID" },
+  { code: "pl", name: "Polish", nativeName: "Polski", flag: "🇵🇱", tts: "pl-PL" },
+  { code: "th", name: "Thai", nativeName: "ไทย", flag: "🇹🇭", tts: "th-TH" },
 ];
 
 export const langByCode = (code: LangCode): Language =>
