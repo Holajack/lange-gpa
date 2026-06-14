@@ -664,7 +664,7 @@ export const PHASES: Phase[] = [
         id: "p6-nurture",
         name: "Become a Nurturer",
         description: "The circle closes: guide a new grower through their first hundred hours.",
-        how: "You know the wall of noise from both sides now. LANGE unlocks nurturer tools — card decks, session plans, the meeting timer — for any language you've grown into.",
+        how: "You know the wall of noise from both sides now. Nuri unlocks nurturer tools — card decks, session plans, the meeting timer — for any language you've grown into.",
         minutes: 60,
         kind: "conversation",
         practiceHref: "/onboarding",

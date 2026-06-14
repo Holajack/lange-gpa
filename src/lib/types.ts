@@ -111,7 +111,7 @@ export interface Nurturer {
   region?: string;
   /** PPP-adjusted rate the grower pays per hour, in USD */
   ratePerHourUsd?: number;
-  /** completed the LANGE GPA method certification */
+  /** completed the Nuri GPA method certification */
   methodCertified?: boolean;
   /** open to time-for-time exchange (nurture yours, they nurture theirs) */
   exchangeOpen?: boolean;

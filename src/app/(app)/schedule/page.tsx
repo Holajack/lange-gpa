@@ -4,7 +4,7 @@
  * /schedule — book growing sessions with nurturers.
  * Left: upcoming bookings + the selected day's hour grid.
  * Right: nurturers who live the grower's target language.
- * A slide-over sheet books a fixed 30-minute LANGE session.
+ * A slide-over sheet books a fixed 30-minute Nuri session.
  */
 
 import { useMemo, useState } from "react";
@@ -29,7 +29,7 @@ const NURI: Nurturer = {
   id: "ai",
   name: "Nuri",
   langs: LANGUAGES.map((l) => l.code),
-  city: "LANGE",
+  city: "Nuri",
   bio: "Always awake, endlessly patient. Runs the same GPA games — speaks only your growing language.",
   tags: ["AI", "24/7", "picture cards"],
   sessions: 0,
@@ -612,7 +612,7 @@ export default function SchedulePage() {
                 <Card className="flex items-start gap-3 bg-raised-2 p-4">
                   <span className="text-xl">⏱️</span>
                   <p className="text-xs leading-relaxed text-muted">
-                    <span className="font-semibold text-ink">30 {t("minutes")}.</span> LANGE meetings run 30 minutes — when the
+                    <span className="font-semibold text-ink">30 {t("minutes")}.</span> Nuri meetings run 30 minutes — when the
                     timer ends, the room switches out of the host language so you can debrief.
                   </p>
                 </Card>

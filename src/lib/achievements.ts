@@ -5,7 +5,7 @@ import type { Profile } from "./types";
 import { PHASES } from "./phases";
 
 /**
- * The Growth Shelf — LANGE's anti-Duolingo achievement system.
+ * The Growth Shelf — Nuri's anti-Duolingo achievement system.
  *
  * No streaks. No XP. No leagues. Nothing here decays, nags or guilt-trips.
  * Every badge marks a REAL comprehension or relationship milestone on the

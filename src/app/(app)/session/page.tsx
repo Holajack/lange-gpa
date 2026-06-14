@@ -86,7 +86,7 @@ const NURI: Nurturer = {
   id: "ai",
   name: "Nuri",
   langs: LANGUAGES.map((l) => l.code),
-  city: "LANGE",
+  city: "Nuri",
   bio: "Always awake, endlessly patient. Runs the same GPA games — speaks only your growing language.",
   tags: ["AI", "24/7", "picture cards"],
   sessions: 0,
@@ -817,7 +817,7 @@ function SessionRoom() {
               )}
             </p>
             <p className="text-xs text-muted">
-              {isAI ? "✨" : "📍"} {swapped ? t("sesLanguageExchange") : isAI ? "LANGE" : nurturer.city} ·{" "}
+              {isAI ? "✨" : "📍"} {swapped ? t("sesLanguageExchange") : isAI ? "Nuri" : nurturer.city} ·{" "}
               {sessionLangInfo.flag} {sessionLangInfo.name}
             </p>
           </div>

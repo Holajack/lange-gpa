@@ -227,7 +227,7 @@ export default function LandingPage() {
         <SectionHead
           eyebrow="How it works"
           title="Grown, not taught"
-          sub="Three ideas from the Growing Participator Approach turn 'studying a language' into growing into a world."
+          sub="Three ideas that turn 'studying a language' into growing into a world."
         />
 
         <div className="mt-14 space-y-8">
@@ -246,7 +246,7 @@ export default function LandingPage() {
                     objects and play — the way a family welcomes a new member.
                   </p>
                   <p className="mt-3 text-sm text-muted">
-                    No lesson plans to invent, either — LANGE guides every minute of every session.
+                    No lesson plans to invent, either — Nuri guides every minute of every session.
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -492,7 +492,7 @@ export default function LandingPage() {
               <p className="mt-5 max-w-xl text-base font-medium leading-relaxed opacity-90">
                 No teaching degree. No grammar explanations. No lesson prep. If you can show a
                 picture, name what&rsquo;s in it and play, you can nurture someone into your world —
-                LANGE guides every session, card by card, minute by minute.
+                Nuri guides every session, card by card, minute by minute.
               </p>
               <Link
                 href="/onboarding?role=nurturer"

@@ -68,7 +68,7 @@ export function Hero() {
             transition={{ duration: 0.55, ease: EASE }}
             className="inline-flex items-center gap-2 rounded-full border border-line bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-muted"
           >
-            🌱 The Growing Participator Approach — digitized
+            🌱 Grow into a language — with a real person
           </motion.div>
 
           <motion.h1

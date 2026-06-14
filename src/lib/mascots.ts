@@ -1,7 +1,7 @@
 import type { LangCode } from "./types";
 
 /**
- * The LANGE toy family — Nuri's siblings. Each growing language has its own
+ * The Nuri toy family — Nuri's siblings. Each growing language has its own
  * sibling modeled after that country's iconic toy (piñata, nutcracker,
  * matryoshka, daruma…), so the mascot itself carries culture — never translation.
  */

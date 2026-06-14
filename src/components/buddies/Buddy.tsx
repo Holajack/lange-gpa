@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * The LANGE buddy family — Nuri's nine siblings, all drawn in his exact flat
+ * The Nuri buddy family — Nuri's nine siblings, all drawn in his exact flat
  * hand-drawn style (see src/components/Mascot.tsx): bold simple silhouettes,
  * flat saturated fills, ONE darker lower-body shading shape + ONE lighter
  * belly/face tone, no outlines, no gradients beyond Nuri's belly shine, and a

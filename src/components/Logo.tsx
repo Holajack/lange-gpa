@@ -17,7 +17,7 @@ export function Logo({ size = "md", href = "/" }: { size?: "sm" | "md" | "lg"; h
         <circle cx="22" cy="15.5" r="2.1" fill="#1A1A20" />
       </svg>
       <span className={`headline ${text} tracking-tight`}>
-        LANGE<span className="text-orange">.</span>
+        Nuri<span className="text-orange">.</span>
       </span>
     </Link>
   );

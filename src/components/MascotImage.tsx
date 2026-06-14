@@ -4,7 +4,7 @@ import type { MascotDef } from "@/lib/mascots";
 import { Buddy, BUDDY_IDS } from "@/components/buddies/Buddy";
 
 /**
- * Portrait of a LANGE language sibling — flat hand-drawn SVG art in the
+ * Portrait of a Nuri language sibling — flat hand-drawn SVG art in the
  * same style as the hero Nuri (the 3D renders live on in docs/, but the
  * app is flat-vector everywhere). Falls back to the rendered PNG for any
  * future buddy whose SVG hasn't been drawn yet.

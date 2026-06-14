@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * /wallet — the LANGE hours wallet.
+ * /wallet — the Nuri hours wallet.
  *
  * Two strictly-separate currencies, made visually explicit:
  *   • GROWING HOURS (lime) — EARNED by nurturing, never bought. They net to

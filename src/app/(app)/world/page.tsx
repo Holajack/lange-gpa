@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * /world — the LANGE planet. Every language sibling stands on its home
+ * /world — the Nuri planet. Every language sibling stands on its home
  * country; pick one and the globe eases over to it (Bump/Zenly style),
  * its marker swells in the sibling's own color, and the side panel opens
  * that language's world: native hello, cultural-immersion notes, and the

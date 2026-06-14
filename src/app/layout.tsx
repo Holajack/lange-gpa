@@ -17,9 +17,9 @@ const onest = Onest({
 });
 
 export const metadata: Metadata = {
-  title: "LANGE — Grow into a language, not just learn it",
+  title: "Nuri — Grow into a language, not just learn it",
   description:
-    "Language growth through the Growing Participator Approach: real people, picture cards, zero translation. From your first hundred words to truly belonging.",
+    "Grow into a language with a real person — picture cards, native audio, zero translation, comprehension first. From your first hundred words to truly belonging.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Nuri — the LANGE mascot (from "nurturer"). A round orange sprout-bot
+ * Nuri — the Nuri mascot (from "nurturer"). A round orange sprout-bot
  * with a friendly visor face, hand-drawn as inline SVG so it can wave,
  * float and cheer without any image assets.
  */

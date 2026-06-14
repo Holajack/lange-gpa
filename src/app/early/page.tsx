@@ -266,7 +266,7 @@ export default function EarlyPage() {
             transition={{ duration: 0.6, delay: 0.3, ease: EASE }}
             className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted"
           >
-            LANGE meets you with picture cards, play, and{" "}
+            Nuri meets you with picture cards, play, and{" "}
             <span className="font-semibold text-ink">zero translation</span> — you understand
             from minute one and speak only when you&rsquo;re ready. Comprehension first.
             Friendship always.
@@ -279,7 +279,7 @@ export default function EarlyPage() {
             className="mx-auto mt-5 max-w-lg text-sm leading-relaxed text-muted"
           >
             <span className="font-semibold text-ink">Born on the mission field,</span> where a
-            language is how you love your neighbors — LANGE is built with pen-pal warmth: a real
+            language is how you love your neighbors — Nuri is built with pen-pal warmth: a real
             voice on the other side, waiting to meet you.
           </motion.p>
 
@@ -503,7 +503,7 @@ export default function EarlyPage() {
             </a>
           </p>
           <Link href="/" className="text-xs font-semibold transition-colors hover:text-ink">
-            ← Back to LANGE
+            ← Back to Nuri
           </Link>
         </div>
       </footer>
