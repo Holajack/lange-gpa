@@ -72,4 +72,43 @@ export default defineSchema({
     /** Server timestamp (ms since epoch). */
     ts: v.number(),
   }).index("by_room", ["roomId"]),
+
+  /**
+   * One wallet per Clerk user — the running totals for the credit system.
+   * Two currencies live here side by side:
+   *   `exchangeHours` — free "growing hours" earned by nurturing and spent
+   *                     to be grown; lifetimeEarned/lifetimeSpent stay visible
+   *                     so a fair grower's balance nets toward zero.
+   *   `paidHours`     — purchased hours for the paid marketplace (PPP-scaled).
+   * Totals are a cache of the ledger; recordEntry keeps them in step.
+   */
+  wallets: defineTable({
+    clerkId: v.string(),
+    exchangeHours: v.number(),
+    paidHours: v.number(),
+    lifetimeEarned: v.number(),
+    lifetimeSpent: v.number(),
+    /** Last write (ms since epoch). */
+    updatedAt: v.number(),
+  }).index("by_clerkId", ["clerkId"]),
+
+  /**
+   * Append-only history behind every wallet. One row per credit movement.
+   *   kind     — "earned" | "spent" | "purchased"
+   *   currency — "exchange" | "paid"
+   * `partner`/`lang`/`minutes`/`note` annotate the move (who you grew with,
+   * which language, how long, a free-text reason).
+   */
+  ledger: defineTable({
+    clerkId: v.string(),
+    kind: v.string(),
+    currency: v.string(),
+    amount: v.number(),
+    partner: v.optional(v.string()),
+    lang: v.optional(v.string()),
+    minutes: v.optional(v.number()),
+    note: v.optional(v.string()),
+    /** Client timestamp (ms since epoch). */
+    ts: v.number(),
+  }).index("by_clerkId", ["clerkId"]),
 });

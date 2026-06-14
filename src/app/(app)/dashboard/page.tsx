@@ -9,13 +9,15 @@ import { useApp, getImmersionStage } from "@/lib/store";
 import { ACHIEVEMENTS, ACHIEVEMENT_EVENT, achievementById, useAchievements } from "@/lib/achievements";
 import { immersionShare } from "@/lib/i18n";
 import { langByCode } from "@/lib/languages";
-import { phaseById, phaseProgress } from "@/lib/phases";
+import { phaseById, phaseProgress, TOTAL_HOURS } from "@/lib/phases";
 import { NURTURERS, nurturersForLang } from "@/lib/nurturers";
+import { mascotForLang } from "@/lib/mascots";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { speak, stopSpeaking } from "@/lib/tts";
-import type { LangCode, Nurturer, PhaseActivity } from "@/lib/types";
+import type { LangCode, Nurturer, PhaseActivity, Profile } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
+import { MascotImage } from "@/components/MascotImage";
 import { ProgressBar, SectionTitle } from "@/components/ui";
 
 /* ---------------------------------------------------------------- *
@@ -133,6 +135,15 @@ export default function DashboardPage() {
   useEffect(() => () => stopSpeaking(), []);
 
   if (!profile) return null;
+
+  /* A brand-new grower stands at the wall of noise: nothing logged, nothing
+     booked, nothing done. Greet them with a welcome garden instead of bleak
+     zeros — every other grower keeps the dashboard below, unchanged. */
+  const isFresh =
+    profile.hoursLogged === 0 &&
+    (profile.completed?.length ?? 0) === 0 &&
+    (profile.bookings?.length ?? 0) === 0;
+  if (isFresh) return <FreshDashboard profile={profile} t={t} />;
 
   const lang = langByCode(profile.targetLang);
   const phase = phaseById(profile.phase);
@@ -762,6 +773,332 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+    </motion.div>
+  );
+}
+
+/* ================================================================ *
+ *  FRESH DASHBOARD — the welcome garden for a brand-new grower
+ *
+ *  Grounded in real onboarding-empty-state patterns: a warm hero
+ *  (Aaptiv/Duolingo), a getting-started checklist with one bright
+ *  next step (Future/Shopify/Origin), zero-state stat widgets with
+ *  ghosted art so the dark space reads intentional (Py/Mimo/Beli/
+ *  Any Distance), and a first-session featured card (Ladder).
+ * ================================================================ */
+
+/** Faint sprout/vine line-art behind empty areas — dark space, alive not dead. */
+function GhostSprout({ className = "", size = 160 }: { className?: string; size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      width={size}
+      height={size}
+      aria-hidden
+      className={`pointer-events-none ${className}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* stem */}
+      <path d="M60 112 C60 88 58 70 60 54" />
+      {/* left leaf */}
+      <path d="M60 78 C44 76 32 66 28 50 C46 50 58 60 60 78 Z" />
+      {/* right leaf */}
+      <path d="M60 66 C76 62 88 50 90 34 C72 36 62 48 60 66 Z" />
+      {/* bud */}
+      <circle cx="60" cy="44" r="9" />
+    </svg>
+  );
+}
+
+/** A single checklist row — dotted circle, label, time, route. */
+function ChecklistStep({
+  href,
+  icon,
+  label,
+  time,
+  active,
+}: {
+  href: string;
+  icon: string;
+  label: string;
+  time: string;
+  active: boolean;
+}) {
+  return (
+    <Link href={href} className="block">
+      <div
+        className={`card-hover flex items-center gap-3 rounded-2xl border p-3 transition-colors ${
+          active
+            ? "border-orange/60 bg-orange/10"
+            : "border-dashed border-line bg-raised-2/40"
+        }`}
+      >
+        {/* dotted-outline circle (not empty) */}
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-dashed text-lg ${
+            active ? "border-orange text-orange" : "border-line text-muted"
+          }`}
+        >
+          {icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className={`truncate text-sm font-semibold ${active ? "text-ink" : "text-muted"}`}>
+            {label}
+          </p>
+          <p className={`text-xs ${active ? "text-orange" : "text-muted/70"}`}>{time}</p>
+        </div>
+        <ArrowRight
+          size={16}
+          strokeWidth={2.5}
+          className={active ? "text-orange" : "text-muted/50"}
+        />
+      </div>
+    </Link>
+  );
+}
+
+function FreshDashboard({ profile, t }: { profile: Profile; t: (key: string) => string }) {
+  const lang = langByCode(profile.targetLang);
+  const mascot = mascotForLang(profile.targetLang);
+  const name = profile.name || t("hello");
+
+  /* The first session uses the AI buddy slot (Nuri's face is the target
+     language's toy sibling). Solo route opens the session with that buddy. */
+  const soloHref = "/session?nurturer=ai";
+  const bookHref = "/schedule";
+
+  const fill = (key: string, vars: Record<string, string>) =>
+    Object.entries(vars).reduce(
+      (s, [k, v]) => s.replace(`{${k}}`, v),
+      t(key)
+    );
+
+  /* Headline 0% ring geometry */
+  const R = 46;
+  const C = 2 * Math.PI * R;
+
+  return (
+    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
+      {/* ============ 1 · WELCOME HERO ============ */}
+      <motion.header variants={fadeUp}>
+        <div className="card relative overflow-hidden p-5 sm:p-7">
+          <div className="orb -right-16 -top-20 h-56 w-56 bg-violet/25" />
+          <div className="orb -bottom-20 -left-16 h-48 w-48 bg-lime/12" />
+
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
+            {/* mascot + speech bubble */}
+            <div className="flex shrink-0 items-start gap-3 sm:flex-col sm:items-center">
+              <MascotImage mascot={mascot} size={104} float glow />
+              <div className="relative max-w-[15rem] rounded-2xl rounded-bl-sm bg-violet/15 px-4 py-3 text-sm leading-snug text-ink ring-1 ring-violet/30 sm:rounded-bl-2xl sm:rounded-tl-sm">
+                {t("dshFreshBubble")}
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h1 className="headline text-3xl leading-tight sm:text-4xl lg:text-5xl">
+                {fill("dshFreshWelcome", { name })}
+              </h1>
+              <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+                <span className="text-lg leading-none">{lang.flag}</span>
+                <span>{lang.nativeName}</span>
+              </p>
+
+              {/* week strip — 7 empty violet outline dots */}
+              <div className="mt-5 flex items-center gap-2.5">
+                {Array.from({ length: 7 }, (_, i) => (
+                  <span
+                    key={i}
+                    className="h-3.5 w-3.5 rounded-full border-2 border-violet/45"
+                    aria-hidden
+                  />
+                ))}
+              </div>
+
+              {/* streak pill — potential, not loss */}
+              <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-lime/12 px-4 py-1.5 text-sm font-semibold text-lime">
+                🌱 {t("dshFreshStreak")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* ============ 2 · GETTING-STARTED CHECKLIST ============ */}
+      <motion.div variants={fadeUp}>
+        <div className="card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-muted">{t("dshFreshFirstWeek")}</p>
+              <h2 className="headline mt-0.5 text-xl">{t("dshFreshChecklistTitle")}</h2>
+            </div>
+            {/* lime progress ring 0/4 */}
+            <div className="relative h-14 w-14 shrink-0">
+              <svg viewBox="0 0 40 40" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden>
+                <circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3.5" />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center font-display text-sm font-bold text-lime">
+                0/4
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {/* the single next step is orange-highlighted */}
+            <ChecklistStep
+              href={soloHref}
+              icon="👋"
+              label={t("dshFreshStepMeet")}
+              time={`2 ${t("minutes")}`}
+              active
+            />
+            <ChecklistStep
+              href={bookHref}
+              icon="🌍"
+              label={t("dshFreshStepBook")}
+              time={`5 ${t("minutes")}`}
+              active={false}
+            />
+            <ChecklistStep
+              href="/practice/listening"
+              icon="👂"
+              label={t("dshFreshStepListen")}
+              time={`10 ${t("minutes")}`}
+              active={false}
+            />
+            <ChecklistStep
+              href="/onboarding"
+              icon="⏳"
+              label={fill("dshFreshStepRhythm", { total: String(TOTAL_HOURS) })}
+              time={t("dshFreshStepRhythmTime")}
+              active={false}
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ============ 3 · ZERO-STATE STAT WIDGETS ============ */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+        {/* headline 0% ring */}
+        <motion.div variants={fadeUp} className="lg:col-span-5">
+          <div className="card card-hover relative flex h-full flex-col items-center overflow-hidden p-6 text-center">
+            <GhostSprout className="absolute -right-6 -top-4 text-violet/10" size={140} />
+            <div className="relative h-36 w-36">
+              <svg viewBox="0 0 120 120" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden>
+                <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="9" />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r={R}
+                  fill="none"
+                  stroke="var(--color-violet)"
+                  strokeWidth="9"
+                  strokeLinecap="round"
+                  strokeDasharray={`0 ${C}`}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="headline text-2xl text-violet-soft">0</span>
+                <span className="text-[11px] font-semibold text-muted">
+                  / {TOTAL_HOURS} {t("hours")}
+                </span>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-muted">{t("dshFreshHoursEncourage")}</p>
+            <Link
+              href={soloHref}
+              className="pill mt-4 bg-orange px-5 py-2.5 text-sm font-bold text-canvas"
+              style={{ boxShadow: "var(--shadow-glow-orange)" }}
+            >
+              {t("dshFreshGrowFirstMinutes")} <ArrowRight size={15} strokeWidth={2.75} className="ml-1 inline" />
+            </Link>
+          </div>
+        </motion.div>
+
+        {/* words met + this week */}
+        <motion.div variants={fadeUp} className="flex flex-col gap-4 lg:col-span-7">
+          {/* words met */}
+          <div className="card card-hover relative flex flex-1 items-center gap-4 overflow-hidden p-6">
+            <GhostSprout className="absolute -bottom-6 -right-4 text-lime/10" size={150} />
+            <div className="relative">
+              <p className="headline text-5xl text-lime/70">0</p>
+              <p className="mt-1 text-sm font-semibold text-muted">{t("wordsMet")}</p>
+            </div>
+            <div className="relative ml-auto max-w-[14rem] text-right">
+              <p className="text-sm text-muted">{t("dshFreshGardenEmpty")}</p>
+              <Link
+                href="/practice/listening"
+                className="pill mt-3 inline-flex bg-lime px-4 py-2 text-sm font-bold text-canvas"
+              >
+                {t("dshFreshStartListening")}
+              </Link>
+            </div>
+          </div>
+
+          {/* this week */}
+          <div className="card card-hover relative flex flex-1 flex-col justify-center overflow-hidden p-6">
+            <GhostSprout className="absolute -left-6 -top-4 text-violet/8" size={120} />
+            <p className="relative text-sm font-semibold text-muted">{t("weeklyActivity")}</p>
+            <div className="relative mt-4 flex items-center gap-2.5">
+              {Array.from({ length: 7 }, (_, i) => (
+                <span
+                  key={i}
+                  className="h-4 w-4 rounded-full border-2 border-violet/35"
+                  aria-hidden
+                />
+              ))}
+            </div>
+            <p className="relative mt-4 text-xs text-muted">{t("dshFreshNoGrowth")}</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ============ 4 · FIRST-SESSION FEATURED CARD ============ */}
+      <motion.div variants={fadeUp}>
+        <div
+          className="card relative overflow-hidden p-6 sm:p-8"
+          style={{
+            background:
+              "radial-gradient(120% 100% at 12% 0%, rgba(124,92,255,0.30), transparent 55%), radial-gradient(110% 100% at 95% 100%, rgba(255,138,30,0.24), transparent 55%)",
+          }}
+        >
+          <div className="orb -right-14 -bottom-16 h-44 w-44 bg-orange/15" />
+
+          <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:text-left">
+            <div className="shrink-0">
+              <MascotImage mascot={mascot} size={92} float />
+            </div>
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <p className="text-xs font-bold uppercase tracking-wide text-violet-soft">
+                {t("dshFreshFirstSessionTag")}
+              </p>
+              <h2 className="headline mt-1 text-2xl leading-tight sm:text-3xl">
+                {t("dshFreshFirstSessionTitle")}
+              </h2>
+              <p className="mt-2 text-sm text-muted">{t("dshFreshFirstSessionReassure")}</p>
+
+              <div className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href={bookHref}
+                  className="pill bg-orange px-6 py-3 text-center text-sm font-bold text-canvas"
+                  style={{ boxShadow: "var(--shadow-glow-orange)" }}
+                >
+                  {t("dshFreshBookFirst")}
+                </Link>
+                <Link
+                  href={soloHref}
+                  className="pill border border-line bg-raised-2 px-6 py-3 text-center text-sm font-semibold text-muted hover:text-ink"
+                >
+                  {fill("dshFreshStartSolo", { buddy: mascot.name })}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

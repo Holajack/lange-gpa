@@ -25,7 +25,8 @@ export function getImmersionStage(profile: Profile): 0 | 1 | 2 | 3 | 4 {
   return (profile.phase - 1) as 0 | 1 | 2 | 3;
 }
 
-const DEFAULT_WEEK = [35, 20, 45, 30, 55, 0, 0];
+/** A brand-new grower starts at the wall of noise: a clean, zeroed week. */
+const FRESH_WEEK = [0, 0, 0, 0, 0, 0, 0];
 
 export function blankProfile(): Profile {
   return {
@@ -36,12 +37,12 @@ export function blankProfile(): Profile {
     nurtureLangs: [],
     immersion: true,
     phase: 1,
-    hoursLogged: 12,
-    wordsMet: 138,
-    streak: 5,
+    hoursLogged: 0,
+    wordsMet: 0,
+    streak: 0,
     completed: [],
     bookings: [],
-    week: DEFAULT_WEEK,
+    week: FRESH_WEEK,
     createdAt: new Date().toISOString(),
     interests: [],
     exchange: false,

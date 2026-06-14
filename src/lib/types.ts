@@ -105,6 +105,20 @@ export interface Nurturer {
   rating: number;
   online: boolean;
   color: string; // avatar gradient seed
+  /* ---- marketplace fields (Preply-style listing). All optional so the
+     AI nurturer + legacy callers keep working without them. ---- */
+  /** native region / dialect headline, e.g. "Cap-Haïtien · Native" */
+  region?: string;
+  /** PPP-adjusted rate the grower pays per hour, in USD */
+  ratePerHourUsd?: number;
+  /** completed the LANGE GPA method certification */
+  methodCertified?: boolean;
+  /** open to time-for-time exchange (nurture yours, they nurture theirs) */
+  exchangeOpen?: boolean;
+  /** lifetime count of growers nurtured into the language */
+  growersNurtured?: number;
+  /** GPA phases this nurturer guides, e.g. "1–3" */
+  phasesGuided?: string;
 }
 
 export interface ForumPost {

@@ -11,9 +11,11 @@ import { AuthCorner } from "./AuthCorner";
 const TABS = [
   { key: "courses", href: "/courses" },
   { key: "dashboard", href: "/dashboard" },
+  { key: "marketplace", href: "/marketplace" },
   { key: "schedule", href: "/schedule" },
   { key: "world", href: "/world" },
   { key: "forum", href: "/forum" },
+  { key: "wallet", href: "/wallet" },
 ];
 
 /** Extra tab for nurturer-role users — the Nurturer Studio. */

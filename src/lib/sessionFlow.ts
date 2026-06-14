@@ -67,6 +67,67 @@ export function buildDeck(lang: LangCode, count = 12): DeckCard[] {
   return deck;
 }
 
+/* ------------------- authentic meeting-ordered dealing ------------------- */
+
+/**
+ * Default meeting for the original thematic domains (the 18 new authentic
+ * sets already carry their own `meeting`). Keeps the first sessions rooted in
+ * the foundational vocab a nurturer opens Phase 1 with.
+ */
+const DOMAIN_DEFAULT_MEETING: Record<string, number> = {
+  animals: 1, home: 2, family: 5, body: 5, food: 8,
+  nature: 14, health: 18, work: 32, traveling: 37, sport: 33,
+};
+
+function effMeeting(domainId: string, item: { meeting?: number }, domainMeeting?: number): number {
+  return item.meeting ?? domainMeeting ?? DOMAIN_DEFAULT_MEETING[domainId] ?? 1;
+}
+
+/** ~2 hours of growing per meeting → which Rough-and-Ready-Dozen meeting are we on. */
+export function meetingForHours(hoursLogged: number): number {
+  return Math.max(1, Math.min(40, Math.floor((hoursLogged || 0) / 2) + 1));
+}
+
+/**
+ * Deal an authentic, meeting-ordered Dirty Dozen: the NEW cards introduced at
+ * `meeting` come first (the day's fresh set), then review cards drawn from
+ * earlier meetings — exactly the GPA rhythm of "introduce a few, recycle the
+ * rest". Falls back to nearby meetings when a meeting has too few fresh words.
+ */
+export function buildMeetingDeck(lang: LangCode, meeting: number, count = 12): DeckCard[] {
+  const all = VOCAB_DOMAINS.flatMap((d) =>
+    d.items
+      .filter((it) => Boolean(it.words[lang]))
+      .map((it) => ({
+        card: {
+          id: it.id,
+          emoji: it.emoji,
+          word: it.words[lang] as string,
+          domainId: d.id,
+          domainEmoji: d.emoji,
+        } as DeckCard,
+        m: effMeeting(d.id, it, d.meeting),
+      }))
+  );
+
+  const fresh = shuffle(all.filter((x) => x.m === meeting).map((x) => x.card));
+  const review = shuffle(all.filter((x) => x.m < meeting).map((x) => x.card));
+  // newer-but-not-yet-due cards, used only to top up the very first meetings
+  const ahead = shuffle(all.filter((x) => x.m > meeting).map((x) => x.card));
+
+  const freshTarget = Math.min(fresh.length, Math.max(2, Math.ceil(count * 0.6)));
+  const deck: DeckCard[] = fresh.slice(0, freshTarget);
+  for (const c of review) {
+    if (deck.length >= count) break;
+    deck.push(c);
+  }
+  for (const c of [...fresh.slice(freshTarget), ...ahead]) {
+    if (deck.length >= count) break;
+    deck.push(c);
+  }
+  return deck.slice(0, count);
+}
+
 /* --------------------------- audio cues --------------------------- */
 /* AUDIO CUE CONTRACT — exact strings shared with audio generation.   */
 

@@ -43,7 +43,8 @@ import {
   CUES,
   JOKE_PROMPTS,
   answerReview,
-  buildDeck,
+  buildMeetingDeck,
+  meetingForHours,
   canReveal,
   createFlow,
   currentCard,
@@ -154,6 +155,8 @@ function SessionRoom() {
   const lang = langByCode(targetLang);
   /** language of the picture-card deck — falls back to Spanish for demo langs without decks */
   const initialContentLang: LangCode = FULL_CONTENT_LANGS.includes(targetLang) ? targetLang : "es";
+  /** which authentic Rough-and-Ready-Dozen meeting the grower is on (≈2h each) */
+  const meeting = meetingForHours(profile?.hoursLogged ?? 0);
 
   // ---- booking lookup (links from /schedule carry nurturer + activity) ----
   const nurturerParam = params.get("nurturer");
@@ -191,7 +194,7 @@ function SessionRoom() {
   const [switchStep, setSwitchStep] = useState<"closed" | "confirm" | "lang">("closed");
 
   // ---- the Dirty Dozen flow ----
-  const [flow, setFlow] = useState<FlowState>(() => createFlow(buildDeck(initialContentLang, DECK_SIZE)));
+  const [flow, setFlow] = useState<FlowState>(() => createFlow(buildMeetingDeck(initialContentLang, meeting, DECK_SIZE)));
   const [feedback, setFeedback] = useState<CardFeedback | null>(null);
   const [iceberg, setIceberg] = useState(false);
   /** id of the card the grower just missed — the nurturer re-says it */
@@ -242,8 +245,8 @@ function SessionRoom() {
   useEffect(() => {
     if (stage !== "pre") return;
     setSessionLang(initialContentLang);
-    setFlow(createFlow(buildDeck(initialContentLang, DECK_SIZE)));
-  }, [stage, initialContentLang]);
+    setFlow(createFlow(buildMeetingDeck(initialContentLang, meeting, DECK_SIZE)));
+  }, [stage, initialContentLang, meeting]);
 
   // countdown
   useEffect(() => {
@@ -493,7 +496,8 @@ function SessionRoom() {
   const performSwitch = (code: LangCode) => {
     stopSpeaking();
     setSessionLang(code);
-    setFlow(createFlow(buildDeck(code, DECK_SIZE)));
+    // a fresh language starts at the wall of noise — Meeting 1
+    setFlow(createFlow(buildMeetingDeck(code, 1, DECK_SIZE)));
     setFeedback(null);
     setIceberg(false);
     setMissId(null);
