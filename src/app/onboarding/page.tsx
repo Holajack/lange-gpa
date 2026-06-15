@@ -176,7 +176,7 @@ function CheckBadge({ on, color = "var(--color-violet)" }: { on: boolean; color?
 
 function Dots({ step, onJump }: { step: number; onJump: (i: number) => void }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-1.5">
       {Array.from({ length: STEP_COUNT }, (_, i) => (
         <button
           key={i}
@@ -186,7 +186,7 @@ function Dots({ step, onJump }: { step: number; onJump: (i: number) => void }) {
           onClick={() => onJump(i)}
           className={`h-2.5 rounded-full transition-all duration-300 ${
             i === step
-              ? "w-8 bg-violet"
+              ? "w-6 bg-violet sm:w-8"
               : i < step
                 ? "w-2.5 bg-lime hover:scale-125"
                 : "w-2.5 bg-white/15"
@@ -289,14 +289,14 @@ function TargetCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="card relative flex flex-col items-center gap-1.5 px-3 py-5 transition-[border-color,box-shadow] duration-200"
+      className="card relative flex flex-col items-center gap-1.5 px-3 py-5 text-center transition-[border-color,box-shadow] duration-200"
       style={selected ? { borderColor: "var(--color-violet)", boxShadow: "var(--shadow-glow-violet)" } : undefined}
     >
       <span className="text-4xl">{lang.flag}</span>
-      <span className="headline text-lg leading-none">{lang.nativeName}</span>
+      <span className="headline break-words text-lg leading-none">{lang.nativeName}</span>
       <span className="text-xs text-muted">{lang.name}</span>
       {full && (
-        <span className="mt-1 rounded-full bg-lime/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-lime">
+        <span className="mt-1 rounded-full bg-lime/15 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-normal text-lime">
           {fullLabel}
         </span>
       )}
@@ -357,7 +357,7 @@ function MotivationCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="card relative flex flex-col items-start gap-2 p-5 text-left transition-[border-color,box-shadow] duration-200"
+      className="card relative flex flex-col items-start gap-2 p-4 text-left transition-[border-color,box-shadow] duration-200 sm:p-5"
       style={
         selected
           ? { borderColor: "var(--color-violet)", boxShadow: "var(--shadow-glow-violet)" }
@@ -1079,7 +1079,7 @@ function OnboardingFlow() {
         >
           <Logo size="sm" />
           <Dots step={step} onJump={jump} />
-          <span className="w-[72px] text-right text-xs font-medium text-muted">
+          <span className="hidden w-[72px] text-right text-xs font-medium text-muted sm:block">
             {step + 1} / {STEP_COUNT}
           </span>
         </motion.header>
@@ -1325,7 +1325,7 @@ function OnboardingFlow() {
                   <motion.p variants={item} className="mt-3 text-muted">
                     {nurturerOnly ? t("dshOnbPlaceSubNurture") : t("dshOnbPlaceSubGrow")}
                   </motion.p>
-                  <motion.div variants={item} className="card mt-8 grid gap-5 p-6 sm:grid-cols-2">
+                  <motion.div variants={item} className="card mt-8 grid gap-5 p-4 sm:grid-cols-2 sm:p-6">
                     <PlaceInput label={t("dshOnbCityLabel")} value={city} placeholder={t("dshOnbCityPlaceholder")} onChange={setCity} />
                     <PlaceInput
                       label={t("dshOnbCountryLabel")}
@@ -1451,7 +1451,7 @@ function OnboardingFlow() {
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
                     {t("dshOnbNameHead")}
                   </motion.h1>
-                  <motion.div variants={item} className="card mt-8 px-6 py-10">
+                  <motion.div variants={item} className="card mt-8 px-4 py-8 sm:px-6 sm:py-10">
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -1496,7 +1496,7 @@ function OnboardingFlow() {
                   {/* first word — audio only, no translation */}
                   <motion.div
                     variants={item}
-                    className="card mt-8 flex items-center justify-between gap-4 p-6"
+                    className="card mt-8 flex items-center justify-between gap-4 p-4 sm:p-6"
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-5xl">{target.flag}</span>
@@ -1519,7 +1519,7 @@ function OnboardingFlow() {
                   {/* immersion toggle */}
                   <motion.div
                     variants={item}
-                    className="card mt-3 flex items-center justify-between gap-4 p-6"
+                    className="card mt-3 flex items-center justify-between gap-4 p-4 sm:p-6"
                   >
                     <div>
                       <p className="flex items-center gap-2 font-semibold">

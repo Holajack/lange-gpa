@@ -298,11 +298,11 @@ export default function ForumPage() {
                         </option>
                       ))}
                     </select>
-                    <div className="ml-auto">
+                    <div className="w-full sm:ml-auto sm:w-auto">
                       <Pill
                         onClick={submitPost}
                         disabled={!title.trim() || !body.trim()}
-                        className="bg-lime px-6 py-2.5 text-sm font-semibold text-canvas"
+                        className="w-full bg-lime px-6 py-2.5 text-sm font-semibold text-canvas sm:w-auto"
                       >
                         {t("newPost")} ✨
                       </Pill>
@@ -534,7 +534,7 @@ function PostCard({
 
                 {/* reply composer */}
                 <form
-                  className="mt-1 flex items-center gap-3"
+                  className="mt-1 flex flex-wrap items-center gap-3"
                   onSubmit={(e) => {
                     e.preventDefault();
                     onReply();
@@ -545,12 +545,12 @@ function PostCard({
                     value={draft}
                     onChange={(e) => onDraft(e.target.value)}
                     placeholder={replyPlaceholder}
-                    className={`${inputCls} py-2.5`}
+                    className={`${inputCls} flex-1 min-w-[140px] py-2.5`}
                   />
                   <Pill
                     type="submit"
                     disabled={!draft.trim()}
-                    className="shrink-0 bg-violet px-5 py-2.5 text-sm font-semibold text-white"
+                    className="w-full shrink-0 bg-violet px-5 py-2.5 text-sm font-semibold text-white sm:w-auto"
                   >
                     {replyLabel}
                   </Pill>

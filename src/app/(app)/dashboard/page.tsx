@@ -213,7 +213,7 @@ export default function DashboardPage() {
       {/* ============ Greeting ============ */}
       <motion.header variants={fadeUp} className="flex flex-wrap items-end justify-between gap-3 pt-2">
         <div>
-          <h1 className="headline text-4xl lg:text-5xl">
+          <h1 className="headline text-2xl sm:text-4xl lg:text-5xl">
             {t("hello")}, {profile.name}! <span className="wavehand inline-block">👋</span>
           </h1>
           <p className="mt-2 flex items-center gap-2 text-sm text-muted">
@@ -893,7 +893,7 @@ function FreshDashboard({ profile, t }: { profile: Profile; t: (key: string) => 
             {/* mascot + speech bubble */}
             <div className="flex shrink-0 items-start gap-3 sm:flex-col sm:items-center">
               <MascotImage mascot={mascot} size={104} float glow />
-              <div className="relative max-w-[15rem] rounded-2xl rounded-bl-sm bg-violet/15 px-4 py-3 text-sm leading-snug text-ink ring-1 ring-violet/30 sm:rounded-bl-2xl sm:rounded-tl-sm">
+              <div className="relative max-w-[11rem] rounded-2xl rounded-bl-sm bg-violet/15 px-4 py-3 text-sm leading-snug text-ink ring-1 ring-violet/30 sm:max-w-[15rem] sm:rounded-bl-2xl sm:rounded-tl-sm">
                 {t("dshFreshBubble")}
               </div>
             </div>
@@ -1021,13 +1021,13 @@ function FreshDashboard({ profile, t }: { profile: Profile; t: (key: string) => 
         {/* words met + this week */}
         <motion.div variants={fadeUp} className="flex flex-col gap-4 lg:col-span-7">
           {/* words met */}
-          <div className="card card-hover relative flex flex-1 items-center gap-4 overflow-hidden p-6">
+          <div className="card card-hover relative flex flex-1 flex-col gap-4 overflow-hidden p-6 sm:flex-row sm:items-center">
             <GhostSprout className="absolute -bottom-6 -right-4 text-lime/10" size={150} />
             <div className="relative">
-              <p className="headline text-5xl text-lime/70">0</p>
+              <p className="headline text-4xl text-lime/70 sm:text-5xl">0</p>
               <p className="mt-1 text-sm font-semibold text-muted">{t("wordsMet")}</p>
             </div>
-            <div className="relative ml-auto max-w-[14rem] text-right">
+            <div className="relative w-full text-left sm:ml-auto sm:max-w-[14rem] sm:text-right">
               <p className="text-sm text-muted">{t("dshFreshGardenEmpty")}</p>
               <Link
                 href="/practice/listening"

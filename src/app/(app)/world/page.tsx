@@ -562,9 +562,10 @@ export default function WorldPage() {
         </Link>
       </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.08fr_0.92fr]">
         {/* LEFT: the planet + sibling rail */}
         <motion.section
+          className="min-w-0"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08, duration: 0.55, ease: "easeOut" }}
@@ -673,6 +674,7 @@ export default function WorldPage() {
 
         {/* RIGHT: the selected language's world — culture far out, people up close */}
         <motion.section
+          className="min-w-0"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16, duration: 0.55, ease: "easeOut" }}

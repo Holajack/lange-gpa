@@ -236,8 +236,8 @@ export default function WalletPage() {
           {/* big lime — growing hours */}
           <div className="relative">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted">Growing hours</p>
-            <p className="mt-1 flex items-baseline gap-2">
-              <span className="font-display text-5xl font-extrabold leading-none text-lime sm:text-6xl">
+            <p className="mt-1 flex flex-wrap items-baseline gap-2">
+              <span className="font-display text-4xl font-extrabold leading-none text-lime sm:text-6xl">
                 {fmtHrs(wallet.exchangeHours)}
               </span>
               <span className="font-display text-xl font-bold text-lime/80">hrs to grow</span>

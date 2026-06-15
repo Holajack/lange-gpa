@@ -208,7 +208,7 @@ export default function PhasePage() {
                 )}
               </div>
 
-              <h1 className="headline mt-3 text-4xl leading-tight lg:text-5xl">{phase.name}</h1>
+              <h1 className="headline mt-3 text-3xl leading-tight sm:text-4xl lg:text-5xl">{phase.name}</h1>
               <p className="mt-2 text-base font-semibold lg:text-lg" style={{ color: phase.color }}>
                 {phase.tagline}
               </p>

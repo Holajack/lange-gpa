@@ -72,7 +72,7 @@ export function SectionTitle({
 }) {
   return (
     <div className={`flex flex-wrap items-end gap-x-6 gap-y-1 ${className}`}>
-      <h2 className="headline text-3xl lg:text-4xl">{children}</h2>
+      <h2 className="headline text-2xl sm:text-3xl lg:text-4xl">{children}</h2>
       {sub && <p className="pb-1 text-sm text-muted">{sub}</p>}
     </div>
   );

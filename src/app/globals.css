@@ -91,6 +91,15 @@ body {
   border-radius: 99px;
 }
 
+/* Hide scrollbar but keep scrolling (mobile nav strip, chip rows) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Reusable card */
 .card {
   background: var(--color-raised);

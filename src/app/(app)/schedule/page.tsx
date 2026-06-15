@@ -300,7 +300,7 @@ export default function SchedulePage() {
                           {fmtDate(b.date)} · {b.time} — {b.activity}
                         </p>
                       </div>
-                      <Tag className="shrink-0 bg-violet/15 text-violet-soft">
+                      <Tag className="hidden sm:inline-flex shrink-0 bg-violet/15 text-violet-soft">
                         {b.minutes} {t("minutes")}
                       </Tag>
                       <Link
@@ -314,7 +314,7 @@ export default function SchedulePage() {
                         onClick={() => removeBooking(b.id)}
                         aria-label={t("cancel")}
                         title={t("cancel")}
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-coral/15 hover:text-coral"
+                        className="grid h-10 w-10 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-coral/15 hover:text-coral"
                       >
                         ✕
                       </button>
@@ -488,7 +488,7 @@ export default function SchedulePage() {
                     type="button"
                     onClick={closeSheet}
                     aria-label={t("cancel")}
-                    className="grid h-9 w-9 place-items-center rounded-full bg-white/6 text-muted transition hover:bg-coral/15 hover:text-coral"
+                    className="grid h-10 w-10 place-items-center rounded-full bg-white/6 text-muted transition hover:bg-coral/15 hover:text-coral"
                   >
                     ✕
                   </button>

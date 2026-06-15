@@ -233,7 +233,7 @@ export default function LandingPage() {
         <div className="mt-14 space-y-8">
           {/* (a) a person, not a textbook */}
           <Reveal>
-            <div className="card card-hover relative overflow-hidden p-8 sm:p-12">
+            <div className="card card-hover relative overflow-hidden p-5 sm:p-12">
               <div className="orb -right-24 -top-24 h-72 w-72 bg-orange/15" />
               <div className="relative grid items-center gap-10 lg:grid-cols-[5fr_6fr]">
                 <div>
@@ -269,7 +269,7 @@ export default function LandingPage() {
 
           {/* (b) pictures, not translations — interactive */}
           <Reveal>
-            <div className="card card-hover relative overflow-hidden p-8 sm:p-12">
+            <div className="card card-hover relative overflow-hidden p-5 sm:p-12">
               <div className="orb -left-24 -bottom-24 h-72 w-72 bg-lime/10" />
               <div className="relative">
                 <div className="mx-auto max-w-2xl text-center">
@@ -326,7 +326,7 @@ export default function LandingPage() {
 
           {/* (c) listen first, speak when ready */}
           <Reveal>
-            <div className="card card-hover relative overflow-hidden p-8 sm:p-12">
+            <div className="card card-hover relative overflow-hidden p-5 sm:p-12">
               <div className="orb -right-28 bottom-0 h-72 w-72 bg-violet/20" />
               <div className="relative grid items-center gap-10 lg:grid-cols-[6fr_5fr]">
                 <div className="order-2 lg:order-1">
@@ -386,7 +386,7 @@ export default function LandingPage() {
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PHASES.map((p, i) => (
             <Reveal key={p.id} delay={i * 0.07}>
-              <div className="card card-hover relative h-full overflow-hidden p-7">
+              <div className="card card-hover relative h-full overflow-hidden p-5 sm:p-7">
                 <div
                   className="absolute inset-x-0 top-0 h-1"
                   style={{ background: `linear-gradient(90deg, ${p.color}, transparent)` }}
@@ -478,7 +478,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-5 py-10">
         <Reveal>
           <div
-            className="relative overflow-hidden rounded-[28px] p-8 sm:p-14"
+            className="relative overflow-hidden rounded-[28px] p-5 sm:p-14"
             style={{ background: "linear-gradient(115deg, #ff8a1e, #ffd234)" }}
           >
             <div className="absolute -right-10 -top-12 rotate-12 text-[150px] opacity-15" aria-hidden>
@@ -518,7 +518,7 @@ export default function LandingPage() {
         <div className="mt-14 grid gap-5 md:grid-cols-3">
           {TESTIMONIALS.map((tm, i) => (
             <Reveal key={tm.name} delay={i * 0.1}>
-              <div className="card card-hover flex h-full flex-col p-7">
+              <div className="card card-hover flex h-full flex-col p-5 sm:p-7">
                 <p className="text-2xl" aria-hidden>&ldquo;</p>
                 <p className="flex-1 text-[15px] leading-relaxed text-ink/90">{tm.quote}</p>
                 <div className="mt-6 flex items-center gap-3 border-t border-line pt-5">

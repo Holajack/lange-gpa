@@ -537,7 +537,7 @@ function SessionRoom() {
           transition={{ duration: 0.55, ease: "easeOut" }}
           className="w-full max-w-xl"
         >
-          <Card className="relative overflow-hidden p-8 text-center sm:p-10">
+          <Card className="relative overflow-hidden p-5 text-center sm:p-8">
             <div
               className="orb left-[-80px] top-[-80px] h-[220px] w-[220px]"
               style={{ background: `${isAI ? mascot.color : nurturer.color}33` }}
@@ -601,7 +601,7 @@ function SessionRoom() {
               transition={{ delay: 0.7, duration: 0.45 }}
               className="mt-8 flex flex-col items-center gap-3"
             >
-              <Pill onClick={() => setStage("live")} className="bg-violet px-10 py-4 text-lg font-semibold text-white">
+              <Pill onClick={() => setStage("live")} className="bg-violet px-6 py-3.5 sm:px-10 sm:py-4 text-lg font-semibold text-white">
                 <span style={{ textShadow: "none" }}>▶ {t("start")} · 30:00</span>
               </Pill>
               <p className="text-xs text-muted">Demo: inside the room, hit ⚡ ×60 to fast-forward the clock.</p>{/* demo toggle copy — left as-is per task */}
@@ -622,7 +622,7 @@ function SessionRoom() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full max-w-xl"
         >
-          <Card className="relative overflow-hidden p-8 text-center sm:p-10">
+          <Card className="relative overflow-hidden p-5 text-center sm:p-8">
             <div className="orb right-[-90px] top-[-90px] h-[240px] w-[240px] bg-lime/20" />
             <motion.div
               initial={{ y: 24, opacity: 0 }}
@@ -821,8 +821,10 @@ function SessionRoom() {
               {sessionLangInfo.flag} {sessionLangInfo.name}
             </p>
           </div>
-          <Wavebars active={speaking} color={accent} />
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="hidden sm:flex">
+            <Wavebars active={speaking} color={accent} />
+          </div>
+          <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-2">
             <Tag className="bg-white/6">🪴 {nurturerName} {t("sesNurtures")}</Tag>
             <Tag className="bg-white/6">🌱 {growerName} {t("sesGrows")}</Tag>
             <Tag className="bg-lemon/15 text-lemon">⭐ {points}</Tag>
@@ -831,12 +833,12 @@ function SessionRoom() {
 
         {/* deck progress dots (AI mode has no tray, so show pace here) */}
         {isAI && (
-          <div className="flex items-center gap-1.5 px-4 pt-2 sm:px-6">
+          <div className="flex flex-wrap items-center gap-1.5 px-4 pt-2 sm:px-6">
             {flow.deck.map((c, i) => (
               <span
                 key={c.id}
                 className={`h-2 rounded-full transition-all ${
-                  i < flow.introduced ? "w-5 bg-lime" : "w-2 bg-white/12"
+                  i < flow.introduced ? "w-4 sm:w-5 bg-lime" : "w-2 bg-white/12"
                 } ${target?.id === c.id ? "ring-2 ring-amber" : ""}`}
               />
             ))}
@@ -889,7 +891,7 @@ function SessionRoom() {
                       </>
                     )}
                     {isNewest && (
-                      <span className="absolute right-1.5 top-1.5 rounded-full bg-violet px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                      <span className="absolute right-1.5 top-1.5 rounded-full bg-violet px-1.5 py-0.5 text-[10px] font-extrabold text-white">
                         NEW
                       </span>
                     )}
@@ -980,7 +982,7 @@ function SessionRoom() {
           </div>
 
           {/* the whole deck, nurturer's-eye view */}
-          <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-12">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-12">
             {flow.deck.map((c, i) => {
               const met = i < flow.introduced;
               const isTarget = target?.id === c.id;
@@ -1000,7 +1002,7 @@ function SessionRoom() {
                   title={c.word}
                 >
                   <CardFace itemId={c.id} emoji={c.emoji} className="text-xl leading-none" imgClassName="h-7 w-7 rounded-lg" />
-                  <span className="w-full truncate text-[9px] font-medium text-muted">{c.word}</span>
+                  <span className="w-full truncate text-[11px] font-medium text-muted">{c.word}</span>
                 </div>
               );
             })}
@@ -1106,7 +1108,7 @@ function SessionRoom() {
             )}
             <Pill
               onClick={() => setSwitchStep("confirm")}
-              className="ml-auto gap-2 bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink"
+              className="sm:ml-auto gap-2 bg-white/8 px-5 py-2.5 text-sm font-semibold text-ink"
             >
               <ArrowLeftRight size={15} /> {t("sesSwitchRoles")}
             </Pill>
@@ -1123,7 +1125,7 @@ function SessionRoom() {
               {t("sesPictureDictBlurb")}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               type="button"
               onClick={() => setCamWanted((v) => !v)}

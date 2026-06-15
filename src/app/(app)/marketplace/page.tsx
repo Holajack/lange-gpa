@@ -381,7 +381,7 @@ function ProfileDrawer({
             </div>
 
             {/* 5-column GPA stats strip */}
-            <div className="grid grid-cols-5 gap-1 rounded-2xl bg-raised-2 p-3 text-center">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 rounded-2xl bg-raised-2 p-3 text-center">
               {[
                 { v: n.methodCertified ? "✦" : "—", l: n.methodCertified ? "Certified" : "Mentor", c: n.methodCertified ? "text-lime" : "text-muted" },
                 { v: "✓", l: "Fidelity", c: "text-mint" },
@@ -442,17 +442,17 @@ function ProfileDrawer({
 
           {/* sticky CTAs */}
           {!confirming && (
-            <div className="sticky bottom-0 z-10 flex items-center gap-2 border-t border-line bg-raised/95 p-4 backdrop-blur">
+            <div className="sticky bottom-0 z-10 flex flex-col gap-2 sm:flex-row sm:items-center border-t border-line bg-raised/95 p-4 backdrop-blur">
               <Pill
                 onClick={() => startBooking("paid")}
-                className="flex-1 bg-lime py-3.5 font-bold text-canvas"
+                className="flex-1 min-w-0 bg-lime py-3.5 font-bold text-canvas"
               >
                 Book hours · {money(rate)}/hr
               </Pill>
               {n.exchangeOpen && (
                 <Pill
                   onClick={() => startBooking("exchange")}
-                  className="flex-1 border-2 border-violet bg-transparent py-3.5 font-bold text-violet-soft"
+                  className="flex-1 min-w-0 border-2 border-violet bg-transparent py-3.5 font-bold text-violet-soft"
                 >
                   ⇄ Propose exchange
                 </Pill>

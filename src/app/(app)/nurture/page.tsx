@@ -423,7 +423,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
       </div>
 
       {/* controls */}
-      <div className="mt-5 flex items-center justify-center gap-2.5">
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
         <button
           type="button"
           onClick={() => step(-1)}
@@ -445,7 +445,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
           type="button"
           onClick={() => word && void speak(`${whereIs.replace("…?", "")} ${word}?`, contentLang)}
           title="Ask the question"
-          className="pill bg-violet px-4 py-3 text-sm font-bold text-white transition hover:scale-105 active:scale-95"
+          className="pill min-w-0 bg-violet px-4 py-3 text-sm font-bold text-white transition hover:scale-105 active:scale-95"
         >
           {whereIs}
         </button>
@@ -583,7 +583,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
 
       {/* big clock */}
       <div className="mt-6 flex flex-col items-center gap-1">
-        <p className="font-display text-6xl font-extrabold tabular-nums tracking-tight lg:text-7xl">
+        <p className="font-display text-5xl font-extrabold tabular-nums tracking-tight sm:text-6xl lg:text-7xl">
           {mm}:{ss}
         </p>
         <p className="text-sm font-bold" style={{ color: current.color }}>
@@ -614,8 +614,8 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
       </div>
       <div className="mt-2 flex gap-1 text-[11px] font-semibold text-muted">
         {SEGMENTS.map((seg) => (
-          <span key={seg.id} className="text-center" style={{ width: `${(seg.minutes / 30) * 100}%` }}>
-            {seg.emoji} {t(seg.labelKey)} · {seg.minutes}′
+          <span key={seg.id} className="min-w-0 truncate text-center" style={{ width: `${(seg.minutes / 30) * 100}%` }}>
+            {seg.emoji} <span className="hidden sm:inline">{t(seg.labelKey)} · </span>{seg.minutes}′
           </span>
         ))}
       </div>

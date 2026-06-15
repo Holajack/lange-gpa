@@ -229,7 +229,9 @@ export default function CoursesPage() {
               {HOUR_MARKS.map((m) => (
                 <span
                   key={m}
-                  className="absolute top-0"
+                  className={`absolute top-0${
+                    m === 100 || m === 250 || m === 1000 ? " hidden sm:inline" : ""
+                  }`}
                   style={{
                     left: `${(m / TOTAL_HOURS) * 100}%`,
                     transform:
