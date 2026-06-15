@@ -52,7 +52,7 @@ const selectCls =
 export default function ForumPage() {
   const { profile, t } = useApp();
 
-  const userName = profile?.name?.trim() ? profile.name : "You";
+  const userName = profile?.name?.trim() ? profile.name : t("frm2You");
   const userRole = profile?.role ?? "grower";
   const userIsNurturer = userRole === "nurturer";
   const userColor = userIsNurturer ? NURTURER_COLOR : GROWER_COLOR;
@@ -126,7 +126,7 @@ export default function ForumPage() {
       body: body.trim(),
       replies: [],
       likes: 0,
-      ago: "now",
+      ago: t("frm2Now"),
     };
     setPosts((prev) => [post, ...prev]);
     setTitle("");
@@ -137,10 +137,10 @@ export default function ForumPage() {
   const submitReply = (postId: string) => {
     const text = (drafts[postId] ?? "").trim();
     if (!text) return;
-    const author = userIsNurturer ? `${userName} (nurturer)` : userName;
+    const author = userIsNurturer ? t("frm2NurturerSuffix").replace("{name}", userName) : userName;
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === postId ? { ...p, replies: [...p.replies, { author, body: text, ago: "now" }] } : p
+        p.id === postId ? { ...p, replies: [...p.replies, { author, body: text, ago: t("frm2Now") }] } : p
       )
     );
     setDrafts((prev) => ({ ...prev, [postId]: "" }));
@@ -228,7 +228,7 @@ export default function ForumPage() {
               type="button"
               onClick={() => toggleLang(code)}
               aria-pressed={active}
-              title={lang.name}
+              title={lang.nativeName}
               className={`pill border px-3.5 py-2 text-sm transition-colors ${
                 active
                   ? "border-violet/60 bg-violet/20 text-ink"
@@ -277,7 +277,7 @@ export default function ForumPage() {
                     <select
                       value={newCat}
                       onChange={(e) => setNewCat(e.target.value as Category)}
-                      aria-label="Category"
+                      aria-label={t("frm2Category")}
                       className={selectCls}
                     >
                       {CATEGORIES.filter((c) => c.id !== "all").map((c) => (
@@ -289,12 +289,12 @@ export default function ForumPage() {
                     <select
                       value={newLang}
                       onChange={(e) => setNewLang(e.target.value as LangCode)}
-                      aria-label="Language"
+                      aria-label={t("frm2Language")}
                       className={selectCls}
                     >
                       {LANGUAGES.map((l) => (
                         <option key={l.code} value={l.code}>
-                          {l.flag} {l.name}
+                          {l.flag} {l.nativeName}
                         </option>
                       ))}
                     </select>
@@ -347,6 +347,7 @@ export default function ForumPage() {
                 userColor={userColor}
                 replyLabel={t("reply")}
                 replyPlaceholder={t("frmReplyPlaceholder")}
+                likeLabel={t("frm2Like")}
                 catLabel={t(catMeta(post.category).labelKey)}
                 roleLabel={post.authorRole === "nurturer" ? t("nurturerWord") : t("student")}
               />
@@ -400,6 +401,7 @@ function PostCard({
   userColor,
   replyLabel,
   replyPlaceholder,
+  likeLabel,
   catLabel,
   roleLabel,
 }: {
@@ -415,6 +417,7 @@ function PostCard({
   userColor: string;
   replyLabel: string;
   replyPlaceholder: string;
+  likeLabel: string;
   catLabel: string;
   roleLabel: string;
 }) {
@@ -451,7 +454,7 @@ function PostCard({
             </div>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted">
               <span aria-hidden>{lang.flag}</span>
-              <span>{lang.name}</span>
+              <span>{lang.nativeName}</span>
               <span aria-hidden>·</span>
               <span>{post.ago}</span>
             </div>
@@ -472,7 +475,7 @@ function PostCard({
             type="button"
             onClick={onLike}
             aria-pressed={liked}
-            aria-label="Like"
+            aria-label={likeLabel}
             className={`pill px-4 py-2 text-sm transition-colors ${
               liked ? "bg-coral/20 text-ink" : "bg-white/6 text-muted hover:bg-white/10"
             }`}

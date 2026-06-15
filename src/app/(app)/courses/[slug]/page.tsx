@@ -18,6 +18,7 @@ import {
 
 import { useApp } from "@/lib/store";
 import { PHASES, phaseBySlug, phaseProgress } from "@/lib/phases";
+import { localizedPhase } from "@/lib/phaseI18n";
 import type { PhaseActivity } from "@/lib/types";
 import { Mascot } from "@/components/Mascot";
 import { ProgressBar, SectionTitle, Tag } from "@/components/ui";
@@ -98,18 +99,23 @@ export default function PhasePage() {
     );
   }
 
+  /* Localized view of the phase — same shape, translated display strings. */
+  const lp = localizedPhase(phase, t);
+
   const progress = phaseProgress(phase, profile.hoursLogged);
   const current = profile.phase === phase.id;
   const phasePassed = phase.id < profile.phase;
-  const prev = PHASES.find((p) => p.id === phase.id - 1);
-  const next = PHASES.find((p) => p.id === phase.id + 1);
+  const prevPhase = PHASES.find((p) => p.id === phase.id - 1);
+  const nextPhase = PHASES.find((p) => p.id === phase.id + 1);
+  const prev = prevPhase ? localizedPhase(prevPhase, t) : undefined;
+  const next = nextPhase ? localizedPhase(nextPhase, t) : undefined;
   const onAccent = textOn(phase.color);
 
   /* ----- The sequence: ordered parts + any activities that run throughout ----- */
-  const parts = phase.parts ?? [];
-  const activityById = new Map(phase.activities.map((a) => [a.id, a]));
+  const parts = lp.parts ?? [];
+  const activityById = new Map(lp.activities.map((a) => [a.id, a]));
   const referenced = new Set(parts.flatMap((p) => p.activityIds));
-  const throughout = phase.activities.filter((a) => !referenced.has(a.id));
+  const throughout = lp.activities.filter((a) => !referenced.has(a.id));
 
   const renderActivity = (a: PhaseActivity) => {
     const Icon = KIND_ICON[a.kind];
@@ -208,13 +214,13 @@ export default function PhasePage() {
                 )}
               </div>
 
-              <h1 className="headline mt-3 text-3xl leading-tight sm:text-4xl lg:text-5xl">{phase.name}</h1>
+              <h1 className="headline mt-3 text-3xl leading-tight sm:text-4xl lg:text-5xl">{lp.name}</h1>
               <p className="mt-2 text-base font-semibold lg:text-lg" style={{ color: phase.color }}>
-                {phase.tagline}
+                {lp.tagline}
               </p>
 
               <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted lg:text-[15px]">
-                {phase.description}
+                {lp.description}
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
@@ -222,7 +228,7 @@ export default function PhasePage() {
                   ⏱ {phase.hours}h
                 </span>
                 <span className="rounded-full bg-white/6 px-3.5 py-1.5 text-xs font-semibold text-ink">
-                  💬 {phase.vocabTarget}
+                  💬 {lp.vocabTarget}
                 </span>
               </div>
 
@@ -242,12 +248,12 @@ export default function PhasePage() {
 
       {/* ============ Principles ============ */}
       <motion.section variants={fadeUp} className="space-y-4">
-        <SectionTitle sub={`${t("phaseWord")} ${phase.id} · ${phase.name}`}>
+        <SectionTitle sub={`${t("phaseWord")} ${phase.id} · ${lp.name}`}>
           {t("crsHowGrowthWorks")}
         </SectionTitle>
         <div className="card p-6">
           <ul className="space-y-4">
-            {phase.principles.map((p, i) => (
+            {lp.principles.map((p, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-base"
@@ -265,7 +271,7 @@ export default function PhasePage() {
 
       {/* ============ The sequence ============ */}
       <motion.section variants={fadeUp} className="space-y-4">
-        <SectionTitle sub={`${phase.activities.length} ${t("activitiesWord")} · ${phase.emoji}`}>
+        <SectionTitle sub={`${lp.activities.length} ${t("activitiesWord")} · ${phase.emoji}`}>
           {t("crsSequence")}
         </SectionTitle>
 
@@ -346,7 +352,7 @@ export default function PhasePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {phase.activities.map(renderActivity)}
+            {lp.activities.map(renderActivity)}
           </div>
         )}
       </motion.section>
@@ -360,7 +366,7 @@ export default function PhasePage() {
         <div className="card relative overflow-hidden p-6">
           <div className="orb -bottom-16 -right-16 h-48 w-48" style={{ background: phase.color + "22" }} />
           <ul className="relative space-y-4">
-            {phase.milestones.map((m, i) => (
+            {lp.milestones.map((m, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span
                   className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${

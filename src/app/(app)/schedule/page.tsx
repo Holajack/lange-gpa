@@ -12,6 +12,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/lib/store";
 import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
+import { localizedNurturer } from "@/lib/nurturerI18n";
 import { phaseById } from "@/lib/phases";
 import { LANGUAGES, langByCode } from "@/lib/languages";
 import { mascotForLang } from "@/lib/mascots";
@@ -30,8 +31,9 @@ const NURI: Nurturer = {
   name: "Nuri",
   langs: LANGUAGES.map((l) => l.code),
   city: "Nuri",
-  bio: "Always awake, endlessly patient. Runs the same GPA games — speaks only your growing language.",
-  tags: ["AI", "24/7", "picture cards"],
+  // bio/tags hold t() keys (resolved at render); "AI"/"24/7" stay literal per spec
+  bio: "schNuriBio",
+  tags: ["AI", "24/7", "schPictureCards"],
   sessions: 0,
   rating: 5,
   online: true,
@@ -110,7 +112,7 @@ function DayStrip({
 }
 
 function NurturerCard({
-  n,
+  n: rawN,
   index,
   online,
   onBook,
@@ -122,6 +124,7 @@ function NurturerCard({
   onBook: () => void;
   t: (key: string) => string;
 }) {
+  const n = localizedNurturer(rawN, t);
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -142,15 +145,15 @@ function NurturerCard({
             </span>
           )}
         </div>
-        <p className="line-clamp-2 text-sm leading-relaxed text-muted">{n.bio}</p>
+        <p className="line-clamp-2 text-sm leading-relaxed text-muted">{n.id === "ai" ? t(n.bio) : n.bio}</p>
         <div className="flex flex-wrap gap-1.5">
           {n.tags.map((tag) => (
-            <Tag key={tag}>{tag}</Tag>
+            <Tag key={tag}>{n.id === "ai" && tag.startsWith("sch") ? t(tag) : tag}</Tag>
           ))}
         </div>
         <div className="mt-auto flex items-center gap-2 pt-1">
           <span className="text-sm font-semibold text-lemon">★ {n.rating.toFixed(1)}</span>
-          <span className="text-xs text-muted">· {n.sessions} sessions</span>
+          <span className="text-xs text-muted">· {n.sessions} {t("schSessions")}</span>
           <div className="ml-auto flex items-center gap-2">
             <Pill onClick={onBook} className="bg-violet px-4 py-2 text-sm text-white">
               {t("book")}
@@ -181,11 +184,11 @@ export default function SchedulePage() {
   /** The target language's toy sibling — the AI nurturer's face and name */
   const sibling = mascotForLang(targetLang);
   const phase = phaseById(profile?.phase ?? 1);
-  const defaultActivity = phase.activities[0]?.name ?? "Growing session";
+  const defaultActivity = phase.activities[0]?.name ?? t("schGrowingSession");
 
-  // t() returns the key itself when missing — fall back to plain English
+  // t() returns the key itself when missing — fall back to the schedule-local key
   const aiLabelRaw = t("aiNurturer");
-  const aiLabel = aiLabelRaw === "aiNurturer" ? "AI nurturer" : aiLabelRaw;
+  const aiLabel = aiLabelRaw === "aiNurturer" ? t("schAiNurturer") : aiLabelRaw;
 
   const forLang = useMemo(() => nurturersForLang(targetLang), [targetLang]);
   const fallbackAll = forLang.length === 0;
@@ -242,7 +245,7 @@ export default function SchedulePage() {
         <div>
           <h1 className="headline text-4xl lg:text-5xl">{t("scheduleTitle")}</h1>
           <p className="mt-2 text-sm text-muted">
-            {target.flag} {target.name} · 30 {t("minutes")} · GPA
+            {target.flag} {target.nativeName} · 30 {t("minutes")} · GPA
           </p>
         </div>
         <Pill onClick={() => openSheet()} className="bg-orange px-6 py-3 font-semibold text-canvas" >
@@ -329,7 +332,7 @@ export default function SchedulePage() {
           <Card className="p-5">
             <div className="mb-4 flex items-baseline justify-between gap-3">
               <p className="font-display text-base font-bold capitalize">📅 {selectedLong}</p>
-              <p className="text-xs text-muted">Tap a free hour to book it</p>
+              <p className="text-xs text-muted">{t("schTapFreeHour")}</p>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {HOURS.map((h, i) => {
@@ -374,7 +377,7 @@ export default function SchedulePage() {
           transition={{ delay: 0.16, duration: 0.55, ease: "easeOut" }}
           className="space-y-6"
         >
-          <SectionTitle sub={`${target.flag} ${target.name}`}>{t("availableNurturers")}</SectionTitle>
+          <SectionTitle sub={`${target.flag} ${target.nativeName}`}>{t("availableNurturers")}</SectionTitle>
 
           {/* AI nurturer — the target language's toy sibling */}
           <motion.div
@@ -411,13 +414,13 @@ export default function SchedulePage() {
                       </span>
                     </div>
                     <p className="truncate text-xs text-muted">
-                      {aiLabel} · {sibling.toy}
+                      {aiLabel} · {t(`masc_${sibling.id}_toy`)}
                     </p>
                   </div>
                 </div>
                 <p className="relative mt-3 text-sm leading-relaxed text-muted">
-                  “{sibling.nativeHello}” {sibling.name} is always awake, endlessly patient — runs the same GPA games,
-                  speaks only {target.name}.
+                  “{sibling.nativeHello}”{" "}
+                  {t("schAiDescription").replace("{name}", sibling.name).replace("{language}", target.nativeName)}
                 </p>
                 <div className="relative mt-4 flex items-center gap-2">
                   <Link
@@ -428,7 +431,7 @@ export default function SchedulePage() {
                       boxShadow: `0 0 30px -10px color-mix(in srgb, ${sibling.accent} 70%, transparent)`,
                     }}
                   >
-                    ▶ Start now
+                    ▶ {t("schStartNow")}
                   </Link>
                   <Pill onClick={() => openSheet({ nurturerId: "ai" })} className="bg-violet px-4 py-2 text-sm text-white">
                     {t("book")}
@@ -440,15 +443,15 @@ export default function SchedulePage() {
 
           {/* Real people */}
           <div className="space-y-1 pt-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted">🫶 Real people</p>
-            <p className="text-xs text-muted/80">Real people are the heart of GPA — Nuri fills the gaps between meetings.</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">🫶 {t("schRealPeople")}</p>
+            <p className="text-xs text-muted/80">{t("schRealPeopleSub")}</p>
           </div>
 
           {fallbackAll && (
             <Card className="flex items-center gap-3 p-4">
               <span className="text-2xl">🌍</span>
               <p className="text-sm text-muted">
-                More {target.name} nurturers are joining soon — meet the wider village meanwhile.
+                {t("schMoreJoining").replace("{language}", target.nativeName)}
               </p>
             </Card>
           )}
@@ -612,8 +615,7 @@ export default function SchedulePage() {
                 <Card className="flex items-start gap-3 bg-raised-2 p-4">
                   <span className="text-xl">⏱️</span>
                   <p className="text-xs leading-relaxed text-muted">
-                    <span className="font-semibold text-ink">30 {t("minutes")}.</span> Nuri meetings run 30 minutes — when the
-                    timer ends, the room switches out of the host language so you can debrief.
+                    <span className="font-semibold text-ink">30 {t("minutes")}.</span> {t("schThirtyMinNote")}
                   </p>
                 </Card>
 

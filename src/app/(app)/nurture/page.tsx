@@ -349,7 +349,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
 
   const card = deck[Math.min(index, deck.length - 1)];
   const word = card?.words[contentLang] ?? "";
-  const whereIs = WHERE_IS[contentLang] ?? "Where is…?";
+  const whereIs = WHERE_IS[contentLang] ?? t("nur2WhereIs");
 
   const step = (d: number) => {
     setDir(d);
@@ -427,7 +427,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={() => step(-1)}
-          title="Previous card"
+          title={t("nur2PreviousCard")}
           className="grid h-12 w-12 place-items-center rounded-full bg-white/8 text-ink transition hover:scale-105 active:scale-95"
         >
           <ChevronLeft size={20} />
@@ -435,7 +435,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={() => word && void speak(word, contentLang)}
-          title="Say the word"
+          title={t("nur2SayTheWord")}
           className="grid h-14 w-14 place-items-center rounded-full bg-orange text-canvas transition hover:scale-105 active:scale-95"
           style={{ boxShadow: "var(--shadow-glow-orange)" }}
         >
@@ -444,7 +444,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={() => word && void speak(`${whereIs.replace("…?", "")} ${word}?`, contentLang)}
-          title="Ask the question"
+          title={t("nur2AskTheQuestion")}
           className="pill min-w-0 bg-violet px-4 py-3 text-sm font-bold text-white transition hover:scale-105 active:scale-95"
         >
           {whereIs}
@@ -462,7 +462,7 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={() => step(1)}
-          title="Next card"
+          title={t("nur2NextCard")}
           className="grid h-12 w-12 place-items-center rounded-full bg-white/8 text-ink transition hover:scale-105 active:scale-95"
         >
           <ChevronRight size={20} />
@@ -574,7 +574,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={() => setFast((f) => !f)}
-          title="Demo speed"
+          title={t("nur2DemoSpeed")}
           className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-white/6 text-muted"}`}
         >
           ⚡ ×60
@@ -634,7 +634,7 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
         <button
           type="button"
           onClick={reset}
-          title="Reset"
+          title={t("nur2Reset")}
           className="grid h-12 w-12 place-items-center rounded-full bg-white/8 text-muted transition hover:scale-105 hover:text-ink active:scale-95"
         >
           <RotateCcw size={18} />
@@ -729,7 +729,7 @@ export default function NurturePage() {
                     key={code}
                     type="button"
                     onClick={() => setLang(code)}
-                    title={l.name}
+                    title={l.nativeName}
                     className={`pill px-3.5 py-2 text-sm font-bold ${
                       active ? "bg-orange text-canvas shadow-glow-orange" : "bg-white/6 text-muted hover:text-ink"
                     }`}

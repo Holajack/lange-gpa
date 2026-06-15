@@ -67,7 +67,7 @@ export function AppNav() {
           {/* language chips: target first (big), known langs after */}
           <button
             onClick={toggleImmersion}
-            title={`${t("immersionOn")}: ${target.name}`}
+            title={`${t("immersionOn")}: ${target.nativeName}`}
             className="card flex shrink-0 items-center gap-1.5 rounded-full bg-raised/85 px-2 py-1.5 backdrop-blur-xl sm:gap-2"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet text-lg shadow-glow-violet">

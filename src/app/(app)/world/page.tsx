@@ -29,6 +29,7 @@ import { useApp } from "@/lib/store";
 import { langByCode } from "@/lib/languages";
 import { MASCOTS, mascotForLang, type MascotDef } from "@/lib/mascots";
 import { nurturersForLang } from "@/lib/nurturers";
+import { localizedNurturer, tagKey } from "@/lib/nurturerI18n";
 import {
   NURTURER_COORDS,
   NURTURER_COUNTRIES,
@@ -164,19 +165,22 @@ type PersonView = {
   exchange: boolean;
 };
 
-const nurturerView = (n: Nurturer): PersonView => ({
-  kind: "nurturer",
-  id: n.id,
-  name: n.name,
-  color: n.color,
-  city: n.city,
-  country: NURTURER_COUNTRIES[n.id],
-  online: n.online,
-  bio: n.bio,
-  tags: n.tags,
-  speaks: n.langs,
-  exchange: false,
-});
+const nurturerView = (raw: Nurturer, t: (key: string) => string): PersonView => {
+  const n = localizedNurturer(raw, t);
+  return {
+    kind: "nurturer",
+    id: n.id,
+    name: n.name,
+    color: n.color,
+    city: n.city,
+    country: NURTURER_COUNTRIES[n.id],
+    online: n.online,
+    bio: n.bio,
+    tags: n.tags,
+    speaks: n.langs,
+    exchange: false,
+  };
+};
 
 const participantView = (p: Participant): PersonView => ({
   kind: "grower",
@@ -195,10 +199,13 @@ const participantView = (p: Participant): PersonView => ({
 });
 
 /** Everyone pinned on the planet for a language — city coords + card data. */
-const peopleOnGlobe = (lang: LangCode): { lat: number; lng: number; view: PersonView }[] => [
+const peopleOnGlobe = (
+  lang: LangCode,
+  t: (key: string) => string,
+): { lat: number; lng: number; view: PersonView }[] => [
   ...nurturersForLang(lang).flatMap((n) => {
     const c = NURTURER_COORDS[n.id];
-    return c ? [{ lat: c.lat, lng: c.lng, view: nurturerView(n) }] : [];
+    return c ? [{ lat: c.lat, lng: c.lng, view: nurturerView(n, t) }] : [];
   }),
   ...participantsForLang(lang).map((p) => ({ lat: p.lat, lng: p.lng, view: participantView(p) })),
 ];
@@ -219,6 +226,9 @@ export default function WorldPage() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  /** latest t, read by the globe hit-test without re-running the effect */
+  const tRef = useRef(t);
+  tRef.current = t;
   /** read by the render loop without re-running the effect */
   const selLangRef = useRef<LangCode>(mascot.lang);
   const focusRef = useRef<[number, number]>(anglesOf(spot.lat, spot.lon));
@@ -381,7 +391,7 @@ export default function WorldPage() {
       const ct = Math.cos(rTheta);
       const st = Math.sin(rTheta);
       let best: { view: PersonView; d: number } | null = null;
-      for (const { lat, lng, view } of peopleOnGlobe(selLangRef.current)) {
+      for (const { lat, lng, view } of peopleOnGlobe(selLangRef.current, tRef.current)) {
         const lam = (lng * Math.PI) / 180 - Math.PI;
         const la = (lat * Math.PI) / 180;
         const ux = -Math.cos(la) * Math.cos(lam);
@@ -495,12 +505,12 @@ export default function WorldPage() {
     <div className="flex flex-wrap gap-1.5">
       {p.growing && (
         <Tag className="px-2.5 py-1 text-[11px]">
-          🌱 {t("wldGrowing")} {langByCode(p.growing).flag} {langByCode(p.growing).name}
+          🌱 {t("wldGrowing")} {langByCode(p.growing).flag} {langByCode(p.growing).nativeName}
         </Tag>
       )}
       {p.speaks.map((code) => (
         <Tag key={code} className="px-2.5 py-1 text-[11px]">
-          💬 {t("wldSpeaks")} {langByCode(code).flag} {langByCode(code).name}
+          💬 {t("wldSpeaks")} {langByCode(code).flag} {langByCode(code).nativeName}
         </Tag>
       ))}
     </div>
@@ -554,7 +564,7 @@ export default function WorldPage() {
         <div>
           <h1 className="headline text-4xl lg:text-5xl">{t("world")}</h1>
           <p className="mt-2 text-sm text-muted">
-            🌍 {lang.flag} {lang.name} · {spot.city}
+            🌍 {lang.flag} {lang.nativeName} · {spot.city}
           </p>
         </div>
         <Link href="/schedule" className="pill bg-orange px-6 py-3 font-semibold text-canvas">
@@ -584,7 +594,7 @@ export default function WorldPage() {
               <div className="absolute right-1 top-1 z-10 flex flex-col gap-1.5">
                 <button
                   type="button"
-                  aria-label="Zoom in"
+                  aria-label={t("wld2ZoomIn")}
                   onClick={() => zoomBy(0.35)}
                   className="card flex h-9 w-9 items-center justify-center rounded-full bg-raised/80 text-lg font-bold backdrop-blur-md transition hover:bg-white/10"
                 >
@@ -592,7 +602,7 @@ export default function WorldPage() {
                 </button>
                 <button
                   type="button"
-                  aria-label="Zoom out"
+                  aria-label={t("wld2ZoomOut")}
                   onClick={() => zoomBy(-0.35)}
                   className="card flex h-9 w-9 items-center justify-center rounded-full bg-raised/80 text-lg font-bold backdrop-blur-md transition hover:bg-white/10"
                 >
@@ -613,7 +623,7 @@ export default function WorldPage() {
                   >
                     {peopleMode ? (
                       <>
-                        👋 {t("wldPeopleOf")} {lang.name}
+                        👋 {t("wldPeopleOf")} {lang.nativeName}
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: NURTURER_DOT }} />
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: GROWER_DOT }} />
                       </>
@@ -645,7 +655,7 @@ export default function WorldPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 * i, duration: 0.4, ease: "easeOut" }}
                     onClick={() => pick(m)}
-                    title={`${m.name} — ${langByCode(m.lang).name}`}
+                    title={`${m.name} — ${langByCode(m.lang).nativeName}`}
                     className={`flex shrink-0 flex-col items-center gap-1 rounded-2xl px-2.5 py-2 transition ${sel ? "" : "hover:bg-white/5"}`}
                     style={
                       sel
@@ -695,7 +705,7 @@ export default function WorldPage() {
                     <MascotImage mascot={mascot} size={64} float />
                     <div className="min-w-0">
                       <p className="font-display text-lg font-bold">
-                        {lang.flag} {t("wldPeopleOf")} {lang.name}
+                        {lang.flag} {t("wldPeopleOf")} {lang.nativeName}
                       </p>
                       <p className="mt-0.5 text-xs text-muted">
                         {t("wldPeopleSub")}
@@ -709,9 +719,9 @@ export default function WorldPage() {
                       {t("wldNurturersLabel")}
                     </p>
                     {nurturers.length === 0 ? (
-                      <Card className="p-4 text-sm text-muted">{lang.name} {t("wldMoreNurturers")}</Card>
+                      <Card className="p-4 text-sm text-muted">{lang.nativeName} {t("wldMoreNurturers")}</Card>
                     ) : (
-                      nurturers.map((n, i) => personRow(nurturerView(n), i))
+                      nurturers.map((n, i) => personRow(nurturerView(n, t), i))
                     )}
                   </div>
 
@@ -755,7 +765,7 @@ export default function WorldPage() {
                         <div className="min-w-0 flex-1">
                           <p className="font-display text-2xl font-bold">{mascot.name}</p>
                           <p className="mt-0.5 text-xs text-muted">
-                            {mascot.toy} · {lang.flag} {lang.name}
+                            {t(`masc_${mascot.id}_toy`)} · {lang.flag} {lang.nativeName}
                           </p>
                           <button
                             type="button"
@@ -775,10 +785,10 @@ export default function WorldPage() {
 
                       {/* what a nurturer might show you */}
                       <ul className="relative mt-5 space-y-2.5">
-                        {bullets.map((b) => (
-                          <li key={b} className="flex items-start gap-2.5 text-sm leading-relaxed text-muted">
+                        {bullets.map((_, i) => (
+                          <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-muted">
                             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: mascot.accent }} />
-                            <span>{b}</span>
+                            <span>{t(`wldCul_${mascot.lang}_${i}`)}</span>
                           </li>
                         ))}
                       </ul>
@@ -786,13 +796,13 @@ export default function WorldPage() {
                   </div>
 
                   {/* nurturers who live there */}
-                  <SectionTitle sub={`${lang.flag} ${lang.name}`}>{t("availableNurturers")}</SectionTitle>
+                  <SectionTitle sub={`${lang.flag} ${lang.nativeName}`}>{t("availableNurturers")}</SectionTitle>
 
                   {nurturers.length === 0 ? (
                     <Card className="flex items-center gap-3 p-4">
                       <span className="text-2xl">🌍</span>
                       <p className="text-sm text-muted">
-                        {lang.name} {t("wldMoreNurturersWide")}
+                        {lang.nativeName} {t("wldMoreNurturersWide")}
                       </p>
                     </Card>
                   ) : (
@@ -808,7 +818,7 @@ export default function WorldPage() {
                             <Avatar name={n.name} color={n.color} size={48} ring />
                             <button
                               type="button"
-                              onClick={() => setPerson(nurturerView(n))}
+                              onClick={() => setPerson(nurturerView(n, t))}
                               className="min-w-0 flex-1 text-left"
                             >
                               <div className="flex items-center gap-2">
@@ -825,7 +835,7 @@ export default function WorldPage() {
                               <div className="mt-1.5 flex flex-wrap gap-1.5">
                                 {n.tags.slice(0, 3).map((tag) => (
                                   <Tag key={tag} className="px-2 py-0.5 text-[10px]">
-                                    {tag}
+                                    {t(tagKey(tag))}
                                   </Tag>
                                 ))}
                               </div>
@@ -873,7 +883,7 @@ export default function WorldPage() {
               />
               <button
                 type="button"
-                aria-label="Close"
+                aria-label={t("wld2Close")}
                 onClick={() => setPerson(null)}
                 className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-white/10 hover:text-ink"
               >

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
+import { useApp } from "@/lib/store";
 
 /**
  * Account corner for the app nav (Clerk v7: gate on useUser, the old
@@ -10,6 +11,7 @@ import { UserButton, useUser } from "@clerk/nextjs";
  * so this component must itself check the key before using Clerk hooks.
  */
 function SignedCorner() {
+  const { t } = useApp();
   const { isSignedIn } = useUser();
   if (isSignedIn) {
     return (
@@ -25,7 +27,7 @@ function SignedCorner() {
       href="/sign-in"
       className="pill bg-violet px-4 py-2 text-sm font-bold text-white shadow-glow-violet"
     >
-      Sign in
+      {t("authSignIn")}
     </Link>
   );
 }

@@ -10,7 +10,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "food",
     emoji: "🍎",
     color: "violet",
-    names: { en: "Food", es: "Comida", ru: "Еда", fr: "Nourriture", de: "Essen", pt: "Comida", it: "Cibo", ja: "食べ物", zh: "食物" },
+    names: { en: "Food", es: "Comida", ru: "Еда", fr: "Nourriture", de: "Essen", pt: "Comida", it: "Cibo", ja: "食べもの", zh: "食物", ht: "Manje", ko: "음식", tr: "Yemek", uk: "Їжа", hi: "खाना", ar: "الطعام", vi: "Đồ ăn", id: "Makanan", pl: "Jedzenie", th: "อาหาร" },
     items: [
       { id: "apple", emoji: "🍎", words: { en: "apple", es: "la manzana", ru: "яблоко", fr: "la pomme", de: "der Apfel", pt: "a maçã", it: "la mela", ja: "りんご", zh: "苹果", ht: "pòm" } },
       { id: "bread", emoji: "🍞", words: { en: "bread", es: "el pan", ru: "хлеб", fr: "le pain", de: "das Brot", pt: "o pão", it: "il pane", ja: "パン", zh: "面包", ht: "pen" } },
@@ -30,7 +30,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "animals",
     emoji: "🐾",
     color: "lime",
-    names: { en: "Animals", es: "Animales", ru: "Животные", fr: "Animaux", de: "Tiere", pt: "Animais", it: "Animali", ja: "動物", zh: "动物" },
+    names: { en: "Animals", es: "Animales", ru: "Животные", fr: "Animaux", de: "Tiere", pt: "Animais", it: "Animali", ja: "動物", zh: "动物", ht: "Bèt", ko: "동물", tr: "Hayvanlar", uk: "Тварини", hi: "जानवर", ar: "الحيوانات", vi: "Động vật", id: "Binatang", pl: "Zwierzęta", th: "สัตว์" },
     items: [
       { id: "dog", emoji: "🐕", words: { en: "dog", es: "el perro", ru: "собака", fr: "le chien", de: "der Hund", pt: "o cachorro", it: "il cane", ja: "犬", zh: "狗", ht: "chen" } },
       { id: "cat", emoji: "🐈", words: { en: "cat", es: "el gato", ru: "кошка", fr: "le chat", de: "die Katze", pt: "o gato", it: "il gatto", ja: "猫", zh: "猫", ht: "chat" } },
@@ -50,7 +50,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "home",
     emoji: "🏠",
     color: "orange",
-    names: { en: "Home", es: "Casa", ru: "Дом", fr: "Maison", de: "Zuhause", pt: "Casa", it: "Casa", ja: "家", zh: "家" },
+    names: { en: "Home", es: "Hogar", ru: "Дом", fr: "Maison", de: "Zuhause", pt: "Casa", it: "Casa", ja: "家", zh: "家", ht: "Kay", ko: "집", tr: "Ev", uk: "Дім", hi: "घर", ar: "البيت", vi: "Nhà cửa", id: "Rumah", pl: "Dom", th: "บ้าน" },
     items: [
       { id: "house", emoji: "🏠", words: { en: "house", es: "la casa", ru: "дом", fr: "la maison", de: "das Haus", pt: "a casa", it: "la casa", ja: "家", zh: "房子", ht: "kay" } },
       { id: "door", emoji: "🚪", words: { en: "door", es: "la puerta", ru: "дверь", fr: "la porte", de: "die Tür", pt: "a porta", it: "la porta", ja: "ドア", zh: "门", ht: "pòt" } },
@@ -70,7 +70,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "body",
     emoji: "👋",
     color: "lemon",
-    names: { en: "Body", es: "Cuerpo", ru: "Тело", fr: "Corps", de: "Körper", pt: "Corpo", it: "Corpo", ja: "体", zh: "身体" },
+    names: { en: "Body", es: "Cuerpo", ru: "Тело", fr: "Corps", de: "Körper", pt: "Corpo", it: "Corpo", ja: "からだ", zh: "身体", ht: "Kò", ko: "몸", tr: "Vücut", uk: "Тіло", hi: "शरीर", ar: "الجسم", vi: "Cơ thể", id: "Tubuh", pl: "Ciało", th: "ร่างกาย" },
     items: [
       { id: "hand", emoji: "✋", words: { en: "hand", es: "la mano", ru: "рука", fr: "la main", de: "die Hand", pt: "a mão", it: "la mano", ja: "手", zh: "手", ht: "men" } },
       { id: "eye", emoji: "👁️", words: { en: "eye", es: "el ojo", ru: "глаз", fr: "l'œil", de: "das Auge", pt: "o olho", it: "l'occhio", ja: "目", zh: "眼睛", ht: "je" } },
@@ -88,7 +88,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "traveling",
     emoji: "✈️",
     color: "orange",
-    names: { en: "Traveling", es: "Viajes", ru: "Путешествия", fr: "Voyages", de: "Reisen", pt: "Viagens", it: "Viaggi", ja: "旅行", zh: "旅行" },
+    names: { en: "Traveling", es: "Viajar", ru: "Путешествия", fr: "Voyage", de: "Reisen", pt: "Viagem", it: "Viaggiare", ja: "旅", zh: "出行", ht: "Vwayaje", ko: "여행", tr: "Seyahat", uk: "Подорожі", hi: "यात्रा", ar: "السفر", vi: "Đi lại", id: "Bepergian", pl: "Podróże", th: "การเดินทาง" },
     items: [
       { id: "car", emoji: "🚗", words: { en: "car", es: "el coche", ru: "машина", fr: "la voiture", de: "das Auto", pt: "o carro", it: "la macchina", ja: "車", zh: "汽车", ht: "machin" } },
       { id: "bus", emoji: "🚌", words: { en: "bus", es: "el autobús", ru: "автобус", fr: "le bus", de: "der Bus", pt: "o ônibus", it: "l'autobus", ja: "バス", zh: "公交车", ht: "bis" } },
@@ -106,7 +106,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "family",
     emoji: "👨‍👩‍👧",
     color: "violet",
-    names: { en: "Family", es: "Familia", ru: "Семья", fr: "Famille", de: "Familie", pt: "Família", it: "Famiglia", ja: "家族", zh: "家庭" },
+    names: { en: "Family", es: "Familia", ru: "Семья", fr: "Famille", de: "Familie", pt: "Família", it: "Famiglia", ja: "家族", zh: "家人", ht: "Fanmi", ko: "가족", tr: "Aile", uk: "Сім’я", hi: "परिवार", ar: "العائلة", vi: "Gia đình", id: "Keluarga", pl: "Rodzina", th: "ครอบครัว" },
     items: [
       { id: "mother", emoji: "👩", words: { en: "mother", es: "la madre", ru: "мама", fr: "la mère", de: "die Mutter", pt: "a mãe", it: "la madre", ja: "お母さん", zh: "妈妈", ht: "manman" } },
       { id: "father", emoji: "👨", words: { en: "father", es: "el padre", ru: "папа", fr: "le père", de: "der Vater", pt: "o pai", it: "il padre", ja: "お父さん", zh: "爸爸", ht: "papa" } },
@@ -122,7 +122,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "sport",
     emoji: "⚽",
     color: "lime",
-    names: { en: "Sport", es: "Deporte", ru: "Спорт", fr: "Sport", de: "Sport", pt: "Esporte", it: "Sport", ja: "スポーツ", zh: "运动" },
+    names: { en: "Sport", es: "Deporte", ru: "Спорт", fr: "Sport", de: "Sport", pt: "Esporte", it: "Sport", ja: "スポーツ", zh: "运动", ht: "Espò", ko: "운동", tr: "Spor", uk: "Спорт", hi: "खेल", ar: "الرياضة", vi: "Thể thao", id: "Olahraga", pl: "Sport", th: "กีฬา" },
     items: [
       { id: "ball", emoji: "⚽", words: { en: "ball", es: "el balón", ru: "мяч", fr: "le ballon", de: "der Ball", pt: "a bola", it: "il pallone", ja: "ボール", zh: "球", ht: "boul" } },
       { id: "run", emoji: "🏃", words: { en: "run", es: "correr", ru: "бегать", fr: "courir", de: "laufen", pt: "correr", it: "correre", ja: "走る", zh: "跑步", ht: "kouri" } },
@@ -138,7 +138,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "health",
     emoji: "🩺",
     color: "coral",
-    names: { en: "Health", es: "Salud", ru: "Здоровье", fr: "Santé", de: "Gesundheit", pt: "Saúde", it: "Salute", ja: "健康", zh: "健康" },
+    names: { en: "Health", es: "Salud", ru: "Здоровье", fr: "Santé", de: "Gesundheit", pt: "Saúde", it: "Salute", ja: "健康", zh: "健康", ht: "Sante", ko: "건강", tr: "Sağlık", uk: "Здоров’я", hi: "सेहत", ar: "الصحّة", vi: "Sức khỏe", id: "Kesehatan", pl: "Zdrowie", th: "สุขภาพ" },
     items: [
       { id: "doctor", emoji: "🧑‍⚕️", words: { en: "doctor", es: "el médico", ru: "врач", fr: "le médecin", de: "der Arzt", pt: "o médico", it: "il medico", ja: "お医者さん", zh: "医生", ht: "doktè" } },
       { id: "medicine", emoji: "💊", words: { en: "medicine", es: "la medicina", ru: "лекарство", fr: "le médicament", de: "die Medizin", pt: "o remédio", it: "la medicina", ja: "薬", zh: "药", ht: "medikaman" } },
@@ -154,7 +154,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "nature",
     emoji: "🌳",
     color: "mint",
-    names: { en: "Nature", es: "Naturaleza", ru: "Природа", fr: "Nature", de: "Natur", pt: "Natureza", it: "Natura", ja: "自然", zh: "自然" },
+    names: { en: "Nature", es: "Naturaleza", ru: "Природа", fr: "Nature", de: "Natur", pt: "Natureza", it: "Natura", ja: "自然", zh: "大自然", ht: "Lanati", ko: "자연", tr: "Doğa", uk: "Природа", hi: "प्रकृति", ar: "الطبيعة", vi: "Thiên nhiên", id: "Alam", pl: "Przyroda", th: "ธรรมชาติ" },
     items: [
       { id: "sun", emoji: "☀️", words: { en: "sun", es: "el sol", ru: "солнце", fr: "le soleil", de: "die Sonne", pt: "o sol", it: "il sole", ja: "太陽", zh: "太阳", ht: "solèy" } },
       { id: "moon", emoji: "🌙", words: { en: "moon", es: "la luna", ru: "луна", fr: "la lune", de: "der Mond", pt: "a lua", it: "la luna", ja: "月", zh: "月亮", ht: "lalin" } },
@@ -172,7 +172,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "work",
     emoji: "💼",
     color: "violet",
-    names: { en: "Work", es: "Trabajo", ru: "Работа", fr: "Travail", de: "Arbeit", pt: "Trabalho", it: "Lavoro", ja: "仕事", zh: "工作" },
+    names: { en: "Work", es: "Trabajo", ru: "Работа", fr: "Travail", de: "Arbeit", pt: "Trabalho", it: "Lavoro", ja: "仕事", zh: "工作", ht: "Travay", ko: "일", tr: "İş", uk: "Робота", hi: "काम", ar: "العمل", vi: "Công việc", id: "Pekerjaan", pl: "Praca", th: "งาน" },
     items: [
       { id: "computer", emoji: "💻", words: { en: "computer", es: "el ordenador", ru: "компьютер", fr: "l'ordinateur", de: "der Computer", pt: "o computador", it: "il computer", ja: "パソコン", zh: "电脑", ht: "òdinatè" } },
       { id: "pen", emoji: "🖊️", words: { en: "pen", es: "el bolígrafo", ru: "ручка", fr: "le stylo", de: "der Stift", pt: "a caneta", it: "la penna", ja: "ペン", zh: "笔", ht: "plim" } },
@@ -190,7 +190,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "colors",
     emoji: "🎨",
     meeting: 7,
-    names: { en: "Colors" },
+    names: { en: "Colors", es: "Colores", ru: "Цвета", fr: "Couleurs", de: "Farben", pt: "Cores", it: "Colori", ja: "色", zh: "颜色", ht: "Koulè", ko: "색깔", tr: "Renkler", uk: "Кольори", hi: "रंग", ar: "الألوان", vi: "Màu sắc", id: "Warna", pl: "Kolory", th: "สี" },
     color: "coral",
     items: [
       { id: "color-red", emoji: "🟥", meeting: 7, words: { en: "red", es: "rojo", ru: "красный", fr: "rouge", de: "rot", pt: "vermelho", it: "rosso", ja: "赤", zh: "红色", ht: "wouj" } },
@@ -209,7 +209,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "numbers",
     emoji: "🔢",
     meeting: 12,
-    names: { en: "Numbers" },
+    names: { en: "Numbers", es: "Números", ru: "Числа", fr: "Nombres", de: "Zahlen", pt: "Números", it: "Numeri", ja: "数", zh: "数字", ht: "Nimewo", ko: "숫자", tr: "Sayılar", uk: "Числа", hi: "संख्याएँ", ar: "الأرقام", vi: "Con số", id: "Angka", pl: "Liczby", th: "ตัวเลข" },
     color: "lemon",
     items: [
       { id: "num-one", emoji: "1️⃣", meeting: 12, words: { en: "one", es: "uno", ru: "один", fr: "un", de: "eins", pt: "um", it: "uno", ja: "一", zh: "一", ht: "youn" } },
@@ -228,7 +228,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "clothing",
     emoji: "👕",
     meeting: 9,
-    names: { en: "Clothing" },
+    names: { en: "Clothing", es: "Ropa", ru: "Одежда", fr: "Vêtements", de: "Kleidung", pt: "Roupas", it: "Abbigliamento", ja: "衣服", zh: "衣服", ht: "Rad", ko: "옷", tr: "Giysiler", uk: "Одяг", hi: "कपड़े", ar: "الملابس", vi: "Quần áo", id: "Pakaian", pl: "Ubrania", th: "เสื้อผ้า" },
     color: "violet",
     items: [
       { id: "cloth-shirt", emoji: "👕", meeting: 9, words: { en: "shirt", es: "la camisa", ru: "рубашка", fr: "la chemise", de: "das Hemd", pt: "a camisa", it: "la camicia", ja: "シャツ", zh: "衬衫", ht: "chemiz" } },
@@ -247,7 +247,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "prepositions",
     emoji: "📍",
     meeting: 4,
-    names: { en: "Where things are" },
+    names: { en: "Where things are", es: "Dónde están las cosas", ru: "Где что находится", fr: "Où sont les choses", de: "Wo die Dinge sind", pt: "Onde as coisas estão", it: "Dove sono le cose", ja: "ものの位置", zh: "东西在哪儿", ht: "Kote bagay yo ye", ko: "위치", tr: "Nesnelerin yeri", uk: "Де що розташоване", hi: "चीज़ें कहाँ हैं", ar: "أين توجد الأشياء", vi: "Vị trí đồ vật", id: "Letak benda", pl: "Gdzie co jest", th: "ตำแหน่งของสิ่งต่าง ๆ" },
     color: "mint",
     items: [
       { id: "prep-on", emoji: "⬆️", meeting: 4, words: { en: "on", es: "encima de", ru: "на", fr: "sur", de: "auf", pt: "em cima de", it: "su", ja: "上", zh: "上面", ht: "sou" } },
@@ -264,7 +264,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "emotions",
     emoji: "😀",
     meeting: 11,
-    names: { en: "Feelings" },
+    names: { en: "Feelings", es: "Emociones", ru: "Чувства", fr: "Émotions", de: "Gefühle", pt: "Sentimentos", it: "Emozioni", ja: "気持ち", zh: "情绪", ht: "Santiman", ko: "감정", tr: "Duygular", uk: "Почуття", hi: "भावनाएँ", ar: "المشاعر", vi: "Cảm xúc", id: "Perasaan", pl: "Uczucia", th: "ความรู้สึก" },
     color: "orange",
     items: [
       { id: "emo-happy", emoji: "😀", meeting: 11, words: { en: "happy", es: "feliz", ru: "счастливый", fr: "content", de: "glücklich", pt: "feliz", it: "felice", ja: "嬉しい", zh: "开心", ht: "kontan" } },
@@ -281,7 +281,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "tableware",
     emoji: "🍴",
     meeting: 2,
-    names: { en: "Kitchen & table" },
+    names: { en: "Kitchen & table", es: "Cocina y mesa", ru: "Кухня и стол", fr: "Cuisine et table", de: "Küche & Tisch", pt: "Cozinha e mesa", it: "Cucina e tavola", ja: "台所と食卓", zh: "厨房与餐桌", ht: "Kizin ak tab", ko: "주방과 식탁", tr: "Mutfak ve sofra", uk: "Кухня та стіл", hi: "रसोई और मेज़", ar: "المطبخ والمائدة", vi: "Bếp & bàn ăn", id: "Dapur & meja makan", pl: "Kuchnia i stół", th: "ครัวและโต๊ะอาหาร" },
     color: "lime",
     items: [
       { id: "tbl-knife", emoji: "🔪", meeting: 2, words: { en: "knife", es: "el cuchillo", ru: "нож", fr: "le couteau", de: "das Messer", pt: "a faca", it: "il coltello", ja: "ナイフ", zh: "刀", ht: "kouto" } },
@@ -296,7 +296,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "tools",
     emoji: "🔧",
     meeting: 11,
-    names: { en: "Tools" },
+    names: { en: "Tools", es: "Herramientas", ru: "Инструменты", fr: "Outils", de: "Werkzeuge", pt: "Ferramentas", it: "Attrezzi", ja: "道具", zh: "工具", ht: "Zouti", ko: "도구", tr: "Aletler", uk: "Інструменти", hi: "औज़ार", ar: "الأدوات", vi: "Dụng cụ", id: "Perkakas", pl: "Narzędzia", th: "เครื่องมือ" },
     color: "coral",
     items: [
       { id: "tool-hammer", emoji: "🔨", meeting: 11, words: { en: "hammer", es: "el martillo", ru: "молоток", fr: "le marteau", de: "der Hammer", pt: "o martelo", it: "il martello", ja: "金槌", zh: "锤子", ht: "mato" } },
@@ -312,7 +312,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "room",
     emoji: "🚪",
     meeting: 3,
-    names: { en: "Parts of the room" },
+    names: { en: "Parts of the room", es: "Partes de la habitación", ru: "Части комнаты", fr: "Parties de la pièce", de: "Teile des Zimmers", pt: "Partes do cômodo", it: "Parti della stanza", ja: "部屋の各部", zh: "房间的各个部分", ht: "Pati nan chanm nan", ko: "방의 구성", tr: "Odanın bölümleri", uk: "Частини кімнати", hi: "कमरे के हिस्से", ar: "أجزاء الغرفة", vi: "Các phần trong phòng", id: "Bagian ruangan", pl: "Części pokoju", th: "ส่วนต่าง ๆ ของห้อง" },
     color: "violet",
     items: [
       { id: "room-wall", emoji: "🧱", meeting: 3, words: { en: "wall", es: "la pared", ru: "стена", fr: "le mur", de: "die Wand", pt: "a parede", it: "la parete", ja: "壁", zh: "墙", ht: "miray" } },
@@ -327,7 +327,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "rooms",
     emoji: "🏠",
     meeting: 8,
-    names: { en: "Rooms of the house" },
+    names: { en: "Rooms of the house", es: "Habitaciones de la casa", ru: "Комнаты в доме", fr: "Pièces de la maison", de: "Räume des Hauses", pt: "Cômodos da casa", it: "Stanze della casa", ja: "家の部屋", zh: "家里的各个房间", ht: "Chanm nan kay la", ko: "집 안의 방들", tr: "Evin odaları", uk: "Кімнати в домі", hi: "घर के कमरे", ar: "غرف البيت", vi: "Các phòng trong nhà", id: "Ruangan di rumah", pl: "Pomieszczenia w domu", th: "ห้องต่าง ๆ ในบ้าน" },
     color: "mint",
     items: [
       { id: "rooms-kitchen", emoji: "🍳", meeting: 8, words: { en: "kitchen", es: "la cocina", ru: "кухня", fr: "la cuisine", de: "die Küche", pt: "a cozinha", it: "la cucina", ja: "台所", zh: "厨房", ht: "kizin" } },
@@ -340,7 +340,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "family-more",
     emoji: "👨‍👩‍👧",
     meeting: 5,
-    names: { en: "More family" },
+    names: { en: "More family", es: "Más familia", ru: "Ещё о семье", fr: "Encore la famille", de: "Mehr Familie", pt: "Mais família", it: "Altra famiglia", ja: "家族（つづき）", zh: "更多家人", ht: "Plis fanmi", ko: "가족 더 알기", tr: "Daha fazla aile", uk: "Ще про сім’ю", hi: "और परिवार", ar: "مزيد من أفراد العائلة", vi: "Thêm về gia đình", id: "Keluarga lainnya", pl: "Więcej rodziny", th: "ครอบครัวเพิ่มเติม" },
     color: "orange",
     items: [
       { id: "fam-son", emoji: "👦", meeting: 5, words: { en: "son", es: "el hijo", ru: "сын", fr: "le fils", de: "der Sohn", pt: "o filho", it: "il figlio", ja: "息子", zh: "儿子", ht: "pitit gason" } },
@@ -355,7 +355,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "body-more",
     emoji: "🦵",
     meeting: 5,
-    names: { en: "More body parts" },
+    names: { en: "More body parts", es: "Más partes del cuerpo", ru: "Ещё части тела", fr: "Encore des parties du corps", de: "Mehr Körperteile", pt: "Mais partes do corpo", it: "Altre parti del corpo", ja: "からだの部位（つづき）", zh: "更多身体部位", ht: "Plis pati nan kò a", ko: "몸의 부위 더 알기", tr: "Daha fazla vücut bölümü", uk: "Ще частини тіла", hi: "शरीर के और अंग", ar: "مزيد من أعضاء الجسم", vi: "Thêm bộ phận cơ thể", id: "Bagian tubuh lainnya", pl: "Więcej części ciała", th: "อวัยวะเพิ่มเติม" },
     color: "lemon",
     items: [
       { id: "body-leg", emoji: "🦵", meeting: 5, words: { en: "leg", es: "la pierna", ru: "нога", fr: "la jambe", de: "das Bein", pt: "a perna", it: "la gamba", ja: "足", zh: "腿", ht: "janm" } },
@@ -372,7 +372,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "adjectives",
     emoji: "📏",
     meeting: 25,
-    names: { en: "Describing words" },
+    names: { en: "Describing words", es: "Palabras para describir", ru: "Слова-описания", fr: "Mots pour décrire", de: "Beschreibende Wörter", pt: "Palavras que descrevem", it: "Parole che descrivono", ja: "ようすを表すことば", zh: "描述词", ht: "Mo pou dekri", ko: "묘사하는 말", tr: "Niteleme sözcükleri", uk: "Слова-описи", hi: "वर्णन करने वाले शब्द", ar: "كلمات الوصف", vi: "Từ miêu tả", id: "Kata sifat", pl: "Słowa opisujące", th: "คำบรรยายลักษณะ" },
     color: "lime",
     items: [
       { id: "adj-big", emoji: "🔼", meeting: 25, words: { en: "big", es: "grande", ru: "большой", fr: "grand", de: "groß", pt: "grande", it: "grande", ja: "大きい", zh: "大", ht: "gwo" } },
@@ -391,7 +391,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "states",
     emoji: "🤒",
     meeting: 19,
-    names: { en: "How I feel (body)" },
+    names: { en: "How I feel (body)", es: "Cómo me siento (cuerpo)", ru: "Как я себя чувствую (тело)", fr: "Comment je me sens (corps)", de: "Wie ich mich fühle (Körper)", pt: "Como me sinto (corpo)", it: "Come mi sento (corpo)", ja: "からだの調子", zh: "身体的感觉", ht: "Kijan m santi m (kò)", ko: "몸 상태", tr: "Nasıl hissediyorum (vücut)", uk: "Як я почуваюся (тіло)", hi: "मैं कैसा महसूस करता हूँ (शरीर)", ar: "كيف أشعر (الجسم)", vi: "Cảm giác cơ thể", id: "Bagaimana rasa badanku", pl: "Jak się czuję (ciało)", th: "ความรู้สึกทางร่างกาย" },
     color: "coral",
     items: [
       { id: "state-hungry", emoji: "🍽️", meeting: 19, words: { en: "hungry", es: "hambriento", ru: "голодный", fr: "affamé", de: "hungrig", pt: "com fome", it: "affamato", ja: "お腹すいた", zh: "饿", ht: "grangou" } },
@@ -406,7 +406,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "insects",
     emoji: "🐛",
     meeting: 12,
-    names: { en: "Insects & small creatures" },
+    names: { en: "Insects & small creatures", es: "Insectos y bichos", ru: "Насекомые и мелкая живность", fr: "Insectes et petites bêtes", de: "Insekten & Kleintiere", pt: "Insetos e bichinhos", it: "Insetti e piccole creature", ja: "虫と小さな生きもの", zh: "昆虫与小动物", ht: "Ensèk ak ti bèt", ko: "곤충과 작은 생물", tr: "Böcekler ve küçük canlılar", uk: "Комахи та дрібні створіння", hi: "कीड़े और छोटे जीव", ar: "الحشرات والكائنات الصغيرة", vi: "Côn trùng & sinh vật nhỏ", id: "Serangga & hewan kecil", pl: "Owady i małe stworzenia", th: "แมลงและสัตว์ตัวเล็ก" },
     color: "mint",
     items: [
       { id: "bug-fly", emoji: "🪰", meeting: 12, words: { en: "fly", es: "la mosca", ru: "муха", fr: "la mouche", de: "die Fliege", pt: "a mosca", it: "la mosca", ja: "ハエ", zh: "苍蝇", ht: "mouch" } },
@@ -420,7 +420,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "animals-more",
     emoji: "🐘",
     meeting: 3,
-    names: { en: "More animals" },
+    names: { en: "More animals", es: "Más animales", ru: "Ещё животные", fr: "Encore des animaux", de: "Mehr Tiere", pt: "Mais animais", it: "Altri animali", ja: "動物（つづき）", zh: "更多动物", ht: "Plis bèt", ko: "동물 더 알기", tr: "Daha fazla hayvan", uk: "Ще тварини", hi: "और जानवर", ar: "مزيد من الحيوانات", vi: "Thêm động vật", id: "Binatang lainnya", pl: "Więcej zwierząt", th: "สัตว์เพิ่มเติม" },
     color: "violet",
     items: [
       { id: "animal-duck", emoji: "🦆", meeting: 3, words: { en: "duck", es: "el pato", ru: "утка", fr: "le canard", de: "die Ente", pt: "o pato", it: "l'anatra", ja: "アヒル", zh: "鸭子", ht: "kanna" } },
@@ -435,7 +435,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "nature-more",
     emoji: "🌳",
     meeting: 14,
-    names: { en: "The outdoors" },
+    names: { en: "The outdoors", es: "El aire libre", ru: "На улице", fr: "Le plein air", de: "Draußen in der Natur", pt: "Ao ar livre", it: "All'aria aperta", ja: "屋外", zh: "户外", ht: "Deyò a", ko: "바깥세상", tr: "Açık hava", uk: "На свіжому повітрі", hi: "खुली हवा में", ar: "الهواء الطلق", vi: "Ngoài trời", id: "Alam terbuka", pl: "Na świeżym powietrzu", th: "กลางแจ้ง" },
     color: "lime",
     items: [
       { id: "nat-cloud", emoji: "☁️", meeting: 14, words: { en: "cloud", es: "la nube", ru: "облако", fr: "le nuage", de: "die Wolke", pt: "a nuvem", it: "la nuvola", ja: "雲", zh: "云", ht: "nyaj" } },
@@ -451,7 +451,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "drinks-more",
     emoji: "🥤",
     meeting: 8,
-    names: { en: "More drinks" },
+    names: { en: "More drinks", es: "Más bebidas", ru: "Ещё напитки", fr: "Encore des boissons", de: "Mehr Getränke", pt: "Mais bebidas", it: "Altre bevande", ja: "飲みもの（つづき）", zh: "更多饮品", ht: "Plis bwason", ko: "마실 것 더 알기", tr: "Daha fazla içecek", uk: "Ще напої", hi: "और पेय", ar: "مزيد من المشروبات", vi: "Thêm đồ uống", id: "Minuman lainnya", pl: "Więcej napojów", th: "เครื่องดื่มเพิ่มเติม" },
     color: "orange",
     items: [
       { id: "drink-tea", emoji: "🍵", meeting: 8, words: { en: "tea", es: "el té", ru: "чай", fr: "le thé", de: "der Tee", pt: "o chá", it: "il tè", ja: "お茶", zh: "茶", ht: "te" } },
@@ -462,7 +462,7 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
     id: "verbs",
     emoji: "🏃",
     meeting: 33,
-    names: { en: "Action words" },
+    names: { en: "Action words", es: "Palabras de acción", ru: "Слова-действия", fr: "Mots d'action", de: "Tunwörter", pt: "Palavras de ação", it: "Parole d'azione", ja: "うごきのことば", zh: "动作词", ht: "Mo aksyon", ko: "동작을 나타내는 말", tr: "Eylem sözcükleri", uk: "Слова-дії", hi: "क्रिया-शब्द", ar: "كلمات الأفعال", vi: "Từ chỉ hành động", id: "Kata kerja", pl: "Słowa czynności", th: "คำกริยา" },
     color: "lemon",
     items: [
       { id: "verb-pour", emoji: "🫗", meeting: 33, words: { en: "pour", es: "verter", ru: "наливать", fr: "verser", de: "gießen", pt: "despejar", it: "versare", ja: "注ぐ", zh: "倒", ht: "vide" } },

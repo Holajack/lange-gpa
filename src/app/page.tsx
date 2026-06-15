@@ -452,12 +452,12 @@ export default function LandingPage() {
                 <p className="mt-5 font-display text-lg font-bold">{m.name}</p>
                 <p className="mt-1.5 text-xs font-semibold text-muted">
                   <span className="mr-1.5" aria-hidden>{lang.flag}</span>
-                  {lang.name}
+                  {lang.nativeName}
                 </p>
                 <button
                   type="button"
                   onClick={() => void speak(m.nativeHello, m.lang)}
-                  aria-label={`Hear ${m.name} say hello in ${lang.name}`}
+                  aria-label={`Hear ${m.name} say hello in ${lang.nativeName}`}
                   className="pill mt-4 cursor-pointer px-4 py-1.5 text-sm font-bold"
                   style={{
                     background: `${m.color}26`,

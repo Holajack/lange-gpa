@@ -175,13 +175,14 @@ function CheckBadge({ on, color = "var(--color-violet)" }: { on: boolean; color?
 }
 
 function Dots({ step, onJump }: { step: number; onJump: (i: number) => void }) {
+  const { t } = useApp();
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       {Array.from({ length: STEP_COUNT }, (_, i) => (
         <button
           key={i}
           type="button"
-          aria-label={`Step ${i + 1}`}
+          aria-label={t("onb2StepN").replace("{n}", String(i + 1))}
           disabled={i >= step}
           onClick={() => onJump(i)}
           className={`h-2.5 rounded-full transition-all duration-300 ${
@@ -308,7 +309,7 @@ function TargetCard({
 function Toggle({
   on,
   onClick,
-  label = "Immersion mode",
+  label,
   knob = "🌱",
 }: {
   on: boolean;
@@ -316,12 +317,13 @@ function Toggle({
   label?: string;
   knob?: string;
 }) {
+  const { t } = useApp();
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
-      aria-label={label}
+      aria-label={label ?? t("onb2ImmersionMode")}
       onClick={onClick}
       className={`relative h-9 w-[60px] shrink-0 rounded-full transition-colors duration-300 ${
         on ? "bg-lime" : "bg-white/12"
@@ -661,7 +663,7 @@ function PlacementPanel({
             {t("dshPlGrownInPre")}<span className="text-violet-soft">{target.nativeName}</span>{t("dshPlGrownInPost")}
           </motion.h1>
           <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-            {t("dshPlIntroBody").replace("{language}", target.name)}
+            {t("dshPlIntroBody").replace("{language}", target.nativeName)}
           </motion.p>
           <motion.p variants={item} className="mt-3 max-w-xl text-sm text-muted">
             {t("dshPlOneReplay")}
@@ -717,7 +719,7 @@ function PlacementPanel({
             <div className="flex items-center gap-4">
               <motion.button
                 type="button"
-                aria-label="Hear it again"
+                aria-label={t("onb2HearItAgain")}
                 whileTap={{ scale: 0.92 }}
                 disabled={speaking || replays >= MAX_REPLAYS_PER_ROUND}
                 onClick={replay}
@@ -1507,7 +1509,7 @@ function OnboardingFlow() {
                     </div>
                     <button
                       type="button"
-                      aria-label="Listen"
+                      aria-label={t("onb2Listen")}
                       onClick={() => void speak(HELLO[target.code], target.code, 0.9)}
                       className="pill h-12 w-12 bg-violet text-white"
                       style={{ boxShadow: "var(--shadow-glow-violet)" }}

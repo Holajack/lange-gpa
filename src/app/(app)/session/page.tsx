@@ -180,7 +180,7 @@ function SessionRoom() {
   const activity =
     activityParam && activityParam.trim().length > 0
       ? activityParam
-      : phaseById(profile?.phase ?? 1).activities[0]?.name ?? "Growing session";
+      : phaseById(profile?.phase ?? 1).activities[0]?.name ?? t("ses2GrowingSession");
 
   // ---- room state ----
   const [stage, setStage] = useState<Stage>("pre");
@@ -236,7 +236,7 @@ function SessionRoom() {
   const deckDone = flow.phase === "complete";
   const sessionLangInfo = langByCode(sessionLang);
 
-  const youName = profile?.name?.trim() ? profile.name : "You";
+  const youName = profile?.name?.trim() ? profile.name : t("ses2You");
   const nurturerName = swapped ? youName : isAI ? mascot.name : nurturer.name;
   const growerName = swapped ? nurturer.name : youName;
 
@@ -564,7 +564,7 @@ function SessionRoom() {
                 )}
               </h1>
               <p className="text-sm text-muted">
-                {isAI ? `✨ ${mascot.nativeHello}` : `📍 ${nurturer.city}`} · {lang.flag} {lang.name}
+                {isAI ? `✨ ${mascot.nativeHello}` : `📍 ${nurturer.city}`} · {lang.flag} {lang.nativeName}
               </p>
               <Tag className="mt-1 bg-violet/15 text-violet-soft">🌱 {activity}</Tag>
             </motion.div>
@@ -572,12 +572,12 @@ function SessionRoom() {
             <div className="mt-8 space-y-3 text-left">
               {(isAI
                 ? [
-                    ["🤖", `${mascot.name} ${t("sesIntroSpeaksOnly")} ${lang.name} — ${t("sesIntroNeverTired")}`],
+                    ["🤖", `${mascot.name} ${t("sesIntroSpeaksOnly")} ${lang.nativeName} — ${t("sesIntroNeverTired")}`],
                     ["🃏", t("sesIntroDeckAi")],
                     ["👉", t("sesIntroPointTap")],
                   ]
                 : [
-                    ["🗣️", `${nurturer.name.split(" ")[0]} ${t("sesIntroSpeaksOnly")} ${lang.name} — ${t("sesIntroWallToWindow")}`],
+                    ["🗣️", `${nurturer.name.split(" ")[0]} ${t("sesIntroSpeaksOnly")} ${lang.nativeName} — ${t("sesIntroWallToWindow")}`],
                     ["🃏", t("sesIntroDeckHuman")],
                     ["🎥", t("sesIntroRecordIt")],
                   ]
@@ -604,7 +604,7 @@ function SessionRoom() {
               <Pill onClick={() => setStage("live")} className="bg-violet px-6 py-3.5 sm:px-10 sm:py-4 text-lg font-semibold text-white">
                 <span style={{ textShadow: "none" }}>▶ {t("start")} · 30:00</span>
               </Pill>
-              <p className="text-xs text-muted">Demo: inside the room, hit ⚡ ×60 to fast-forward the clock.</p>{/* demo toggle copy — left as-is per task */}
+              <p className="text-xs text-muted">{t("ses2DemoFastForward")}</p>
             </motion.div>
           </Card>
         </motion.div>
@@ -634,7 +634,7 @@ function SessionRoom() {
             </motion.div>
             <h1 className="headline mt-4 text-4xl">{t("done")} 🎉</h1>
             <p className="mt-2 text-sm text-muted">
-              {t("sesEndAnother")} {elapsedMin} {t("minutes")} {t("sesEndLivedInside")} {sessionLangInfo.flag} {sessionLangInfo.name} —{" "}
+              {t("sesEndAnother")} {elapsedMin} {t("minutes")} {t("sesEndLivedInside")} {sessionLangInfo.flag} {sessionLangInfo.nativeName} —{" "}
               {flow.introduced} {t("sesEndCardsMet")}
             </p>
 
@@ -760,7 +760,7 @@ function SessionRoom() {
             <button
               type="button"
               onClick={() => setFast((f) => !f)}
-              title="Demo speed"
+              title={t("ses2DemoSpeed")}
               className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-black/45 text-muted backdrop-blur"}`}
             >
               ⚡ ×60
@@ -818,7 +818,7 @@ function SessionRoom() {
             </p>
             <p className="text-xs text-muted">
               {isAI ? "✨" : "📍"} {swapped ? t("sesLanguageExchange") : isAI ? "Nuri" : nurturer.city} ·{" "}
-              {sessionLangInfo.flag} {sessionLangInfo.name}
+              {sessionLangInfo.flag} {sessionLangInfo.nativeName}
             </p>
           </div>
           <div className="hidden sm:flex">
@@ -892,7 +892,7 @@ function SessionRoom() {
                     )}
                     {isNewest && (
                       <span className="absolute right-1.5 top-1.5 rounded-full bg-violet px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                        NEW
+                        {t("ses2New")}
                       </span>
                     )}
                   </button>

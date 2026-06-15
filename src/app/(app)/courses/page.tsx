@@ -6,6 +6,7 @@ import { ArrowRight, Check } from "lucide-react";
 
 import { useApp } from "@/lib/store";
 import { PHASES, TOTAL_HOURS, phaseProgress } from "@/lib/phases";
+import { localizedPhase } from "@/lib/phaseI18n";
 import type { Phase } from "@/lib/types";
 import { Mascot } from "@/components/Mascot";
 import { ProgressBar, Tag } from "@/components/ui";
@@ -196,22 +197,25 @@ export default function CoursesPage() {
             {/* segmented journey bar */}
             <div className="relative mt-5">
               <div className="flex h-5 w-full gap-1">
-                {barPhases.map((p) => (
-                  <div
-                    key={p.id}
-                    className="relative h-full overflow-hidden rounded-full"
-                    style={{
-                      width: `${(p.hours / TOTAL_HOURS) * 100}%`,
-                      background: p.color + "22",
-                    }}
-                    title={`${p.name} · ${p.hours}h`}
-                  >
+                {barPhases.map((phase) => {
+                  const p = localizedPhase(phase, t);
+                  return (
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
-                      style={{ width: `${phaseProgress(p, hours)}%`, background: p.color }}
-                    />
-                  </div>
-                ))}
+                      key={p.id}
+                      className="relative h-full overflow-hidden rounded-full"
+                      style={{
+                        width: `${(p.hours / TOTAL_HOURS) * 100}%`,
+                        background: p.color + "22",
+                      }}
+                      title={`${p.name} · ${p.hours}h`}
+                    >
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700 ease-out"
+                        style={{ width: `${phaseProgress(p, hours)}%`, background: p.color }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* you-are-here tick */}
@@ -257,6 +261,7 @@ export default function CoursesPage() {
         <div className="space-y-12 lg:space-y-16">
           {PHASES.map((phase, i) => {
             const left = i % 2 === 0;
+            const lp = localizedPhase(phase, t);
             return (
               <motion.div
                 key={phase.id}
@@ -275,7 +280,7 @@ export default function CoursesPage() {
 
                 <div className={left ? "lg:col-start-1" : "lg:col-start-2"}>
                   <JourneyCard
-                    phase={phase}
+                    phase={lp}
                     hours={hours}
                     currentPhaseId={profile.phase}
                     phaseWord={t("phaseWord")}

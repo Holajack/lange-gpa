@@ -30,6 +30,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/lib/store";
 import { useWallet } from "@/lib/credits";
 import { NURTURERS } from "@/lib/nurturers";
+import { localizedNurturer } from "@/lib/nurturerI18n";
 import { LANGUAGES, langByCode } from "@/lib/languages";
 import { mascotForLang } from "@/lib/mascots";
 import { MascotImage } from "@/components/MascotImage";
@@ -44,12 +45,12 @@ const CONFETTI = ["🎉", "✨", "🌱", "💜", "⭐", "🎊", "🧡", "💚", 
 
 type Duration = 30 | 60;
 
-const PHASE_FILTERS: { value: string; label: string }[] = [
-  { value: "all", label: "Any phase" },
-  { value: "1", label: "Phase 1" },
-  { value: "2", label: "Phase 2" },
-  { value: "3", label: "Phase 3" },
-  { value: "4", label: "Phase 4+" },
+const PHASE_FILTERS: { value: string; labelKey: string }[] = [
+  { value: "all", labelKey: "mktPhaseAny" },
+  { value: "1", labelKey: "mktPhase1" },
+  { value: "2", labelKey: "mktPhase2" },
+  { value: "3", labelKey: "mktPhase3" },
+  { value: "4", labelKey: "mktPhase4Plus" },
 ];
 
 /* Plausible per-city UTC offsets so the timezone line reads real. The grower's
@@ -61,10 +62,10 @@ const CITY_OFFSET: Record<string, number> = {
 };
 
 /* Reframed "reviews" — grower notes, GPA-flavoured (understanding, not grades). */
-const GROWER_NOTES: Record<string, { who: string; note: string }[]> = {
+const GROWER_NOTES: Record<string, { whoKey: string; noteKey: string }[]> = {
   _default: [
-    { who: "Grower · Phase 1", note: "Never switched to English once. I understood more than I thought I could." },
-    { who: "Grower · Phase 2", note: "Words started coming out on their own after a few sessions. Patient and warm." },
+    { whoKey: "mktNoteWho1", noteKey: "mktNote1" },
+    { whoKey: "mktNoteWho2", noteKey: "mktNote2" },
   ],
 };
 
@@ -134,17 +135,19 @@ function OnlineDot() {
 }
 
 function CertifiedPill() {
+  const { t } = useApp();
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-lime/15 px-2.5 py-0.5 text-[11px] font-bold text-lime">
-      ✦ Method-certified
+      ✦ {t("mktMethodCertified")}
     </span>
   );
 }
 
 function ExchangePill() {
+  const { t } = useApp();
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-orange/15 px-2.5 py-0.5 text-[11px] font-bold text-orange">
-      ⇄ Time-for-time
+      ⇄ {t("mktTimeForTime")}
     </span>
   );
 }
@@ -152,7 +155,7 @@ function ExchangePill() {
 /* ------------------------------ browse card ------------------------------- */
 
 function NurturerRow({
-  n,
+  n: rawN,
   index,
   freeOnly,
   onOpen,
@@ -162,6 +165,8 @@ function NurturerRow({
   freeOnly: boolean;
   onOpen: () => void;
 }) {
+  const { t } = useApp();
+  const n = localizedNurturer(rawN, t);
   const lang = langByCode(n.langs[0]);
   const rate = n.ratePerHourUsd ?? 8;
   const priced = !freeOnly || !n.exchangeOpen; // free-exchange filter grays the price
@@ -190,19 +195,19 @@ function NurturerRow({
 
             {/* dialect headline — no CEFR levels, GPA has none */}
             <p className="mt-0.5 truncate text-xs text-muted">
-              Speaks {lang.name} · {n.region ?? n.city}
+              {t("mktSpeaks")} {lang.nativeName} · {n.region ?? n.city}
             </p>
 
             {/* fidelity stat FIRST, star second */}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-sm font-semibold text-lime">✓ {n.sessions} sessions guided</span>
+              <span className="text-sm font-semibold text-lime">✓ {n.sessions} {t("mktSessionsGuided")}</span>
               <span className="text-xs text-lemon">★ {n.rating.toFixed(1)}</span>
             </div>
 
             {/* meta rows */}
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-              <span>🌱 {n.growersNurtured ?? "—"} growers nurtured</span>
-              <span>🪜 Phases {n.phasesGuided ?? "1"}</span>
+              <span>🌱 {n.growersNurtured ?? "—"} {t("mktGrowersNurtured")}</span>
+              <span>🪜 {t("mktPhases")} {n.phasesGuided ?? "1"}</span>
             </div>
 
             {n.exchangeOpen && (
@@ -215,10 +220,10 @@ function NurturerRow({
           {/* PPP rate block */}
           <div className="flex shrink-0 flex-col items-end justify-between text-right">
             <div className={priced ? "" : "opacity-35 line-through"}>
-              <p className="font-display text-xl font-extrabold leading-none">{money(rate)} / hr</p>
-              <p className="text-[10px] uppercase tracking-widest text-muted">per hour</p>
+              <p className="font-display text-xl font-extrabold leading-none">{money(rate)} {t("mktPerHrSuffix")}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted">{t("mktPerHour")}</p>
             </div>
-            <span className="mt-2 hidden text-xs font-semibold text-violet-soft sm:inline">View →</span>
+            <span className="mt-2 hidden text-xs font-semibold text-violet-soft sm:inline">{t("mktView")}</span>
           </div>
         </button>
       </Card>
@@ -235,7 +240,7 @@ interface BookingDraft {
 }
 
 function ProfileDrawer({
-  n,
+  n: rawN,
   onClose,
   onBooked,
 }: {
@@ -244,8 +249,9 @@ function ProfileDrawer({
   onBooked: () => void;
 }) {
   const router = useRouter();
-  const { addBooking, profile } = useApp();
+  const { addBooking, profile, t } = useApp();
   const wallet = useWallet();
+  const n = localizedNurturer(rawN, t);
   const lang = langByCode(n.langs[0]);
   const mascot = mascotForLang(n.langs[0]);
   const rate = n.ratePerHourUsd ?? 8;
@@ -290,8 +296,8 @@ function ProfileDrawer({
     const date = tomorrowIso();
     const activity =
       draft.mode === "exchange"
-        ? `Exchange session · ${lang.name}`
-        : `${draft.duration} min growing session · ${lang.name}`;
+        ? `Exchange session · ${lang.nativeName}`
+        : `${draft.duration} min growing session · ${lang.nativeName}`;
 
     addBooking({ nurturerId: n.id, date, time: draft.slot, minutes: draft.duration, activity });
 
@@ -338,7 +344,7 @@ function ProfileDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("mktClose")}
             className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-black/40 text-ink backdrop-blur transition hover:bg-coral/20 hover:text-coral"
           >
             ✕
@@ -355,10 +361,10 @@ function ProfileDrawer({
               className="relative flex items-center gap-2 rounded-full bg-black/45 px-5 py-2.5 text-sm font-semibold text-ink backdrop-blur transition hover:bg-black/60"
             >
               <span className="grid h-8 w-8 place-items-center rounded-full bg-lime text-canvas">▶</span>
-              Watch intro
+              {t("mktWatchIntro")}
             </button>
             <span className="absolute bottom-2 right-3 text-[10px] uppercase tracking-widest text-ink/60">
-              60-sec hello in {lang.name}
+              {t("mktHelloIn")} {lang.nativeName}
             </span>
           </div>
 
@@ -383,11 +389,11 @@ function ProfileDrawer({
             {/* 5-column GPA stats strip */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 rounded-2xl bg-raised-2 p-3 text-center">
               {[
-                { v: n.methodCertified ? "✦" : "—", l: n.methodCertified ? "Certified" : "Mentor", c: n.methodCertified ? "text-lime" : "text-muted" },
-                { v: "✓", l: "Fidelity", c: "text-mint" },
-                { v: money(rate), l: "per hour", c: "text-ink" },
-                { v: String(n.sessions), l: "sessions", c: "text-ink" },
-                { v: String(n.growersNurtured ?? "—"), l: "growers", c: "text-ink" },
+                { v: n.methodCertified ? "✦" : "—", l: n.methodCertified ? t("mktStatCertified") : t("mktStatMentor"), c: n.methodCertified ? "text-lime" : "text-muted" },
+                { v: "✓", l: t("mktStatFidelity"), c: "text-mint" },
+                { v: money(rate), l: t("mktPerHour"), c: "text-ink" },
+                { v: String(n.sessions), l: t("mktStatSessions"), c: "text-ink" },
+                { v: String(n.growersNurtured ?? "—"), l: t("mktStatGrowers"), c: "text-ink" },
               ].map((s, i) => (
                 <div key={i} className="px-0.5">
                   <p className={`font-display text-sm font-extrabold leading-tight ${s.c}`}>{s.v}</p>
@@ -398,16 +404,16 @@ function ProfileDrawer({
 
             {/* I speak — dialect / region pills (no CEFR levels) */}
             <section className="space-y-2.5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted">I speak</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("mktISpeak")}</p>
               <div className="flex flex-wrap gap-2">
-                {(n.region ?? `${lang.name} · ${n.city}`).split(" · ").map((bit) => (
+                {(n.region ?? `${lang.nativeName} · ${n.city}`).split(" · ").map((bit) => (
                   <span key={bit} className="rounded-full bg-violet/15 px-3 py-1 text-xs font-medium text-violet-soft">
                     {bit}
                   </span>
                 ))}
                 {n.langs.slice(1).map((l) => (
                   <span key={l} className="rounded-full bg-white/6 px-3 py-1 text-xs font-medium text-muted">
-                    + {langByCode(l).name}
+                    + {langByCode(l).nativeName}
                   </span>
                 ))}
               </div>
@@ -416,21 +422,21 @@ function ProfileDrawer({
 
             {/* availability summary */}
             <section className="space-y-2.5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted">Availability</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("mktAvailability")}</p>
               <div className="flex items-center gap-2 rounded-2xl border border-line p-3 text-sm text-muted">
                 <span className="text-base">🗓️</span>
-                Guides Phases {n.phasesGuided ?? "1"} · most evenings &amp; weekends · books up to 2 weeks out.
+                {t("mktGuidesPhases")} {n.phasesGuided ?? "1"} · {t("mktAvailabilitySummary")}
               </div>
             </section>
 
             {/* grower notes (reframed reviews) */}
             <section className="space-y-2.5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted">Grower notes</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("mktGrowerNotes")}</p>
               <div className="space-y-2">
                 {notesFor(n.id).map((r, i) => (
                   <div key={i} className="rounded-2xl bg-raised-2 p-3">
-                    <p className="text-sm leading-relaxed text-ink/90">“{r.note}”</p>
-                    <p className="mt-1.5 text-[11px] font-semibold text-muted">{r.who}</p>
+                    <p className="text-sm leading-relaxed text-ink/90">“{t(r.noteKey)}”</p>
+                    <p className="mt-1.5 text-[11px] font-semibold text-muted">{t(r.whoKey)}</p>
                   </div>
                 ))}
               </div>
@@ -447,19 +453,19 @@ function ProfileDrawer({
                 onClick={() => startBooking("paid")}
                 className="flex-1 min-w-0 bg-lime py-3.5 font-bold text-canvas"
               >
-                Book hours · {money(rate)}/hr
+                {t("mktBookHours")} · {money(rate)}{t("mktHrSuffix")}
               </Pill>
               {n.exchangeOpen && (
                 <Pill
                   onClick={() => startBooking("exchange")}
                   className="flex-1 min-w-0 border-2 border-violet bg-transparent py-3.5 font-bold text-violet-soft"
                 >
-                  ⇄ Propose exchange
+                  ⇄ {t("mktProposeExchange")}
                 </Pill>
               )}
               <button
                 type="button"
-                aria-label="Chat"
+                aria-label={t("mktChat")}
                 className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/6 text-lg text-muted transition hover:bg-violet/15 hover:text-violet-soft"
               >
                 💬
@@ -500,10 +506,13 @@ function ProfileDrawer({
                       })}
                     </div>
                     <p className="popin font-display text-2xl font-extrabold text-lime">
-                      {draft.mode === "exchange" ? "Exchange booked!" : "Session booked!"} 🎉
+                      {draft.mode === "exchange" ? t("mktExchangeBooked") : t("mktSessionBooked")} 🎉
                     </p>
                     <p className="max-w-xs text-sm text-ink/80">
-                      {mascot.nativeHello} {n.name.split(" ")[0]} will meet you in {lang.name}. Taking you to the room…
+                      {mascot.nativeHello}{" "}
+                      {t("mktBookedSuccess")
+                        .replace("{name}", n.name.split(" ")[0])
+                        .replace("{lang}", lang.nativeName)}
                     </p>
                   </div>
                 ) : (
@@ -512,23 +521,23 @@ function ProfileDrawer({
                       <button
                         type="button"
                         onClick={() => setConfirming(false)}
-                        aria-label="Back"
+                        aria-label={t("mktBack")}
                         className="grid h-9 w-9 place-items-center rounded-full bg-white/6 text-muted transition hover:text-ink"
                       >
                         ←
                       </button>
                       <div>
                         <p className="font-display text-lg font-bold leading-none">
-                          {draft.mode === "exchange" ? "Propose exchange" : "Book hours"}
+                          {draft.mode === "exchange" ? t("mktProposeExchange") : t("mktBookHours")}
                         </p>
-                        <p className="text-xs text-muted">with {n.name}</p>
+                        <p className="text-xs text-muted">{t("mktWith")} {n.name}</p>
                       </div>
                     </div>
 
                     <div className="space-y-7 p-5 sm:p-6">
                       {/* duration */}
                       <div className="space-y-3">
-                        <p className="text-xs font-semibold uppercase tracking-widest text-muted">Duration</p>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("mktDuration")}</p>
                         <div className="grid grid-cols-2 gap-3">
                           {([30, 60] as Duration[]).map((d) => {
                             const sel = draft.duration === d;
@@ -542,7 +551,7 @@ function ProfileDrawer({
                                 }`}
                               >
                                 <p className="font-display text-lg font-extrabold">{d} min</p>
-                                <p className="text-xs text-muted">{d === 30 ? "Warm-up" : "Full session"}</p>
+                                <p className="text-xs text-muted">{d === 30 ? t("mktWarmUp") : t("mktFullSession")}</p>
                               </button>
                             );
                           })}
@@ -552,13 +561,13 @@ function ProfileDrawer({
                       {/* timezone line */}
                       <div className="flex items-center gap-2 rounded-xl bg-raised-2 px-3 py-2 text-xs text-muted">
                         <span>🕓</span>
-                        Times shown in your timezone (<span className="font-semibold text-ink">{tzName}</span>).
-                        {CITY_OFFSET[n.city] !== undefined && <> {n.name.split(" ")[0]} is in {n.city}.</>}
+                        {t("mktTimesShownPrefix")}<span className="font-semibold text-ink">{tzName}</span>).
+                        {CITY_OFFSET[n.city] !== undefined && <> {t("mktIsIn").replace("{name}", n.name.split(" ")[0]).replace("{city}", n.city)}</>}
                       </div>
 
                       {/* slot grid — two-tap select → inline confirm */}
                       <div className="space-y-3">
-                        <p className="text-xs font-semibold uppercase tracking-widest text-muted">Pick a time</p>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("mktPickATime")}</p>
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                           {SLOTS.map((slot) => {
                             const sel = draft.slot === slot;
@@ -575,7 +584,7 @@ function ProfileDrawer({
                                 <span className="font-display text-sm font-bold">{slot}</span>
                                 {local && (
                                   <span className={`text-[10px] ${sel ? "text-white/75" : "text-muted/70"}`}>
-                                    {local} their time
+                                    {local} {t("mktTheirTime")}
                                   </span>
                                 )}
                               </button>
@@ -597,37 +606,39 @@ function ProfileDrawer({
                               {draft.mode === "paid" ? (
                                 <>
                                   <div className="flex items-center justify-between text-sm">
-                                    <span className="text-muted">Session {draft.duration} min</span>
+                                    <span className="text-muted">{t("mktReceiptSession").replace("{duration}", String(draft.duration))}</span>
                                     <span className="font-semibold">{money(sessionPrice)}</span>
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
-                                    <span className="text-muted">Platform fee</span>
+                                    <span className="text-muted">{t("mktPlatformFee")}</span>
                                     <span className="font-semibold">{money(fee)}</span>
                                   </div>
                                   <div className="flex items-center justify-between border-t border-line pt-2 text-sm">
-                                    <span className="font-semibold text-ink">Total</span>
+                                    <span className="font-semibold text-ink">{t("mktTotal")}</span>
                                     <span className="font-display text-base font-extrabold text-lime">{money(total)}</span>
                                   </div>
                                   <p className="text-[11px] text-muted">
                                     {hasPaidHours
-                                      ? `Covered by your wallet · ${wallet.paidHours} paid hr available.`
-                                      : "You'll be charged at confirm · no paid hours banked yet."}
+                                      ? t("mktCoveredByWallet").replace("{hours}", String(wallet.paidHours))
+                                      : t("mktChargedAtConfirm")}
                                   </p>
                                 </>
                               ) : (
                                 <>
                                   <div className="flex items-center justify-between text-sm">
-                                    <span className="text-muted">From your exchange balance</span>
+                                    <span className="text-muted">{t("mktFromExchangeBalance")}</span>
                                     <span className="font-semibold text-coral">−{hoursNeeded} hr</span>
                                   </div>
                                   <div className="flex items-center justify-between text-sm">
-                                    <span className="text-muted">You owe back, in your language</span>
+                                    <span className="text-muted">{t("mktYouOweBack")}</span>
                                     <span className="font-semibold text-lime">+{hoursNeeded} hr</span>
                                   </div>
                                   <p className="text-[11px] text-muted">
                                     {hasExchangeHour
-                                      ? `Balance after: ${Math.round((wallet.exchangeHours - hoursNeeded) * 10) / 10} hr. Time-for-time, fair and free.`
-                                      : `You have ${wallet.exchangeHours} hr banked — this will put you ${Math.round((hoursNeeded - wallet.exchangeHours) * 10) / 10} hr in debt, repaid by nurturing someone in your language.`}
+                                      ? t("mktBalanceAfter").replace("{hours}", String(Math.round((wallet.exchangeHours - hoursNeeded) * 10) / 10))
+                                      : t("mktExchangeDebt")
+                                          .replace("{banked}", String(wallet.exchangeHours))
+                                          .replace("{debt}", String(Math.round((hoursNeeded - wallet.exchangeHours) * 10) / 10))}
                                   </p>
                                 </>
                               )}
@@ -648,12 +659,12 @@ function ProfileDrawer({
                       >
                         {draft.slot
                           ? draft.mode === "exchange"
-                            ? `Confirm exchange · ${draft.slot}`
-                            : `Confirm · ${money(total)} · ${draft.slot}`
-                          : "Pick a time above"}
+                            ? t("mktConfirmExchange").replace("{slot}", draft.slot)
+                            : t("mktConfirmPaid").replace("{total}", money(total)).replace("{slot}", draft.slot)
+                          : t("mktPickTimeAbove")}
                       </Pill>
                       {profile == null && (
-                        <p className="pt-2 text-center text-[11px] text-muted">Booking will appear in your schedule.</p>
+                        <p className="pt-2 text-center text-[11px] text-muted">{t("mktBookingAppears")}</p>
                       )}
                     </div>
                   </div>
@@ -670,7 +681,7 @@ function ProfileDrawer({
 /* ---------------------------------- page ---------------------------------- */
 
 export default function MarketplacePage() {
-  const { profile } = useApp();
+  const { profile, t } = useApp();
   const wallet = useWallet();
 
   // default the language filter to the grower's target language
@@ -693,13 +704,20 @@ export default function MarketplacePage() {
   }, []);
 
   const regionOptions = useMemo(() => {
-    const set = new Set<string>();
+    // value = raw dialect (for matching against raw region); label = localized
+    const map = new Map<string, string>();
     NURTURERS.forEach((n) => {
       const matchLang = langFilter === "all" || n.langs.includes(langFilter);
-      if (matchLang && n.region) set.add(n.region.split(" · ")[0]);
+      if (matchLang && n.region) {
+        const raw = n.region.split(" · ")[0];
+        if (!map.has(raw)) {
+          const loc = (localizedNurturer(n, t).region ?? raw).split(" · ")[0];
+          map.set(raw, loc);
+        }
+      }
     });
-    return Array.from(set).sort();
-  }, [langFilter]);
+    return Array.from(map, ([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [langFilter, t]);
 
   const roster = useMemo(() => {
     return NURTURERS.filter((n) => {
@@ -729,20 +747,20 @@ export default function MarketplacePage() {
         className="flex flex-wrap items-end justify-between gap-4"
       >
         <div>
-          <h1 className="headline text-4xl lg:text-5xl">Find a nurturer</h1>
+          <h1 className="headline text-4xl lg:text-5xl">{t("mktFindNurturer")}</h1>
           <p className="mt-2 max-w-md text-sm text-muted">
-            Real people who live the language. Book paid hours, or trade time-for-time — you nurture yours, they nurture theirs.
+            {t("mktSubtitle")}
           </p>
         </div>
         {/* wallet balance chips */}
         <div className="flex items-center gap-2">
           <div className="rounded-2xl bg-raised-2 px-4 py-2 text-center">
             <p className="font-display text-base font-extrabold text-lime">{wallet.ready ? wallet.exchangeHours : "—"}</p>
-            <p className="text-[10px] uppercase tracking-widest text-muted">exchange hr</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted">{t("mktExchangeHr")}</p>
           </div>
           <div className="rounded-2xl bg-raised-2 px-4 py-2 text-center">
             <p className="font-display text-base font-extrabold text-violet-soft">{wallet.ready ? wallet.paidHours : "—"}</p>
-            <p className="text-[10px] uppercase tracking-widest text-muted">paid hr</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted">{t("mktPaidHr")}</p>
           </div>
         </div>
       </motion.div>
@@ -759,12 +777,12 @@ export default function MarketplacePage() {
                 setRegion("");
               }}
               className="pill cursor-pointer appearance-none bg-white/6 py-2 pl-3.5 pr-8 text-xs font-semibold text-ink focus:outline-none"
-              aria-label="Language"
+              aria-label={t("mktLanguage")}
             >
-              <option value="all">🌍 All languages</option>
+              <option value="all">🌍 {t("mktAllLanguages")}</option>
               {langOptions.map((l) => (
                 <option key={l.code} value={l.code}>
-                  {l.flag} {l.name}
+                  {l.flag} {l.nativeName}
                 </option>
               ))}
             </select>
@@ -778,12 +796,12 @@ export default function MarketplacePage() {
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 className="pill cursor-pointer appearance-none bg-white/6 py-2 pl-3.5 pr-8 text-xs font-semibold text-ink focus:outline-none"
-                aria-label="Region or dialect"
+                aria-label={t("mktRegionOrDialect")}
               >
-                <option value="">All dialects</option>
+                <option value="">{t("mktAllDialects")}</option>
                 {regionOptions.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
+                  <option key={r.value} value={r.value}>
+                    {r.label}
                   </option>
                 ))}
               </select>
@@ -792,10 +810,10 @@ export default function MarketplacePage() {
           )}
 
           <Chip active={certifiedOnly} onClick={() => setCertifiedOnly((v) => !v)}>
-            ✦ Method-certified
+            ✦ {t("mktMethodCertified")}
           </Chip>
           <Chip active={freeOnly} onClick={() => setFreeOnly((v) => !v)}>
-            ⇄ Free exchange only
+            ⇄ {t("mktFreeExchangeOnly")}
           </Chip>
 
           {/* phase */}
@@ -804,11 +822,11 @@ export default function MarketplacePage() {
               value={phaseFilter}
               onChange={(e) => setPhaseFilter(e.target.value)}
               className="pill cursor-pointer appearance-none bg-white/6 py-2 pl-3.5 pr-8 text-xs font-semibold text-ink focus:outline-none"
-              aria-label="GPA phase"
+              aria-label={t("mktGpaPhase")}
             >
               {PHASE_FILTERS.map((p) => (
                 <option key={p.value} value={p.value}>
-                  {p.label}
+                  {t(p.labelKey)}
                 </option>
               ))}
             </select>
@@ -819,16 +837,16 @@ export default function MarketplacePage() {
 
       {/* result count */}
       <p className="text-xs text-muted">
-        {roster.length} {roster.length === 1 ? "nurturer" : "nurturers"}
-        {freeOnly && " open to exchange"}
+        {roster.length} {roster.length === 1 ? t("mktNurturer") : t("mktNurturers")}
+        {freeOnly && ` ${t("mktOpenToExchange")}`}
       </p>
 
       {/* browse feed */}
       {roster.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
           <MascotImage mascot={mascotForLang(langFilter === "all" ? "en" : langFilter)} size={96} float />
-          <p className="font-display text-lg font-bold">No nurturers match those filters yet</p>
-          <p className="max-w-xs text-sm text-muted">Try widening the dialect or phase — more people join the village every week.</p>
+          <p className="font-display text-lg font-bold">{t("mktEmptyHeading")}</p>
+          <p className="max-w-xs text-sm text-muted">{t("mktEmptyBody")}</p>
           <Pill
             onClick={() => {
               setRegion("");
@@ -838,7 +856,7 @@ export default function MarketplacePage() {
             }}
             className="bg-violet px-5 py-2.5 text-sm font-semibold text-white"
           >
-            Clear filters
+            {t("mktClearFilters")}
           </Pill>
         </Card>
       ) : (
@@ -850,7 +868,7 @@ export default function MarketplacePage() {
       )}
 
       <p className="pt-2 text-center text-xs text-muted/70">
-        Booked sessions appear in your <Link href="/schedule" className="font-semibold text-violet-soft hover:underline">schedule</Link>.
+        {t("mktBookedSessionsAppear")} <Link href="/schedule" className="font-semibold text-violet-soft hover:underline">{t("mktScheduleLink")}</Link>.
       </p>
 
       {/* profile + booking drawer */}

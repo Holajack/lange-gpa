@@ -24,6 +24,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useWallet } from "@/lib/credits";
+import { useApp } from "@/lib/store";
 import { mascotForLang } from "@/lib/mascots";
 import { langByCode } from "@/lib/languages";
 import { MascotImage } from "@/components/MascotImage";
@@ -37,6 +38,7 @@ import type { LangCode } from "@/lib/types";
 
 type LedgerEntry = ReturnType<typeof useWallet>["ledger"][number];
 type Filter = "all" | "earned" | "spent";
+type TFn = (key: string) => string;
 
 /** "12.5" — one decimal, but drop a trailing ".0" so whole hours read clean. */
 function fmtHrs(n: number): string {
@@ -54,18 +56,19 @@ const PACKS: { hours: number; best?: boolean }[] = [
 ];
 
 /** Title for a ledger row, derived from kind + currency. */
-function titleFor(e: LedgerEntry): string {
-  if (e.kind === "purchased") return "Bought hours";
-  const langName = e.lang ? langByCode(e.lang as LangCode).name : null;
-  if (e.kind === "earned") return langName ? `Nurtured ${langName}` : "Nurtured an hour";
+function titleFor(e: LedgerEntry, t: TFn): string {
+  if (e.kind === "purchased") return t("walBoughtHours");
+  const langName = e.lang ? langByCode(e.lang as LangCode).nativeName : null;
+  if (e.kind === "earned")
+    return langName ? t("walNurturedLang").replace("{langName}", langName) : t("walNurturedHour");
   // spent
-  return langName ? `Grew your ${langName} hour` : "Grew an hour";
+  return langName ? t("walGrewLang").replace("{langName}", langName) : t("walGrewHour");
 }
 
 /** Grey subline: partner + duration. */
-function sublineFor(e: LedgerEntry): string {
+function sublineFor(e: LedgerEntry, t: TFn): string {
   const bits: string[] = [];
-  if (e.partner) bits.push(`with ${e.partner}`);
+  if (e.partner) bits.push(t("walWith").replace("{partner}", e.partner));
   if (typeof e.minutes === "number" && e.minutes > 0) bits.push(`${e.minutes} min`);
   if (e.note && bits.length === 0) bits.push(e.note);
   return bits.join(" · ");
@@ -123,12 +126,12 @@ function RowAvatar({ entry }: { entry: LedgerEntry }) {
   return <Avatar name={entry.partner ?? "?"} size={44} ring />;
 }
 
-function LedgerRow({ entry, index }: { entry: LedgerEntry; index: number }) {
+function LedgerRow({ entry, index, t }: { entry: LedgerEntry; index: number; t: TFn }) {
   const signed = entry.kind === "spent" ? -entry.amount : entry.amount;
   const isExchange = entry.currency === "exchange";
   // earned/purchased read as gains (currency-colored); spent reads as a soft outflow
   const amountColor = signed < 0 ? "text-coral" : isExchange ? "text-lime" : "text-violet-soft";
-  const subline = sublineFor(entry);
+  const subline = sublineFor(entry, t);
 
   return (
     <motion.div
@@ -139,17 +142,17 @@ function LedgerRow({ entry, index }: { entry: LedgerEntry; index: number }) {
       <div className="flex items-center gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-white/[0.03]">
         <RowAvatar entry={entry} />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-sm font-bold">{titleFor(entry)}</p>
+          <p className="truncate font-display text-sm font-bold">{titleFor(entry, t)}</p>
           {subline && <p className="truncate text-xs text-muted">{subline}</p>}
         </div>
         <div className="shrink-0 text-right">
           <p className={`font-display text-base font-extrabold tabular-nums ${amountColor}`}>
             {signed > 0 ? "+" : "−"}
             {fmtHrs(Math.abs(signed))}
-            <span className="ml-0.5 text-[11px] font-semibold opacity-70">hrs</span>
+            <span className="ml-0.5 text-[11px] font-semibold opacity-70">{t("walHrs")}</span>
           </p>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">
-            {isExchange ? "growing" : "paid"}
+            {isExchange ? t("walGrowing") : t("walPaid")}
           </p>
         </div>
       </div>
@@ -163,6 +166,7 @@ function LedgerRow({ entry, index }: { entry: LedgerEntry; index: number }) {
 
 export default function WalletPage() {
   const wallet = useWallet();
+  const { t } = useApp();
   const [filter, setFilter] = useState<Filter>("all");
   const [buyOpen, setBuyOpen] = useState(false);
   const [buying, setBuying] = useState<number | null>(null);
@@ -204,9 +208,9 @@ export default function WalletPage() {
   }
 
   const FILTERS: { id: Filter; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "earned", label: "Earned" },
-    { id: "spent", label: "Spent" },
+    { id: "all", label: t("walFilterAll") },
+    { id: "earned", label: t("walFilterEarned") },
+    { id: "spent", label: t("walFilterSpent") },
   ];
 
   return (
@@ -217,8 +221,8 @@ export default function WalletPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <h1 className="headline text-4xl lg:text-5xl">Your hours</h1>
-        <p className="mt-2 text-sm text-muted">Growing hours are earned, not bought. Paid hours top up the rest.</p>
+        <h1 className="headline text-4xl lg:text-5xl">{t("walTitle")}</h1>
+        <p className="mt-2 text-sm text-muted">{t("walSubtitle")}</p>
       </motion.div>
 
       {/* ===== HEADER CARD: stacked balances + honesty row + action bar ===== */}
@@ -235,14 +239,14 @@ export default function WalletPage() {
 
           {/* big lime — growing hours */}
           <div className="relative">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Growing hours</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("walGrowingHours")}</p>
             <p className="mt-1 flex flex-wrap items-baseline gap-2">
               <span className="font-display text-4xl font-extrabold leading-none text-lime sm:text-6xl">
                 {fmtHrs(wallet.exchangeHours)}
               </span>
-              <span className="font-display text-xl font-bold text-lime/80">hrs to grow</span>
+              <span className="font-display text-xl font-bold text-lime/80">{t("walHrsToGrow")}</span>
             </p>
-            <p className="mt-1.5 text-xs text-muted">earned by nurturing — nets to zero</p>
+            <p className="mt-1.5 text-xs text-muted">{t("walEarnedNetsZero")}</p>
           </div>
 
           {/* smaller violet — paid hours */}
@@ -250,18 +254,18 @@ export default function WalletPage() {
             <span className="font-display text-2xl font-extrabold leading-none text-violet-soft">
               {fmtHrs(wallet.paidHours)}
             </span>
-            <span className="text-sm font-semibold text-violet-soft/80">paid hours</span>
+            <span className="text-sm font-semibold text-violet-soft/80">{t("walPaidHours")}</span>
           </div>
 
           {/* honesty row: lifetime nurtured | lifetime grown */}
           <div className="relative mt-6 grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-white/[0.04] px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">Lifetime nurtured</p>
-              <p className="mt-0.5 font-display text-xl font-bold text-lime">{fmtHrs(wallet.lifetimeEarned)} hrs</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">{t("walLifetimeNurtured")}</p>
+              <p className="mt-0.5 font-display text-xl font-bold text-lime">{fmtHrs(wallet.lifetimeEarned)} {t("walHrs")}</p>
             </div>
             <div className="rounded-2xl bg-white/[0.04] px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">Lifetime grown</p>
-              <p className="mt-0.5 font-display text-xl font-bold text-ink">{fmtHrs(wallet.lifetimeSpent)} hrs</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">{t("walLifetimeGrown")}</p>
+              <p className="mt-0.5 font-display text-xl font-bold text-ink">{fmtHrs(wallet.lifetimeSpent)} {t("walHrs")}</p>
             </div>
           </div>
 
@@ -272,13 +276,13 @@ export default function WalletPage() {
               className="pill bg-lime px-4 py-3 text-sm font-bold text-canvas"
               style={{ boxShadow: "0 0 30px -12px color-mix(in srgb, var(--color-lime) 80%, transparent)" }}
             >
-              🌱 Nurture to earn
+              🌱 {t("walNurtureToEarn")}
             </Link>
             <Link
               href="/marketplace"
               className="pill border border-violet/60 bg-violet/10 px-4 py-3 text-sm font-bold text-violet-soft"
             >
-              Spend an hour
+              {t("walSpendAnHour")}
             </Link>
           </div>
         </Card>
@@ -298,11 +302,11 @@ export default function WalletPage() {
             💳
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-base font-bold">Buy paid hours</p>
-            <p className="text-xs text-muted">Top up when you want to grow more than you can give back.</p>
+            <p className="font-display text-base font-bold">{t("walBuyPaidHours")}</p>
+            <p className="text-xs text-muted">{t("walBuyEntryBody")}</p>
           </div>
           <Pill onClick={() => setBuyOpen(true)} className="shrink-0 bg-violet px-5 py-2.5 text-sm font-semibold text-white">
-            Buy
+            {t("walBuy")}
           </Pill>
         </Card>
       </motion.div>
@@ -316,7 +320,7 @@ export default function WalletPage() {
       >
         {/* segmented control */}
         <div className="flex items-center justify-between gap-3">
-          <h2 className="headline text-2xl">History</h2>
+          <h2 className="headline text-2xl">{t("walHistory")}</h2>
           <div className="flex rounded-full bg-white/5 p-1">
             {FILTERS.map((f) => {
               const sel = filter === f.id;
@@ -347,19 +351,19 @@ export default function WalletPage() {
             <div className="space-y-1">
               <p className="font-display text-lg font-bold">
                 {filter === "spent"
-                  ? "No grown hours yet"
+                  ? t("walEmptyGrownTitle")
                   : filter === "earned"
-                  ? "No earned hours yet"
-                  : "No growing hours yet"}
+                  ? t("walEmptyEarnedTitle")
+                  : t("walEmptyGrowingTitle")}
               </p>
               <p className="mx-auto max-w-xs text-sm text-muted">
                 {filter === "spent"
-                  ? "Spend an hour with a nurturer and it shows up here."
-                  : "Nurture an hour in your language to earn your first."}
+                  ? t("walEmptySpentBody")
+                  : t("walEmptyEarnedBody")}
               </p>
             </div>
             <Link href="/schedule" className="pill bg-lime px-5 py-2.5 text-sm font-bold text-canvas">
-              🌱 Nurture an hour
+              🌱 {t("walNurtureAnHour")}
             </Link>
           </Card>
         ) : (
@@ -371,7 +375,7 @@ export default function WalletPage() {
                 </div>
                 <div className="space-y-0.5 pt-1">
                   {g.rows.map((e, i) => (
-                    <LedgerRow key={e.id} entry={e} index={i} />
+                    <LedgerRow key={e.id} entry={e} index={i} t={t} />
                   ))}
                 </div>
               </div>
@@ -406,13 +410,13 @@ export default function WalletPage() {
 
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="headline text-2xl">Buy paid hours</h2>
-                    <p className="mt-1 text-sm text-muted">Only paid hours are purchasable — growing hours stay earned.</p>
+                    <h2 className="headline text-2xl">{t("walBuyPaidHours")}</h2>
+                    <p className="mt-1 text-sm text-muted">{t("walBuySheetSubtitle")}</p>
                   </div>
                   <button
                     type="button"
                     onClick={closeBuy}
-                    aria-label="Close"
+                    aria-label={t("walClose")}
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/6 text-muted transition hover:bg-coral/15 hover:text-coral"
                   >
                     ✕
@@ -421,7 +425,7 @@ export default function WalletPage() {
 
                 {/* PPP info chip */}
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/6 px-3 py-1.5 text-xs font-medium text-muted">
-                  🌍 price adjusted for your country (PPP)
+                  🌍 {t("walPppNote")}
                 </span>
 
                 {/* tiered packs */}
@@ -449,26 +453,26 @@ export default function WalletPage() {
                         >
                           {p.best && (
                             <span className="absolute -top-2.5 left-5 rounded-full bg-lime px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-canvas">
-                              Best value
+                              {t("walBestValue")}
                             </span>
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="font-display text-2xl font-extrabold text-violet-soft">
                               {p.hours}
-                              <span className="ml-1 text-base font-bold text-muted">hrs</span>
+                              <span className="ml-1 text-base font-bold text-muted">{t("walHrs")}</span>
                             </p>
-                            <p className="mt-0.5 text-xs text-muted">≈ ${PPP_PER_HOUR.toFixed(2)}/hr in your region</p>
+                            <p className="mt-0.5 text-xs text-muted">≈ ${PPP_PER_HOUR.toFixed(2)}{t("walPerHrRegion")}</p>
                           </div>
                           <div className="text-right">
                             <p className="font-display text-xl font-extrabold text-ink">${total.toFixed(2)}</p>
-                            <p className="text-[11px] text-muted">pack total</p>
+                            <p className="text-[11px] text-muted">{t("walPackTotal")}</p>
                           </div>
                           <Pill
                             onClick={() => buy(p.hours)}
                             disabled={buying !== null}
                             className="shrink-0 bg-violet px-5 py-2.5 text-sm font-semibold text-white"
                           >
-                            {isThis ? "…" : "Buy"}
+                            {isThis ? "…" : t("walBuy")}
                           </Pill>
                         </div>
                       </motion.div>
@@ -478,7 +482,7 @@ export default function WalletPage() {
 
                 {/* demo note */}
                 <p className="text-center text-xs text-muted/80">
-                  Demo purchase — no real card is charged yet (Stripe coming soon).
+                  {t("walDemoNote")}
                 </p>
 
                 {/* success overlay */}
@@ -492,7 +496,7 @@ export default function WalletPage() {
                     >
                       <span className="popin text-5xl">💜</span>
                       <p className="popin font-display text-xl font-bold text-violet-soft">
-                        +{buying} paid hours added
+                        {t("walPaidHoursAdded").replace("{n}", String(buying))}
                       </p>
                     </motion.div>
                   )}

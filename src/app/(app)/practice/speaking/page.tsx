@@ -462,7 +462,7 @@ export default function SpeakingPage() {
 
             <button
               type="button"
-              aria-label="hold to record"
+              aria-label={t("prc2HoldToRecord")}
               onPointerDown={() => void startHold()}
               onPointerUp={endHold}
               onPointerLeave={endHold}
