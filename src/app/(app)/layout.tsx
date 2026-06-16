@@ -9,15 +9,23 @@ import { useApp } from "@/lib/store";
  * Shell for everything behind onboarding: top nav + profile guard.
  * No profile yet → you meet Nuri at onboarding first.
  */
+const CLERK_ON = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { profile, ready } = useApp();
+  const { profile, ready, cloudState } = useApp();
   const router = useRouter();
 
-  useEffect(() => {
-    if (ready && !profile) router.replace("/onboarding");
-  }, [ready, profile, router]);
+  // With Clerk on, sign-out is enforced by middleware (→ /sign-in), and we
+  // wait for the cloud account to finish loading before routing — otherwise a
+  // signed-in user with an existing account would flash onboarding. Keyless
+  // builds settle as soon as localStorage is read.
+  const settled = CLERK_ON ? ready && cloudState === "ready" : ready;
 
-  if (!ready || !profile) {
+  useEffect(() => {
+    if (settled && !profile) router.replace("/onboarding");
+  }, [settled, profile, router]);
+
+  if (!settled || !profile) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-violet border-t-transparent" />

@@ -5,6 +5,7 @@ import type { LangCode, Profile, SessionBooking } from "./types";
 import { makeBlendedT, makeT } from "./i18n";
 import { langByCode } from "./languages";
 import { AWARD_REQUEST_EVENT, awardAchievement, evaluateAchievements } from "./achievements";
+import { CloudProfileBridge } from "@/components/CloudProfileBridge";
 
 const KEY = "lange.profile.v1";
 
@@ -53,6 +54,15 @@ export function blankProfile(): Profile {
 interface Store {
   profile: Profile | null;
   ready: boolean;
+  /**
+   * Cloud-account sync state (set by CloudProfileBridge when Clerk is configured):
+   * "off"     — keyless/anonymous build, no cloud account
+   * "loading" — signed in, fetching the account from Convex
+   * "ready"   — account fetched (profile hydrated, or confirmed none yet)
+   * The app shell waits for "ready" before deciding onboarding-vs-app.
+   */
+  cloudState: "off" | "loading" | "ready";
+  setCloudState: (s: "off" | "loading" | "ready") => void;
   /** UI language: target language when immersion is on, else first known language */
   uiLang: LangCode;
   t: (key: string) => string;
@@ -70,6 +80,7 @@ const Ctx = createContext<Store | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
+  const [cloudState, setCloudState] = useState<"off" | "loading" | "ready">("off");
 
   useEffect(() => {
     try {
@@ -215,6 +226,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value: Store = {
     profile,
     ready,
+    cloudState,
+    setCloudState,
     uiLang,
     t,
     saveProfile,
@@ -226,7 +239,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     resetAll,
   };
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      <CloudProfileBridge />
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useApp(): Store {

@@ -941,6 +941,27 @@ function OnboardingFlow() {
   const [dailyMinutes, setDailyMinutes] = useState<number | null>(null);
   const [exchange, setExchange] = useState(false);
 
+  // Editing an existing account? Pre-fill the wizard from the profile so the
+  // avatar → onboarding is a real edit, not a blank restart. Fires once when
+  // the profile first loads; never runs for brand-new growers (no profile).
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !ready || !profile) return;
+    prefilled.current = true;
+    setRole(profile.role);
+    if (profile.knownLangs?.length) setKnownLangs(profile.knownLangs);
+    setTargetLang(profile.targetLang ?? null);
+    setNurtureLangs(profile.nurtureLangs ?? []);
+    setName(profile.name ?? "");
+    setImmersion(profile.immersion ?? true);
+    setCity(profile.city ?? "");
+    setCountry(profile.country ?? "");
+    setMotivation(profile.motivation ?? null);
+    setInterests(profile.interests ?? []);
+    setDailyMinutes(profile.dailyMinutes ?? null);
+    setExchange(profile.exchange ?? false);
+  }, [ready, profile]);
+
   const nurturerOnly = role === "nurturer";
   const trimmed = name.trim();
   const target = targetLang ? langByCode(targetLang) : null;
@@ -1023,7 +1044,9 @@ function OnboardingFlow() {
       ? (nurture[0] ?? knownLangs[0] ?? "en")
       : (targetLang ?? "es");
     const out: Profile = {
-      ...blankProfile(), // keeps phase 1 + demo defaults (12 h, 138 words, 5-day streak)
+      // Editing an existing account keeps all progress (hours, words, streak,
+      // completed, bookings, week, createdAt); a brand-new grower starts fresh.
+      ...(profile ?? blankProfile()),
       name: trimmed,
       role,
       knownLangs: knownLangs.length > 0 ? knownLangs : ["en"],

@@ -26,6 +26,14 @@ export default defineSchema({
     hoursListened: v.number(),
     /** Current GPA phase (1–6). */
     phase: v.number(),
+    /**
+     * Full localStorage Profile JSON — the lossless source of truth for
+     * round-trip. The structured fields above stay for querying/indexing;
+     * `data` carries everything else (wordsMet, streak, completed, bookings,
+     * week, interests, motivation…) so an account restores completely on
+     * any device. Optional so existing rows stay valid.
+     */
+    data: v.optional(v.any()),
   }).index("by_clerkId", ["clerkId"]),
 
   bookings: defineTable({

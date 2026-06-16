@@ -1,22 +1,51 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 /**
- * Keyless-safe middleware: when Clerk env vars are absent (the current demo
- * deploy) every request passes straight through; when the owner adds keys
- * (docs/SETUP-BACKEND.md) Clerk's middleware takes over without code changes.
- * Importing @clerk/nextjs/server is safe keyless — only running
+ * Keyless-safe middleware with sign-in enforcement.
+ *
+ * When Clerk env vars are absent (a keyless demo deploy) every request passes
+ * straight through and the app runs anonymously. When keys are present, the
+ * app requires an account: the routes below (the whole signed-in app + the
+ * onboarding flow that creates the account) redirect to /sign-in unless the
+ * visitor is authenticated. Public routes — landing, /early, /sign-in,
+ * /sign-up, API — stay open.
+ *
+ * Importing @clerk/nextjs/server is safe keyless; only running
  * clerkMiddleware() without keys would throw, so it is only constructed when
  * the publishable key exists.
  */
 const hasClerkKeys = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
+/** Everything behind the account: the app shell routes + onboarding. */
+const isProtected = createRouteMatcher([
+  "/dashboard(.*)",
+  "/courses(.*)",
+  "/schedule(.*)",
+  "/world(.*)",
+  "/forum(.*)",
+  "/wallet(.*)",
+  "/marketplace(.*)",
+  "/nurture(.*)",
+  "/session(.*)",
+  "/practice(.*)",
+  "/onboarding(.*)",
+]);
+
 function passthrough(_req: NextRequest) {
   return NextResponse.next();
 }
 
-export default hasClerkKeys ? clerkMiddleware() : passthrough;
+export default hasClerkKeys
+  ? clerkMiddleware(async (auth, req) => {
+      if (isProtected(req)) {
+        await auth.protect({
+          unauthenticatedUrl: new URL("/sign-in", req.url).toString(),
+        });
+      }
+    })
+  : passthrough;
 
 export const config = {
   matcher: [

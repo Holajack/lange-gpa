@@ -3,7 +3,6 @@
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { ProfileSync } from "@/components/ProfileSync";
 
 /**
  * Auth + backend providers, keyless-safe.
@@ -26,9 +25,17 @@ const convexClient =
 export function Providers({ children }: { children: React.ReactNode }) {
   if (!clerkKey || !convexClient) return <>{children}</>;
   return (
-    <ClerkProvider publishableKey={clerkKey}>
+    <ClerkProvider
+      publishableKey={clerkKey}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignOutUrl="/"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
+      {/* Cloud account sync lives in CloudProfileBridge, mounted inside
+          AppProvider so it can read/write the live profile. */}
       <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-        <ProfileSync />
         {children}
       </ConvexProviderWithClerk>
     </ClerkProvider>

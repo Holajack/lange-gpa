@@ -16,6 +16,8 @@ export const upsertProfile = mutation({
     immersion: v.boolean(),
     hoursListened: v.number(),
     phase: v.number(),
+    /** Full Profile JSON blob — everything not in the structured fields. */
+    data: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
