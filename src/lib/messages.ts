@@ -10,7 +10,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useConvex } from "convex/react";
 
-export type ChatMessage = { id: string; mine: boolean; text: string; ts: number };
+export type ChatMessage = {
+  id: string;
+  mine: boolean;
+  text: string;
+  ts: number;
+  kind?: string;
+  audioUrl?: string | null;
+  durationSec?: number | null;
+};
 export type ChatOther = { id: string; name: string; photo?: string } | null;
 export type Convo = {
   otherProfileId: string;
@@ -26,6 +34,7 @@ export type ConversationApi = {
   other: ChatOther;
   messages: ChatMessage[];
   send: (text: string) => Promise<void>;
+  sendVoice: (blob: Blob, durationSec: number) => Promise<void>;
   refresh: () => void;
 };
 
@@ -73,7 +82,26 @@ function useConversationLive(withProfileId: string | null): ConversationApi {
     [convex, withProfileId, refresh]
   );
 
-  return { other, messages, send, refresh: () => void refresh() };
+  const sendVoice = useCallback(
+    async (blob: Blob, durationSec: number) => {
+      if (!withProfileId) return;
+      const uploadUrl = (await convex.mutation("messages:generateUploadUrl" as never, {} as never)) as string;
+      const res = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": blob.type || "audio/webm" },
+        body: blob,
+      });
+      const { storageId } = (await res.json()) as { storageId: string };
+      await convex.mutation(
+        "messages:sendVoice" as never,
+        { toProfileId: withProfileId, storageId, durationSec } as never
+      );
+      void refresh();
+    },
+    [convex, withProfileId, refresh]
+  );
+
+  return { other, messages, send, sendVoice, refresh: () => void refresh() };
 }
 
 function useConversationsLive(): Convo[] {
@@ -122,7 +150,13 @@ function useUnreadLive(): number {
   return n;
 }
 
-const STUB_CONV: ConversationApi = { other: null, messages: [], send: async () => {}, refresh: () => {} };
+const STUB_CONV: ConversationApi = {
+  other: null,
+  messages: [],
+  send: async () => {},
+  sendVoice: async () => {},
+  refresh: () => {},
+};
 
 export const useConversation: (withProfileId: string | null) => ConversationApi = CONVEX_ON
   ? useConversationLive

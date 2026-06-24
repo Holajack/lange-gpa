@@ -9,7 +9,7 @@
 import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Send } from "lucide-react";
+import { Mic, Send, Square } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useConversation, useConversations } from "@/lib/messages";
 import { Avatar } from "@/components/Avatar";
@@ -22,9 +22,39 @@ function MessagesInner() {
   const withId = params.get("with");
 
   const convos = useConversations();
-  const { other, messages, send } = useConversation(withId);
+  const { other, messages, send, sendVoice } = useConversation(withId);
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+
+  const [recording, setRecording] = useState(false);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startedRef = useRef(0);
+
+  const startRec = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data.size) chunksRef.current.push(e.data);
+      };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+        const dur = (Date.now() - startedRef.current) / 1000;
+        stream.getTracks().forEach((tr) => tr.stop());
+        setRecording(false);
+        if (blob.size > 0 && dur >= 0.4) void sendVoice(blob, dur);
+      };
+      startedRef.current = Date.now();
+      mediaRef.current = mr;
+      mr.start();
+      setRecording(true);
+    } catch {
+      /* mic denied or unsupported */
+    }
+  };
+  const stopRec = () => mediaRef.current?.stop();
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,13 +134,19 @@ function MessagesInner() {
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex ${m.mine ? "justify-end" : "justify-start"}`}
                     >
-                      <span
-                        className={`max-w-[78%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
-                          m.mine ? "rounded-br-md bg-violet text-white" : "rounded-bl-md bg-raised-2 text-ink"
-                        }`}
-                      >
-                        {m.text}
-                      </span>
+                      {m.kind === "voice" && m.audioUrl ? (
+                        <span className="flex items-center gap-2 rounded-2xl bg-raised-2 px-2.5 py-1.5">
+                          <audio controls src={m.audioUrl} style={{ height: 34, maxWidth: 220 }} />
+                        </span>
+                      ) : (
+                        <span
+                          className={`max-w-[78%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+                            m.mine ? "rounded-br-md bg-violet text-white" : "rounded-bl-md bg-raised-2 text-ink"
+                          }`}
+                        >
+                          {m.text}
+                        </span>
+                      )}
                     </motion.div>
                   ))
                 )}
@@ -118,22 +154,41 @@ function MessagesInner() {
               </div>
 
               <form onSubmit={submit} className="flex items-center gap-2 border-t border-line p-3">
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder={t("msgPlaceholder")}
-                  maxLength={2000}
-                  className="flex-1 rounded-full border border-line bg-white/5 px-4 py-2.5 text-sm text-ink caret-violet outline-none transition-colors placeholder:text-white/25 focus:border-violet"
-                />
+                {recording ? (
+                  <div className="flex flex-1 items-center gap-2 px-3 text-sm font-medium text-red-400">
+                    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                    {t("msgRecording")}
+                  </div>
+                ) : (
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder={t("msgPlaceholder")}
+                    maxLength={2000}
+                    className="flex-1 rounded-full border border-line bg-white/5 px-4 py-2.5 text-sm text-ink caret-violet outline-none transition-colors placeholder:text-white/25 focus:border-violet"
+                  />
+                )}
                 <button
-                  type="submit"
-                  aria-label={t("msgSend")}
-                  disabled={!draft.trim()}
-                  className="pill flex h-10 w-10 shrink-0 items-center justify-center bg-violet text-white disabled:opacity-40"
-                  style={{ boxShadow: "var(--shadow-glow-violet)" }}
+                  type="button"
+                  aria-label={t("msgVoice")}
+                  onClick={recording ? stopRec : startRec}
+                  className={`pill flex h-10 w-10 shrink-0 items-center justify-center ${
+                    recording ? "bg-red-500 text-white" : "bg-raised-2 text-ink hover:bg-white/10"
+                  }`}
                 >
-                  <Send size={17} />
+                  {recording ? <Square size={15} /> : <Mic size={16} />}
                 </button>
+                {!recording && (
+                  <button
+                    type="submit"
+                    aria-label={t("msgSend")}
+                    disabled={!draft.trim()}
+                    className="pill flex h-10 w-10 shrink-0 items-center justify-center bg-violet text-white disabled:opacity-40"
+                    style={{ boxShadow: "var(--shadow-glow-violet)" }}
+                  >
+                    <Send size={17} />
+                  </button>
+                )}
               </form>
             </>
           )}

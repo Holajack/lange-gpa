@@ -64,7 +64,17 @@ export const conversation = query({
         name: other.name,
         photo: typeof data.photoUrl === "string" ? data.photoUrl : undefined,
       },
-      messages: rows.map((r) => ({ id: r._id, mine: r.fromClerkId === me, text: r.text, ts: r.ts })),
+      messages: await Promise.all(
+        rows.map(async (r) => ({
+          id: r._id,
+          mine: r.fromClerkId === me,
+          kind: r.kind,
+          text: r.text,
+          audioUrl: r.storageId ? await ctx.storage.getUrl(r.storageId) : null,
+          durationSec: r.durationSec ?? null,
+          ts: r.ts,
+        }))
+      ),
     };
   },
 });
@@ -164,5 +174,47 @@ export const unreadCount = query({
       .withIndex("by_to_unread", (q) => q.eq("toClerkId", identity.subject).eq("readByTo", false))
       .collect();
     return rows.length;
+  },
+});
+
+/* ---- voice notes (Stage D2) ---- */
+
+/** A short-lived URL the client POSTs the recorded audio blob to. */
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/** Send a voice note (the client uploads first, then passes the storage id). */
+export const sendVoice = mutation({
+  args: { toProfileId: v.id("profiles"), storageId: v.id("_storage"), durationSec: v.number() },
+  handler: async (ctx, { toProfileId, storageId, durationSec }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const from = identity.subject;
+    const toProfile = await ctx.db.get(toProfileId);
+    if (!toProfile) throw new Error("Person not found");
+    const to = toProfile.clerkId;
+    if (to === from) throw new Error("Cannot message yourself");
+    const me = await ctx.db
+      .query("profiles")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", from))
+      .unique();
+    return await ctx.db.insert("messages", {
+      convoKey: convoKeyOf(from, to),
+      fromClerkId: from,
+      fromName: me?.name ?? "Someone",
+      toClerkId: to,
+      kind: "voice",
+      text: "",
+      storageId,
+      durationSec: Math.max(1, Math.round(durationSec)),
+      ts: Date.now(),
+      readByTo: false,
+    });
   },
 });

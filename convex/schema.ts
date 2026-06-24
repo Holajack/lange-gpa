@@ -154,6 +154,9 @@ export default defineSchema({
     toClerkId: v.string(),
     kind: v.string(),
     text: v.string(),
+    /** voice notes (kind "voice"): stored audio + length in seconds */
+    storageId: v.optional(v.id("_storage")),
+    durationSec: v.optional(v.number()),
     ts: v.number(),
     readByTo: v.boolean(),
   })
