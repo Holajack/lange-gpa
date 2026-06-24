@@ -2,29 +2,21 @@
 
 /**
  * /world — the Nuri planet. Every language sibling stands on its home
- * country; pick one and the globe eases over to it (Bump/Zenly style),
- * its marker swells in the sibling's own color, and the side panel opens
- * that language's world: native hello, cultural-immersion notes, and the
+ * country; pick one and the globe eases over to it (fly-to), its marker
+ * swells in the sibling's own color, and the side panel opens that
+ * language's world: native hello, cultural-immersion notes, and the
  * nurturers who live there.
  *
- * The planet is hands-on: drag to spin it, scroll/pinch (or the +/−
- * buttons) to fly closer. Zoom in far enough and the capitals give way
- * to PEOPLE — nurturers (orange) and growers (violet) pinned at city
- * level only, never an exact location. Tap a dot or a panel row to meet
- * someone.
- *
- * cobe v2 has no internal animation loop — we drive phi/theta/scale each
- * frame with requestAnimationFrame and lerp toward the targets. Marker
- * hit-testing mirrors cobe's marker vertex shader: markers sit at radius
- * 0.8 + markerElevation(0.05) and project orthographically after the
- * phi/theta rotation, so screen = center + l.xy * 0.85 * scale * w/2.
+ * The planet is a realistic textured 3D Earth (see src/components/NuriGlobe):
+ * drag to spin it, scroll/pinch (or the +/− buttons) to fly closer. Zoom in
+ * far enough and the capitals give way to PEOPLE — nurturers (orange) and
+ * growers (violet) pinned at city level only, never an exact location. Tap a
+ * dot or a panel row to meet someone.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import createGlobe from "cobe";
-import type { Marker } from "cobe";
 import { useApp } from "@/lib/store";
 import { langByCode } from "@/lib/languages";
 import { MASCOTS, mascotForLang, type MascotDef } from "@/lib/mascots";
@@ -40,9 +32,10 @@ import { speak } from "@/lib/tts";
 import { Avatar } from "@/components/Avatar";
 import { MascotImage } from "@/components/MascotImage";
 import { Card, SectionTitle, Tag } from "@/components/ui";
+import { NuriGlobe } from "@/components/NuriGlobe";
+import type { NuriGlobeHandle, GlobeCapital, GlobePerson } from "@/components/NuriGlobe";
+import { useRealPeople } from "@/lib/useRealPeople";
 import type { LangCode, Nurturer } from "@/lib/types";
-
-const TAU = Math.PI * 2;
 
 type Spot = { city: string; lat: number; lon: number };
 
@@ -120,30 +113,8 @@ const CULTURE: Partial<Record<LangCode, string[]>> = {
   ],
 };
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const v = parseInt(hex.slice(1), 16);
-  return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255];
-};
-
-/** cobe focus angles: rotate the sphere so [lat, lon] faces the camera. */
-const anglesOf = (lat: number, lon: number): [number, number] => [
-  Math.PI - ((lon * Math.PI) / 180 - Math.PI / 2),
-  (lat * Math.PI) / 180,
-];
-
-const MARKER_REST = 0.045;
-const MARKER_SELECTED = 0.115;
-const PERSON_MARKER = 0.06;
-
-const ZOOM_MIN = 1;
-const ZOOM_MAX = 2.4;
-/** at this zoom the capitals give way to people */
-const PEOPLE_ZOOM = 1.5;
-
 const NURTURER_DOT = "#ff8a1e"; // orange
 const GROWER_DOT = "#7c5cff"; // violet
-const NURTURER_RGB = hexToRgb(NURTURER_DOT);
-const GROWER_RGB = hexToRgb(GROWER_DOT);
 
 /** One card-able human, whichever side of the session they sit on. */
 type PersonView = {
@@ -224,52 +195,97 @@ export default function WorldPage() {
   const growers = participantsForLang(mascot.lang);
   const bullets = CULTURE[mascot.lang] ?? [];
 
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  /** latest t, read by the globe hit-test without re-running the effect */
-  const tRef = useRef(t);
-  tRef.current = t;
-  /** read by the render loop without re-running the effect */
-  const selLangRef = useRef<LangCode>(mascot.lang);
-  const focusRef = useRef<[number, number]>(anglesOf(spot.lat, spot.lon));
-  const pickedAtRef = useRef(Date.now());
-  const sizesRef = useRef<Record<string, number>>({});
-  /** zoom target (wheel / pinch / buttons lerp toward it) */
-  const zoomRef = useRef(1);
-  const peopleModeRef = useRef(false);
-  const draggingRef = useRef(false);
-  /** what cobe actually rendered this frame — used for marker hit-tests */
-  const renderRef = useRef({ phi: focusRef.current[0], theta: focusRef.current[1], scale: 1 });
+  const globeRef = useRef<NuriGlobeHandle>(null);
+  const realPeople = useRealPeople();
 
-  const pick = (m: MascotDef) => {
-    setSelId(m.id);
-    selLangRef.current = m.lang;
+  /** every language's capital as a globe pin, recolored for the selected one */
+  const capitals: GlobeCapital[] = MASCOTS.map((m) => {
     const s = spotOf(m.lang);
-    focusRef.current = anglesOf(s.lat, s.lon);
-    pickedAtRef.current = Date.now();
-  };
+    return {
+      id: m.id,
+      lat: s.lat,
+      lng: s.lon,
+      color: m.color,
+      emoji: langByCode(m.lang).flag,
+      label: s.city,
+      selected: m.lang === mascot.lang,
+    };
+  });
 
-  /** Clamp + apply a zoom level; crossing PEOPLE_ZOOM swaps the marker world. */
-  const applyZoom = useCallback((z: number) => {
-    const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
-    zoomRef.current = next;
-    const people = next >= PEOPLE_ZOOM;
-    if (people !== peopleModeRef.current) {
-      peopleModeRef.current = people;
-      if (!people) {
-        // forget people marker sizes so they pop back in next visit
-        for (const key of Object.keys(sizesRef.current)) {
-          if (key.startsWith("n-") || key.startsWith("p-")) delete sizesRef.current[key];
-        }
-      }
-      setPeopleMode(people);
-    }
-  }, []);
+  /** Real signed-up people tied to this language: growing into it (grower) or
+   *  speaking/nurturing it (nurturer). City-level pins, with `me` highlighted. */
+  const realForLang = realPeople
+    .filter(
+      (p) =>
+        p.targetLang === mascot.lang ||
+        p.knownLangs.includes(mascot.lang) ||
+        p.nurtureLangs.includes(mascot.lang),
+    )
+    .map((p) => {
+      const kind: "grower" | "nurturer" = p.targetLang === mascot.lang ? "grower" : "nurturer";
+      const view: PersonView = {
+        kind,
+        id: p.id,
+        name: p.name,
+        color: kind === "nurturer" ? NURTURER_DOT : GROWER_DOT,
+        city: p.city ?? "",
+        country: p.country,
+        online: true,
+        bio: p.bio ?? "",
+        tags: p.interests,
+        growing: kind === "grower" ? p.targetLang : undefined,
+        speaks: p.knownLangs,
+        phase: p.phase,
+        exchange: p.exchange,
+      };
+      return { view, lat: p.lat, lng: p.lng, me: p.me };
+    });
 
-  const zoomBy = (delta: number) => {
-    applyZoom(zoomRef.current + delta);
-    pickedAtRef.current = Date.now();
-  };
+  /** demo + real, merged for the globe pins and click lookup */
+  const demoPins = peopleOnGlobe(mascot.lang, t);
+  const realPins = realForLang.filter((r) => r.lat != null && r.lng != null);
+  const peoplePins = [
+    ...demoPins,
+    ...realPins.map((r) => ({ lat: r.lat as number, lng: r.lng as number, view: r.view })),
+  ];
+  const people: GlobePerson[] = [
+    ...demoPins.map(({ lat, lng, view }) => ({
+      id: view.id,
+      lat,
+      lng,
+      color: view.color,
+      name: view.name,
+      kind: view.kind,
+    })),
+    ...realPins.map((r) => ({
+      id: r.view.id,
+      lat: r.lat as number,
+      lng: r.lng as number,
+      color: r.view.color,
+      name: r.view.name,
+      kind: r.view.kind,
+      me: r.me,
+    })),
+  ];
+  const viewById = new Map(peoplePins.map(({ view }) => [view.id, view] as const));
+
+  /** side-panel lists: demo + real, by their role for this language */
+  const nurturerViews: PersonView[] = [
+    ...nurturers.map((n) => nurturerView(n, t)),
+    ...realForLang.filter((r) => r.view.kind === "nurturer").map((r) => r.view),
+  ];
+  const growerViews: PersonView[] = [
+    ...growers.map((p) => participantView(p)),
+    ...realForLang.filter((r) => r.view.kind === "grower").map((r) => r.view),
+  ];
+  const growerContext = (v: PersonView) =>
+    v.growing === mascot.lang
+      ? `${t("wldGrowing")} ${lang.flag}`
+      : v.growing
+        ? `${t("wldSpeaks")} ${lang.flag} · ${t("wldGrowing")} ${langByCode(v.growing).flag}`
+        : `${t("wldSpeaks")} ${lang.flag}`;
+
+  const pick = (m: MascotDef) => setSelId(m.id);
 
   // close the person card with Escape
   useEffect(() => {
@@ -280,224 +296,6 @@ export default function WorldPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [person]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const wrap = wrapRef.current;
-    if (!canvas || !wrap) return;
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    let width = Math.max(1, wrap.offsetWidth);
-    let renderedWidth = width;
-
-    /** size easing per marker key — selected mascots swell, people pop in */
-    const easeSize = (key: string, target: number, start: number) => {
-      const cur = sizesRef.current[key] ?? start;
-      const next = cur + (target - cur) * 0.12;
-      sizesRef.current[key] = next;
-      return next;
-    };
-
-    /** markers every frame: capitals when far out, people when zoomed in */
-    const buildMarkers = (): Marker[] => {
-      if (peopleModeRef.current) {
-        const lang = selLangRef.current;
-        const out: Marker[] = [];
-        for (const n of nurturersForLang(lang)) {
-          const c = NURTURER_COORDS[n.id];
-          if (!c) continue;
-          out.push({ location: [c.lat, c.lng], size: easeSize(`n-${n.id}`, PERSON_MARKER, 0.004), color: NURTURER_RGB });
-        }
-        for (const p of participantsForLang(lang)) {
-          out.push({ location: [p.lat, p.lng], size: easeSize(`p-${p.id}`, PERSON_MARKER, 0.004), color: GROWER_RGB });
-        }
-        return out;
-      }
-      return MASCOTS.map((m) => {
-        const s = spotOf(m.lang);
-        const sel = m.lang === selLangRef.current;
-        const size = easeSize(m.id, sel ? MARKER_SELECTED : MARKER_REST, MARKER_REST);
-        return sel
-          ? { location: [s.lat, s.lon], size, color: hexToRgb(m.color) }
-          : { location: [s.lat, s.lon], size };
-      });
-    };
-
-    let [phi, theta] = focusRef.current;
-    let scale = zoomRef.current;
-
-    const globe = createGlobe(canvas, {
-      devicePixelRatio: dpr,
-      width,
-      height: width,
-      phi,
-      theta,
-      dark: 1,
-      diffuse: 1.4,
-      mapSamples: 20000,
-      mapBrightness: 5.5,
-      mapBaseBrightness: 0.04,
-      baseColor: [0.38, 0.32, 0.66],
-      markerColor: hexToRgb("#a78bfa"),
-      glowColor: [0.24, 0.18, 0.5],
-      opacity: 0.92,
-      scale,
-      markers: buildMarkers(),
-    });
-
-    // idle drift keeps the planet alive; reduced motion = much slower spin
-    const autoSpeed = reduced ? 0.0005 : 0.0022;
-
-    let raf = requestAnimationFrame(function frame() {
-      // pause while dragging and for ~4s after any touch; drift slower when zoomed
-      if (Date.now() - pickedAtRef.current > 4500) {
-        focusRef.current[0] += autoSpeed / (scale * scale);
-      }
-      const [fPhi, fTheta] = focusRef.current;
-      // shortest-path lerp around the sphere toward the target; snappier under the finger
-      const k = draggingRef.current ? 0.22 : 0.07;
-      const dPos = (((fPhi - phi) % TAU) + TAU) % TAU;
-      const dNeg = (((phi - fPhi) % TAU) + TAU) % TAU;
-      phi += dPos <= dNeg ? dPos * k : -(dNeg * k);
-      theta += (fTheta - theta) * k;
-      scale += (zoomRef.current - scale) * 0.1;
-      renderRef.current = { phi, theta, scale };
-      if (width !== renderedWidth) {
-        renderedWidth = width;
-        globe.update({ phi, theta, scale, width, height: width, markers: buildMarkers() });
-      } else {
-        globe.update({ phi, theta, scale, markers: buildMarkers() });
-      }
-      raf = requestAnimationFrame(frame);
-    });
-
-    /* ---- hands on the planet: drag to spin, pinch/wheel to zoom ---- */
-
-    const pointers = new Map<number, { x: number; y: number }>();
-    let moved = 0;
-    let pinchDist = 0;
-
-    /**
-     * Mirror of cobe's marker vertex shader: rotate the city's unit vector
-     * by phi (Y) then theta (X); markers sit at radius 0.8+0.05 and project
-     * orthographically. Returns the nearest front-facing person to (px,py).
-     */
-    const personAt = (px: number, py: number, w: number): PersonView | null => {
-      const { phi: rPhi, theta: rTheta, scale: rScale } = renderRef.current;
-      const R = 0.85 * rScale;
-      const cp = Math.cos(rPhi);
-      const sp = Math.sin(rPhi);
-      const ct = Math.cos(rTheta);
-      const st = Math.sin(rTheta);
-      let best: { view: PersonView; d: number } | null = null;
-      for (const { lat, lng, view } of peopleOnGlobe(selLangRef.current, tRef.current)) {
-        const lam = (lng * Math.PI) / 180 - Math.PI;
-        const la = (lat * Math.PI) / 180;
-        const ux = -Math.cos(la) * Math.cos(lam);
-        const uy = Math.sin(la);
-        const uz = Math.cos(la) * Math.sin(lam);
-        const lx = cp * ux + sp * uz;
-        const ly = sp * st * ux + ct * uy - cp * st * uz;
-        const lz = -sp * ct * ux + st * uy + cp * ct * uz;
-        if (lz <= 0.05) continue; // back of the planet
-        const sx = ((1 + lx * R) * w) / 2;
-        const sy = ((1 - ly * R) * w) / 2;
-        const d = Math.hypot(sx - px, sy - py);
-        if (d < 26 && (!best || d < best.d)) best = { view, d };
-      }
-      return best?.view ?? null;
-    };
-
-    const onPointerDown = (e: PointerEvent) => {
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch {
-        /* synthetic or already-released pointers can't be captured — fine */
-      }
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 1) {
-        moved = 0;
-        draggingRef.current = true;
-        canvas.style.cursor = "grabbing";
-      } else if (pointers.size === 2) {
-        const [a, b] = [...pointers.values()];
-        pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
-      }
-      pickedAtRef.current = Date.now();
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      const prev = pointers.get(e.pointerId);
-      if (!prev) return;
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size >= 2) {
-        // pinch: zoom by the change in finger distance
-        const [a, b] = [...pointers.values()];
-        const d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (pinchDist > 0) applyZoom(zoomRef.current * (d / pinchDist));
-        pinchDist = d;
-        pickedAtRef.current = Date.now();
-        return;
-      }
-      const dx = e.clientX - prev.x;
-      const dy = e.clientY - prev.y;
-      moved += Math.abs(dx) + Math.abs(dy);
-      focusRef.current[0] += dx * 0.005;
-      focusRef.current[1] = Math.max(-1.25, Math.min(1.25, focusRef.current[1] + dy * 0.005));
-      pickedAtRef.current = Date.now();
-    };
-
-    const endPointer = (e: PointerEvent, allowClick: boolean) => {
-      const had = pointers.delete(e.pointerId);
-      if (pointers.size < 2) pinchDist = 0;
-      if (pointers.size === 0) {
-        draggingRef.current = false;
-        canvas.style.cursor = "grab";
-        pickedAtRef.current = Date.now(); // keep auto-spin paused ~4s after
-        if (allowClick && had && moved < 6 && peopleModeRef.current) {
-          const rect = canvas.getBoundingClientRect();
-          const hit = personAt(e.clientX - rect.left, e.clientY - rect.top, rect.width);
-          if (hit) setPerson(hit);
-        }
-      }
-    };
-
-    const onPointerUp = (e: PointerEvent) => endPointer(e, true);
-    const onPointerCancel = (e: PointerEvent) => endPointer(e, false);
-
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      applyZoom(zoomRef.current * Math.exp(-e.deltaY * 0.0016));
-      pickedAtRef.current = Date.now();
-    };
-
-    canvas.style.cursor = "grab";
-    canvas.style.touchAction = "none";
-    canvas.addEventListener("pointerdown", onPointerDown);
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", onPointerUp);
-    canvas.addEventListener("pointercancel", onPointerCancel);
-    canvas.addEventListener("wheel", onWheel, { passive: false });
-
-    const ro = new ResizeObserver(() => {
-      width = Math.max(1, wrap.offsetWidth);
-    });
-    ro.observe(wrap);
-    canvas.style.opacity = "1";
-
-    return () => {
-      cancelAnimationFrame(raf);
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerup", onPointerUp);
-      canvas.removeEventListener("pointercancel", onPointerCancel);
-      canvas.removeEventListener("wheel", onWheel);
-      ro.disconnect();
-      globe.destroy();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   if (!profile) return null;
 
@@ -587,15 +385,27 @@ export default function WorldPage() {
               style={{ background: `color-mix(in srgb, ${mascot.color} 14%, transparent)` }}
             />
 
-            <div ref={wrapRef} className="relative mx-auto aspect-square w-full max-w-[560px]">
-              <canvas ref={canvasRef} className="h-full w-full opacity-0 transition-opacity duration-1000" />
+            <div className="relative mx-auto aspect-square w-full max-w-[560px]">
+              <NuriGlobe
+                ref={globeRef}
+                capitals={capitals}
+                people={people}
+                focusLat={spot.lat}
+                focusLng={spot.lon}
+                onPeopleModeChange={setPeopleMode}
+                onPersonClick={(id) => {
+                  const v = viewById.get(id);
+                  if (v) setPerson(v);
+                }}
+                onCapitalClick={(id) => setSelId(id)}
+              />
 
               {/* zoom controls */}
               <div className="absolute right-1 top-1 z-10 flex flex-col gap-1.5">
                 <button
                   type="button"
                   aria-label={t("wld2ZoomIn")}
-                  onClick={() => zoomBy(0.35)}
+                  onClick={() => globeRef.current?.zoomBy(0.6)}
                   className="card flex h-9 w-9 items-center justify-center rounded-full bg-raised/80 text-lg font-bold backdrop-blur-md transition hover:bg-white/10"
                 >
                   +
@@ -603,7 +413,7 @@ export default function WorldPage() {
                 <button
                   type="button"
                   aria-label={t("wld2ZoomOut")}
-                  onClick={() => zoomBy(-0.35)}
+                  onClick={() => globeRef.current?.zoomBy(1.6)}
                   className="card flex h-9 w-9 items-center justify-center rounded-full bg-raised/80 text-lg font-bold backdrop-blur-md transition hover:bg-white/10"
                 >
                   −
@@ -718,10 +528,10 @@ export default function WorldPage() {
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: NURTURER_DOT }} />
                       {t("wldNurturersLabel")}
                     </p>
-                    {nurturers.length === 0 ? (
+                    {nurturerViews.length === 0 ? (
                       <Card className="p-4 text-sm text-muted">{lang.nativeName} {t("wldMoreNurturers")}</Card>
                     ) : (
-                      nurturers.map((n, i) => personRow(nurturerView(n, t), i))
+                      nurturerViews.map((v, i) => personRow(v, i))
                     )}
                   </div>
 
@@ -730,18 +540,10 @@ export default function WorldPage() {
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: GROWER_DOT }} />
                       {t("wldGrowersLabel")}
                     </p>
-                    {growers.length === 0 ? (
+                    {growerViews.length === 0 ? (
                       <Card className="p-4 text-sm text-muted">{t("wldNoGrowers")}</Card>
                     ) : (
-                      growers.map((p, i) =>
-                        personRow(
-                          participantView(p),
-                          i,
-                          p.growingLang === mascot.lang
-                            ? `${t("wldGrowing")} ${lang.flag}`
-                            : `${t("wldSpeaks")} ${lang.flag} · ${t("wldGrowing")} ${langByCode(p.growingLang).flag}`,
-                        ),
-                      )
+                      growerViews.map((v, i) => personRow(v, i, growerContext(v)))
                     )}
                   </div>
                 </>

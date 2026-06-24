@@ -6,11 +6,8 @@
  * 0  Welcome + role choice (grower / nurturer / both, ?role= preselects)
  * 1  Known languages (multi-select, English preselected)
  * 2  Target world (grower/both) — or nurture languages (nurturer-only)
- *    ↳ optional placement: "Grown in {language} before?" opens a
- *      comprehension-only listening test (src/lib/placement.ts) that can
- *      earn a Phase 2 or Phase 3 start. Skippable; default stays Phase 1.
  * 3  Where you're growing from (city + country, optional, city-level privacy)
- * 4  Why this language (single-select motivation, optional)
+ * 4  Why this language (multi-select motivation, optional)
  * 5  What you love (multi-select interests, optional)
  * 6  Daily watering rhythm + language-exchange toggle (optional, pledge CTA)
  * 7  Name + live preview
@@ -20,7 +17,7 @@
  * blocking completion (GPA is invitation, not interrogation).
  */
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Volume2 } from "lucide-react";
@@ -28,56 +25,11 @@ import { Mascot } from "@/components/Mascot";
 import { Logo } from "@/components/Logo";
 import { blankProfile, useApp } from "@/lib/store";
 import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
-import { speak, stopSpeaking } from "@/lib/tts";
-import { phaseById } from "@/lib/phases";
-import {
-  MAX_REPLAYS_PER_ROUND,
-  buildGate,
-  gate2Available,
-  placementAvailable,
-  placementSeed,
-  scoreGate,
-  type GateId,
-  type GateResult,
-  type PlacementGate,
-  type PlacementRound,
-  type RoundResult,
-} from "@/lib/placement";
-import type { LangCode, Language, PhaseId, Profile, Role } from "@/lib/types";
+import { speak } from "@/lib/tts";
+import type { LangCode, Language, Profile, Role } from "@/lib/types";
+import { INTERESTS, MOTIVATIONS, PACES } from "@/lib/onboardingOptions";
 
 const STEP_COUNT = 9;
-
-/** Why this language — single-select; stored as a readable phrase.
- *  `labelKey` resolves through the immersion translator at render time. */
-const MOTIVATIONS = [
-  { id: "family roots", emoji: "🌳", labelKey: "dshMotFamilyRoots" },
-  { id: "travel", emoji: "🧳", labelKey: "dshMotTravel" },
-  { id: "someone I love", emoji: "💛", labelKey: "dshMotSomeoneILove" },
-  { id: "work", emoji: "💼", labelKey: "dshMotWork" },
-  { id: "faith", emoji: "🕊️", labelKey: "dshMotFaith" },
-  { id: "the joy of it", emoji: "✨", labelKey: "dshMotJoy" },
-] as const;
-
-/** What you love — multi-select picture-card worlds. */
-const INTERESTS = [
-  { id: "food", emoji: "🍲", labelKey: "dshIntFood" },
-  { id: "music", emoji: "🎶", labelKey: "dshIntMusic" },
-  { id: "sport", emoji: "⚽", labelKey: "dshIntSport" },
-  { id: "nature", emoji: "🌿", labelKey: "dshIntNature" },
-  { id: "family", emoji: "👨‍👩‍👧", labelKey: "dshIntFamily" },
-  { id: "craft", emoji: "🧵", labelKey: "dshIntCraft" },
-  { id: "games", emoji: "🎲", labelKey: "dshIntGames" },
-  { id: "stories", emoji: "📚", labelKey: "dshIntStories" },
-  { id: "travel", emoji: "🗺️", labelKey: "dshIntTravel" },
-  { id: "faith", emoji: "🙏", labelKey: "dshIntFaith" },
-] as const;
-
-/** Daily watering rhythms — minutes → growing identity. */
-const PACES = [
-  { minutes: 10, emoji: "🌱", identityKey: "dshPaceSeedling" },
-  { minutes: 20, emoji: "🌿", identityKey: "dshPaceSprout" },
-  { minutes: 40, emoji: "🌳", identityKey: "dshPaceGrove" },
-] as const;
 
 /** First word a grower meets — pure target language, meaning carried by voice. */
 const HELLO: Record<LangCode, string> = {
@@ -405,19 +357,20 @@ function InterestChip({
 }
 
 function PaceRow({
-  minutes,
+  mainLabel,
   emoji,
   identity,
-  minLabel,
   perDay,
+  badge,
   selected,
   onClick,
 }: {
-  minutes: number;
+  mainLabel: string;
   emoji: string;
   identity: string;
-  minLabel: string;
   perDay: string;
+  /** small flourish, e.g. "Go all in" on the 2-hour rhythm */
+  badge?: string;
   selected: boolean;
   onClick: () => void;
 }) {
@@ -438,7 +391,12 @@ function PaceRow({
       <span className="flex items-center gap-3.5">
         <span className="text-2xl">{emoji}</span>
         <span className="font-semibold">
-          {minutes} {minLabel} <span className="font-normal text-muted">{perDay}</span>
+          {mainLabel} <span className="font-normal text-muted">{perDay}</span>
+          {badge && (
+            <span className="ml-2 inline-block rounded-full bg-lime/15 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wider text-lime">
+              {badge}
+            </span>
+          )}
         </span>
       </span>
       <span className="headline text-xl text-lime">{identity}</span>
@@ -536,363 +494,6 @@ function PlanVisual() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Placement — "show us your roots"                                     */
-/* ------------------------------------------------------------------ */
-
-/**
- * An honest, comprehension-only placement: hear the host language, point
- * at pictures. No reading, no translating, no typing — it cannot be
- * faked. Gate 1 earns a Phase 2 start; Gate 2 a Phase 3 start (the cap —
- * deeper phases must be lived, not tested into). One replay per round:
- * GPA always allows "again", but a placement pressure-tests the iceberg.
- * Skippable at every point; the default is always Phase 1.
- */
-function PlacementPanel({
-  lang,
-  t,
-  onDone,
-}: {
-  lang: LangCode;
-  t: (key: string) => string;
-  /** earned phase + whether this sitting counts as a real attempt */
-  onDone: (earned: PhaseId, attempted: boolean) => void;
-}) {
-  const target = langByCode(lang);
-
-  const [stage, setStage] = useState<"intro" | "playing" | "bridge" | "result">("intro");
-  const [gate, setGate] = useState<PlacementGate | null>(null);
-  const [roundIx, setRoundIx] = useState(0);
-  const [perRound, setPerRound] = useState<RoundResult[]>([]);
-  const [replays, setReplays] = useState(0);
-  const [heard, setHeard] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
-  const [firstPick, setFirstPick] = useState<string | null>(null);
-  const [chosen, setChosen] = useState<string[]>([]);
-  const [earned, setEarned] = useState<PhaseId>(1);
-  const [results, setResults] = useState<GateResult[]>([]);
-
-  const round = gate?.rounds[roundIx] ?? null;
-  const isChain = round !== null && round.answer.length === 2;
-  const answered = perRound.length;
-
-  /** Voice the round — one utterance, or a two-step TPR chain in order. */
-  const say = useCallback(
-    async (r: PlacementRound) => {
-      setSpeaking(true);
-      for (const part of r.audio) {
-        await speak(part, lang, 0.9);
-      }
-      setSpeaking(false);
-      setHeard(true);
-    },
-    [lang]
-  );
-
-  // each round introduces itself by ear — meaning lives in sound, never text
-  useEffect(() => {
-    if (stage !== "playing" || !gate) return;
-    const r = gate.rounds[roundIx];
-    if (r) void say(r);
-    return stopSpeaking;
-  }, [stage, gate, roundIx, say]);
-
-  const startGate = (g: GateId) => {
-    setGate(buildGate(lang, g));
-    setRoundIx(0);
-    setPerRound([]);
-    setReplays(0);
-    setHeard(false);
-    setFirstPick(null);
-    setChosen([]);
-    setStage("playing");
-  };
-
-  const replay = () => {
-    if (!round || speaking || replays >= MAX_REPLAYS_PER_ROUND) return;
-    setReplays((r) => r + 1);
-    void say(round);
-  };
-
-  const finishGate = (g: PlacementGate, all: RoundResult[]) => {
-    const res = scoreGate(g, all);
-    setResults((rs) => [...rs, res]);
-    if (res.passed && g.gate === 1) {
-      setEarned(2);
-      // offer Gate 2 only where native question frames exist —
-      // an English frame around a host word would break GPA purity
-      setStage(gate2Available(lang) ? "bridge" : "result");
-    } else {
-      if (res.passed && g.gate === 2) setEarned(3);
-      setStage("result");
-    }
-  };
-
-  const tap = (tileId: string) => {
-    if (!gate || !round || !heard || chosen.length > 0) return;
-    if (isChain && firstPick === null) {
-      setFirstPick(tileId); // step one of a chain — wait for step two
-      return;
-    }
-    const picks = isChain ? [firstPick as string, tileId] : [tileId];
-    setChosen(picks);
-    const correct =
-      picks.length === round.answer.length && picks.every((id, i) => id === round.answer[i]);
-    const all: RoundResult[] = [
-      ...perRound,
-      { index: roundIx, kind: round.kind, correct, replayed: replays > 0 },
-    ];
-    setPerRound(all);
-    // neutral acknowledgement, then onward — never a mid-test verdict
-    window.setTimeout(() => {
-      setChosen([]);
-      setFirstPick(null);
-      setReplays(0);
-      setHeard(false);
-      if (roundIx + 1 < gate.rounds.length) setRoundIx((i) => i + 1);
-      else finishGate(gate, all);
-    }, 520);
-  };
-
-  return (
-    <AnimatePresence mode="wait">
-      {/* ---------- intro: warm invitation ---------- */}
-      {stage === "intro" && (
-        <motion.section key="pl-intro" custom={1} variants={stepVariants} initial="enter" animate="center" exit="exit">
-          <NuriSays mood="think">{t("dshPlRootsNuri")}</NuriSays>
-          <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-            {t("dshPlGrownInPre")}<span className="text-violet-soft">{target.nativeName}</span>{t("dshPlGrownInPost")}
-          </motion.h1>
-          <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-            {t("dshPlIntroBody").replace("{language}", target.nativeName)}
-          </motion.p>
-          <motion.p variants={item} className="mt-3 max-w-xl text-sm text-muted">
-            {t("dshPlOneReplay")}
-          </motion.p>
-          <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => startGate(1)}
-              className="pill bg-violet px-7 py-3 font-semibold text-white"
-              style={{ boxShadow: "var(--shadow-glow-violet)" }}
-            >
-              👂 {t("dshPlReadyListen")}
-            </button>
-            <button
-              type="button"
-              onClick={() => onDone(1, false)}
-              className="pill bg-white/6 px-6 py-3 text-sm font-semibold text-muted hover:text-ink"
-            >
-              {t("dshPlSkipFresh")}
-            </button>
-          </motion.div>
-        </motion.section>
-      )}
-
-      {/* ---------- playing: one round on the floor ---------- */}
-      {stage === "playing" && gate && round && (
-        <motion.section
-          key={`pl-g${gate.gate}-r${roundIx}`}
-          custom={1}
-          variants={stepVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-        >
-          <motion.div variants={item} className="flex items-center justify-between gap-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted">
-              {t("dshPlGate")} {gate.gate} · {gate.gate === 1 ? t("dshPlWordsByEar") : t("dshPlQuestionsByEar")}
-            </p>
-            <div className="flex items-center gap-1.5">
-              {gate.rounds.map((_, i) => (
-                <span
-                  key={i}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i < answered ? "w-2 bg-lime" : i === roundIx ? "w-5 bg-violet" : "w-2 bg-white/15"
-                  }`}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* the voice — replayable once */}
-          <motion.div variants={item} className="card mt-6 flex items-center justify-between gap-4 p-6">
-            <div className="flex items-center gap-4">
-              <motion.button
-                type="button"
-                aria-label={t("onb2HearItAgain")}
-                whileTap={{ scale: 0.92 }}
-                disabled={speaking || replays >= MAX_REPLAYS_PER_ROUND}
-                onClick={replay}
-                className="pill h-14 w-14 shrink-0 bg-violet text-white disabled:opacity-40"
-                style={{ boxShadow: "var(--shadow-glow-violet)" }}
-              >
-                <Volume2 size={22} />
-              </motion.button>
-              <div>
-                <p className="font-semibold">
-                  {round.kind === "tpr-chain"
-                    ? t("dshPlTwoSteps")
-                    : round.kind === "tpr"
-                      ? t("dshPlTapAction")
-                      : t("dshPlTapPicture")}
-                </p>
-                <p className="mt-1 text-xs text-muted">
-                  {speaking
-                    ? t("dshPlListening")
-                    : replays >= MAX_REPLAYS_PER_ROUND
-                      ? t("dshPlNoMoreReplays")
-                      : t("dshPlOneReplayIfNeed")}
-                </p>
-              </div>
-            </div>
-            <span className="text-3xl">{target.flag}</span>
-          </motion.div>
-
-          {/* picture tiles — the image is the meaning */}
-          <motion.div
-            variants={grid}
-            className={`mt-6 grid gap-3 ${round.tiles.length > 4 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"}`}
-          >
-            {round.tiles.map((tile) => {
-              const order =
-                firstPick === tile.id || chosen[0] === tile.id ? 1 : chosen[1] === tile.id ? 2 : null;
-              return (
-                <motion.button
-                  key={tile.id}
-                  type="button"
-                  variants={item}
-                  whileHover={heard ? { y: -4 } : undefined}
-                  whileTap={heard ? { scale: 0.95 } : undefined}
-                  disabled={!heard || chosen.length > 0}
-                  onClick={() => tap(tile.id)}
-                  className={`card relative flex items-center justify-center py-8 text-5xl transition-[border-color,box-shadow,opacity] duration-200 ${
-                    heard ? "" : "opacity-60"
-                  }`}
-                  style={
-                    order !== null
-                      ? { borderColor: "var(--color-violet)", boxShadow: "var(--shadow-glow-violet)" }
-                      : undefined
-                  }
-                >
-                  {tile.emoji}
-                  {isChain && order !== null && (
-                    <span className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-violet text-xs font-bold text-white">
-                      {order}
-                    </span>
-                  )}
-                </motion.button>
-              );
-            })}
-          </motion.div>
-
-          <motion.div variants={item} className="mt-7 flex justify-center">
-            <button
-              type="button"
-              onClick={() => onDone(earned, earned > 1)}
-              className="text-xs font-semibold text-muted transition-colors hover:text-ink"
-            >
-              {earned > 1
-                ? t("dshPlStopKeep").replace("{phase}", String(earned))
-                : t("dshPlStopPhase1")}
-            </button>
-          </motion.div>
-        </motion.section>
-      )}
-
-      {/* ---------- bridge: Phase 2 earned, Gate 2 offered ---------- */}
-      {stage === "bridge" && (
-        <motion.section key="pl-bridge" custom={1} variants={stepVariants} initial="enter" animate="center" exit="exit">
-          <NuriSays mood="cheer">{t("dshPlBridgeNuri")}</NuriSays>
-          <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-            {t("dshPlBridgeHeadPre")}<span className="text-orange">{t("dshPlBridgeHeadPhase")}</span>
-          </motion.h1>
-          <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-            {t("dshPlBridgeBody")
-              .replace("{correct}", String(results[0]?.correct ?? 0))
-              .replace("{total}", String(results[0]?.total ?? 0))}
-          </motion.p>
-          <motion.div variants={item} className="mt-8 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => startGate(2)}
-              className="pill bg-violet px-7 py-3 font-semibold text-white"
-              style={{ boxShadow: "var(--shadow-glow-violet)" }}
-            >
-              🪴 {t("dshPlTryGate2")}
-            </button>
-            <button
-              type="button"
-              onClick={() => onDone(2, true)}
-              className="pill bg-lime px-6 py-3 text-sm font-bold text-canvas"
-            >
-              {t("dshPlStartPhase2")} 🌿
-            </button>
-          </motion.div>
-        </motion.section>
-      )}
-
-      {/* ---------- result: honest, never shaming ---------- */}
-      {stage === "result" && (
-        <motion.section key="pl-result" custom={1} variants={stepVariants} initial="enter" animate="center" exit="exit">
-          {earned > 1 ? (
-            <>
-              <NuriSays mood="cheer">{t("dshPlResultProven")}</NuriSays>
-              <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                {t("dshPlIcebergStartsAt")}{" "}
-                <span className="text-lime">
-                  {t("phaseWord")} {earned} {phaseById(earned).emoji}
-                </span>
-              </motion.h1>
-              <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                {phaseById(earned).name} — {phaseById(earned).tagline.toLowerCase()}.{" "}
-                {t("dshPlGardenOpens").replace("{hour}", String(phaseById(earned).startHour))}
-              </motion.p>
-            </>
-          ) : (
-            <>
-              <NuriSays mood="happy">{t("dshPlPhase1Deepest")}</NuriSays>
-              <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                {t("dshPlGrowFromHello")} 🌱
-              </motion.h1>
-              <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                {t("dshPlWordsWashed")}
-              </motion.p>
-            </>
-          )}
-
-          {/* honest readout — performance, not self-report */}
-          <motion.div variants={item} className="mt-6 grid gap-2">
-            {results.map((r) => (
-              <div key={r.gate} className="card flex items-center justify-between gap-4 px-5 py-3.5 text-sm">
-                <span className="font-semibold">
-                  {t("dshPlGate")} {r.gate} · {r.gate === 1 ? t("dshPlWordsByEar") : t("dshPlQuestionsByEar")}
-                </span>
-                <span className={r.passed ? "font-bold text-lime" : "text-muted"}>
-                  {r.correct} / {r.total} · {r.pct}%{r.passed ? ` · ${t("dshPlPassed")}` : ""}
-                </span>
-              </div>
-            ))}
-          </motion.div>
-
-          <motion.div variants={item} className="mt-8">
-            <button
-              type="button"
-              onClick={() => onDone(earned, true)}
-              className="pill bg-lime px-8 py-3 font-bold text-canvas"
-              style={{ boxShadow: "0 0 50px -12px rgba(184,240,60,0.55)" }}
-            >
-              {earned > 1
-                ? `${t("dshPlContinueAs").replace("{phase}", String(earned))} ${phaseById(earned).emoji}`
-                : `${t("dshPlContinueDeepest")} 🌱`}
-            </button>
-          </motion.div>
-        </motion.section>
-      )}
-    </AnimatePresence>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* The flow                                                             */
 /* ------------------------------------------------------------------ */
 
@@ -928,15 +529,10 @@ function OnboardingFlow() {
   const [name, setName] = useState("");
   const [immersion, setImmersion] = useState(true);
 
-  // placement — an earned start, never a claimed one (default Phase 1)
-  const [placementOpen, setPlacementOpen] = useState(false);
-  const [placedPhase, setPlacedPhase] = useState<PhaseId>(1);
-  const [placementTried, setPlacementTried] = useState(false);
-
   // the invitation steps — every one of these may stay empty
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
-  const [motivation, setMotivation] = useState<string | null>(null);
+  const [motivation, setMotivation] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [dailyMinutes, setDailyMinutes] = useState<number | null>(null);
   const [exchange, setExchange] = useState(false);
@@ -956,7 +552,11 @@ function OnboardingFlow() {
     setImmersion(profile.immersion ?? true);
     setCity(profile.city ?? "");
     setCountry(profile.country ?? "");
-    setMotivation(profile.motivation ?? null);
+    // back-compat: older accounts stored a single motivation string
+    const savedMot = profile.motivation as unknown;
+    setMotivation(
+      Array.isArray(savedMot) ? (savedMot as string[]) : typeof savedMot === "string" && savedMot ? [savedMot] : []
+    );
     setInterests(profile.interests ?? []);
     setDailyMinutes(profile.dailyMinutes ?? null);
     setExchange(profile.exchange ?? false);
@@ -969,7 +569,7 @@ function OnboardingFlow() {
   /** Current invitation step left blank — the CTA turns into an honest "Skip for now". */
   const inviteStepEmpty =
     (step === 3 && city.trim() === "" && country.trim() === "") ||
-    (step === 4 && motivation === null) ||
+    (step === 4 && motivation.length === 0) ||
     (step === 5 && interests.length === 0) ||
     (step === 6 && dailyMinutes === null);
 
@@ -1005,12 +605,6 @@ function OnboardingFlow() {
     setStep(i);
   };
 
-  /** A placement belongs to one language — changing worlds clears it. */
-  const clearPlacement = () => {
-    setPlacedPhase(1);
-    setPlacementTried(false);
-  };
-
   const toggleKnown = (code: LangCode) => {
     const nextKnown = knownLangs.includes(code)
       ? knownLangs.filter((c) => c !== code)
@@ -1020,12 +614,10 @@ function OnboardingFlow() {
     setNurtureLangs((nl) => nl.filter((c) => nextKnown.includes(c)));
     if (targetLang !== null && nextKnown.includes(targetLang)) {
       setTargetLang(null);
-      clearPlacement();
     }
   };
 
   const pickTarget = (code: LangCode) => {
-    if (code !== targetLang) clearPlacement();
     setTargetLang(code);
   };
 
@@ -1036,6 +628,9 @@ function OnboardingFlow() {
 
   const toggleInterest = (id: string) =>
     setInterests((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const toggleMotivation = (id: string) =>
+    setMotivation((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const finish = () => {
     if (!role || trimmed.length === 0) return;
@@ -1056,13 +651,10 @@ function OnboardingFlow() {
       // invitation answers — saved only when given
       city: city.trim() || undefined,
       country: country.trim() || undefined,
-      motivation: motivation ?? undefined,
+      motivation: motivation.length ? motivation : undefined,
       interests,
       dailyMinutes: dailyMinutes ?? undefined,
       exchange,
-      // an earned placement seeds phase, hours and words honestly;
-      // without one, the Phase 1 defaults above stand untouched
-      ...(!nurturerOnly && placedPhase > 1 ? placementSeed(placedPhase) : null),
     };
     saveProfile(out);
     router.replace("/dashboard");
@@ -1138,21 +730,6 @@ function OnboardingFlow() {
         )}
 
         <main className="flex flex-1 flex-col justify-center py-10">
-          {/* placement replaces the steps while it runs — never a gate, always escapable */}
-          {placementOpen && target ? (
-            <PlacementPanel
-              lang={target.code}
-              t={t}
-              onDone={(earnedPhase, attempted) => {
-                setPlacementOpen(false);
-                if (attempted) {
-                  setPlacedPhase(earnedPhase);
-                  setPlacementTried(true);
-                }
-              }}
-            />
-          ) : (
-            <>
           <AnimatePresence mode="wait" custom={dir}>
             <motion.section
               key={step}
@@ -1265,52 +842,6 @@ function OnboardingFlow() {
                       />
                     ))}
                   </motion.div>
-
-                  {/* low-key placement invitation — earned starts, never claimed */}
-                  <AnimatePresence>
-                    {target && placementAvailable(target.code) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                        className="card mt-6 flex flex-wrap items-center justify-between gap-4 px-5 py-4"
-                      >
-                        {placementTried ? (
-                          <p className="text-sm font-medium">
-                            {placedPhase > 1 ? (
-                              <>
-                                🧊 {t("dshPlIcebergStartsAt")}{" "}
-                                <span className="font-bold text-lime">
-                                  {t("phaseWord")} {placedPhase} {phaseById(placedPhase).emoji}
-                                </span>
-                              </>
-                            ) : (
-                              <>🌱 {t("dshOnbPhase1Deepest")}</>
-                            )}
-                          </p>
-                        ) : (
-                          <>
-                            <div>
-                              <p className="font-semibold">
-                                🌳 {t("dshPlGrownInPre")}{target.nativeName}{t("dshPlGrownInPost")}
-                              </p>
-                              <p className="mt-1 text-sm text-muted">
-                                {t("dshOnbShowRootsHint")}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setPlacementOpen(true)}
-                              className="pill border border-line bg-white/5 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
-                            >
-                              👂 {t("dshOnbShowMyRoots")}
-                            </button>
-                          </>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </>
               )}
 
@@ -1391,8 +922,8 @@ function OnboardingFlow() {
                         key={m.id}
                         emoji={m.emoji}
                         label={t(m.labelKey)}
-                        selected={motivation === m.id}
-                        onClick={() => setMotivation((cur) => (cur === m.id ? null : m.id))}
+                        selected={motivation.includes(m.id)}
+                        onClick={() => toggleMotivation(m.id)}
                       />
                     ))}
                   </motion.div>
@@ -1434,21 +965,33 @@ function OnboardingFlow() {
                     {t("dshOnbWaterSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 grid gap-3">
-                    {PACES.map((p) => (
-                      <PaceRow
-                        key={p.minutes}
-                        minutes={p.minutes}
-                        emoji={p.emoji}
-                        identity={t(p.identityKey)}
-                        minLabel={t("minutes")}
-                        perDay={t("dshOnbPerDay")}
-                        selected={dailyMinutes === p.minutes}
-                        onClick={() =>
-                          setDailyMinutes((cur) => (cur === p.minutes ? null : p.minutes))
-                        }
-                      />
-                    ))}
+                    {PACES.map((p) => {
+                      const allIn = (p as { allIn?: boolean }).allIn ?? false;
+                      const mainLabel = allIn
+                        ? `${p.minutes / 60} ${t("hours")}`
+                        : `${p.minutes} ${t("minutes")}`;
+                      return (
+                        <PaceRow
+                          key={p.minutes}
+                          mainLabel={mainLabel}
+                          emoji={p.emoji}
+                          identity={t(p.identityKey)}
+                          perDay={t("dshOnbPerDay")}
+                          badge={allIn ? t("dshOnbGoAllIn") : undefined}
+                          selected={dailyMinutes === p.minutes}
+                          onClick={() =>
+                            setDailyMinutes((cur) => (cur === p.minutes ? null : p.minutes))
+                          }
+                        />
+                      );
+                    })}
                   </motion.div>
+                  <motion.p
+                    variants={item}
+                    className="mt-3 flex items-center justify-center gap-2 text-center text-xs text-muted"
+                  >
+                    🍂 {t("dshOnbWaterSplit")}
+                  </motion.p>
                   <motion.div
                     variants={item}
                     className="card mt-6 flex items-center justify-between gap-4 p-5"
@@ -1645,8 +1188,6 @@ function OnboardingFlow() {
               </button>
             )}
           </motion.div>
-            </>
-          )}
         </main>
       </div>
     </div>

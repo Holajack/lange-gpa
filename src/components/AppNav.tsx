@@ -90,9 +90,9 @@ export function AppNav() {
             </span>
           </button>
 
-          {/* profile */}
+          {/* profile — opens the account page (NOT onboarding) */}
           <button
-            onClick={() => router.push("/onboarding")}
+            onClick={() => router.push("/profile")}
             className="card flex shrink-0 items-center gap-3 rounded-full bg-raised/85 py-1.5 pl-1.5 pr-1.5 backdrop-blur-xl card-hover sm:pl-4"
             title={`${profile.name} — ${roleLabel}`}
           >

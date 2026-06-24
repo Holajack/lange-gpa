@@ -927,6 +927,19 @@ function FreshDashboard({ profile, t }: { profile: Profile; t: (key: string) => 
         </div>
       </motion.header>
 
+      {/* ============ start at Phase 1, grow at your pace ============ */}
+      <motion.div variants={fadeUp}>
+        <div className="card flex items-start gap-3.5 p-5">
+          <span className="text-2xl">🌱</span>
+          <div className="min-w-0">
+            <h2 className="headline text-lg">{t("dshFreshPhase1Title")}</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              {fill("dshFreshPhase1Body", { language: lang.nativeName })}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* ============ 2 · GETTING-STARTED CHECKLIST ============ */}
       <motion.div variants={fadeUp}>
         <div className="card p-5">

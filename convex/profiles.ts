@@ -42,3 +42,39 @@ export const getProfile = query({
       .unique();
   },
 });
+
+/**
+ * Public, privacy-preserving roster of real growers/nurturers for the /world
+ * map. Returns CITY-LEVEL info only — never an exact location, email, or the
+ * Clerk id (each row carries an opaque `id` plus a server-computed `me` flag).
+ * The client geocodes the city to a city-center pin; people without a city
+ * simply aren't placed on the globe.
+ */
+export const listPeople = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const myId = identity?.subject;
+    const rows = await ctx.db.query("profiles").collect();
+    return rows.map((r) => {
+      const data = (r.data ?? {}) as Record<string, unknown>;
+      const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+      const arr = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+      return {
+        id: r._id, // opaque doc id — NOT the Clerk id
+        me: r.clerkId === myId,
+        name: r.name,
+        role: r.role,
+        targetLang: r.targetLang,
+        knownLangs: arr(r.knownLangs),
+        nurtureLangs: arr(data.nurtureLangs),
+        phase: r.phase,
+        city: str(data.city),
+        country: str(data.country),
+        bio: str(data.bio),
+        interests: arr(data.interests),
+        exchange: Boolean(data.exchange),
+      };
+    });
+  },
+});

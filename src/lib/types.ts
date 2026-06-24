@@ -87,9 +87,9 @@ export interface Profile {
   country?: string;
   /** what the participant loves — picture-card worlds a nurturer can start from */
   interests?: string[];
-  /** why this language (e.g. "family roots", "someone I love") */
-  motivation?: string;
-  /** daily watering commitment in minutes (10 / 20 / 40) */
+  /** why this language — one or more reasons (e.g. "family roots", "someone I love") */
+  motivation?: string[];
+  /** daily watering commitment in minutes (20 / 40 / 60 / 120 = all-in) */
   dailyMinutes?: number;
   /** open to language exchange — you nurture yours, they nurture theirs */
   exchange?: boolean;
