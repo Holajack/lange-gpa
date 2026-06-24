@@ -9,9 +9,10 @@
 import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mic, Send, Square } from "lucide-react";
+import { Mic, Send, Square, Video } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useConversation, useConversations } from "@/lib/messages";
+import { useCallActions } from "@/components/CallProvider";
 import { Avatar } from "@/components/Avatar";
 import { Card } from "@/components/ui";
 
@@ -23,6 +24,7 @@ function MessagesInner() {
 
   const convos = useConversations();
   const { other, messages, send, sendVoice } = useConversation(withId);
+  const { startCall } = useCallActions();
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -121,6 +123,14 @@ function MessagesInner() {
               <div className="flex items-center gap-3 border-b border-line p-4">
                 <Avatar name={other.name} color="#7c5cff" size={40} ring src={other.photo} />
                 <p className="font-display text-base font-bold">{other.name}</p>
+                <button
+                  type="button"
+                  aria-label={t("callVideo")}
+                  onClick={() => withId && startCall(withId, other.name)}
+                  className="ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-violet/15 text-violet-soft transition hover:bg-violet/25"
+                >
+                  <Video size={18} />
+                </button>
               </div>
 
               <div className="flex-1 space-y-2.5 overflow-y-auto p-4">

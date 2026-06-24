@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
+import { CallProvider } from "@/components/CallProvider";
 import { useApp } from "@/lib/store";
 
 /**
@@ -34,6 +35,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <CallProvider>
     <div className="relative min-h-screen overflow-x-clip">
       {/* ambient orbs */}
       <div className="orb left-[-120px] top-[-80px] h-[340px] w-[340px] bg-violet/20" />
@@ -41,5 +43,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <AppNav />
       <main className="relative mx-auto max-w-[1400px] px-4 pb-20 pt-6 lg:px-8">{children}</main>
     </div>
+    </CallProvider>
   );
 }

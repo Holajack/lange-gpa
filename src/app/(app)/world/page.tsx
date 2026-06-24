@@ -36,6 +36,7 @@ import { NuriGlobe } from "@/components/NuriGlobe";
 import type { NuriGlobeHandle, GlobeCapital, GlobePerson } from "@/components/NuriGlobe";
 import { useRealPeople } from "@/lib/useRealPeople";
 import { useRequests } from "@/lib/requests";
+import { useCallActions } from "@/components/CallProvider";
 import type { LangCode, Nurturer } from "@/lib/types";
 
 type Spot = { city: string; lat: number; lon: number };
@@ -211,6 +212,7 @@ export default function WorldPage() {
   const globeRef = useRef<NuriGlobeHandle>(null);
   const realPeople = useRealPeople();
   const { send: sendRequest, outgoing: outgoingRequests } = useRequests();
+  const { startCall: startVideoCall } = useCallActions();
   const [requested, setRequested] = useState<Set<string>>(new Set());
 
   /** every language's capital as a globe pin, recolored for the selected one */
@@ -823,12 +825,26 @@ export default function WorldPage() {
                 )}
 
                 {!person.me && (
-                  <Link
-                    href={`/messages?with=${person.id}`}
-                    className="pill mt-2 flex w-full items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
-                  >
-                    💬 {t("msgMessage")}
-                  </Link>
+                  <div className="mt-2 flex gap-2">
+                    <Link
+                      href={`/messages?with=${person.id}`}
+                      className="pill flex flex-1 items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
+                    >
+                      💬 {t("msgMessage")}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const id = person.id;
+                        const name = person.name;
+                        setPerson(null);
+                        startVideoCall(id, name);
+                      }}
+                      className="pill flex flex-1 items-center justify-center gap-1.5 bg-violet/15 px-5 py-2.5 text-sm font-semibold text-violet-soft hover:bg-violet/25"
+                    >
+                      📹 {t("callVideo")}
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>

@@ -164,4 +164,33 @@ export default defineSchema({
     .index("by_from", ["fromClerkId"])
     .index("by_to", ["toClerkId"])
     .index("by_to_unread", ["toClerkId", "readByTo"]),
+
+  /**
+   * WebRTC 1:1 video-call signalling (Stage D3). Calls are peer-to-peer
+   * (free Google STUN); Convex only relays the SDP offer/answer and ICE
+   * candidates. No media ever touches the server.
+   */
+  calls: defineTable({
+    callerClerkId: v.string(),
+    callerName: v.string(),
+    /** caller's profile id, so the callee can call back */
+    callerProfileId: v.optional(v.id("profiles")),
+    calleeClerkId: v.string(),
+    /** "ringing" | "active" | "declined" | "ended" */
+    status: v.string(),
+    /** SDP offer/answer, JSON-stringified */
+    offer: v.optional(v.string()),
+    answer: v.optional(v.string()),
+    ts: v.number(),
+  })
+    .index("by_callee", ["calleeClerkId"])
+    .index("by_caller", ["callerClerkId"]),
+
+  iceCandidates: defineTable({
+    callId: v.id("calls"),
+    /** "caller" | "callee" — who produced this candidate */
+    sender: v.string(),
+    candidate: v.string(),
+    ts: v.number(),
+  }).index("by_call", ["callId"]),
 });
