@@ -74,6 +74,11 @@ export const listPeople = query({
         bio: str(data.bio),
         interests: arr(data.interests),
         exchange: Boolean(data.exchange),
+        hoursLogged: typeof data.hoursLogged === "number" ? data.hoursLogged : 0,
+        idealPartner: str(data.idealPartner),
+        goals: str(data.goals),
+        certificates: arr(data.certificates),
+        photoUrl: str(data.photoUrl),
       };
     });
   },

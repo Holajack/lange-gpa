@@ -33,6 +33,11 @@ export type RealPerson = {
   bio?: string;
   interests: string[];
   exchange: boolean;
+  hoursLogged?: number;
+  idealPartner?: string;
+  goals?: string;
+  certificates?: string[];
+  photoUrl?: string;
   /** city-centre coordinates once geocoded (absent until/unless resolved) */
   lat?: number;
   lng?: number;

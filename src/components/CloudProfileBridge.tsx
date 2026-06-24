@@ -32,7 +32,7 @@ const PROFILE_KEY = "lange.profile.v1";
 function Bridge() {
   const { isLoaded, isSignedIn, user } = useUser();
   const convex = useConvex();
-  const { profile, saveProfile, resetAll, setCloudState } = useApp();
+  const { profile, saveProfile, resetAll, setCloudState, updateProfile } = useApp();
 
   const loadedFor = useRef<string | null>(null); // clerkId whose account we've loaded
   const lastPushed = useRef<string>(""); // raw JSON last synced up (echo guard)
@@ -112,6 +112,13 @@ function Bridge() {
         /* offline or transient — the next change retries */
       });
   }, [profile, isSignedIn, user, convex]);
+
+  // keep the profile photo synced with the Clerk account image
+  useEffect(() => {
+    if (!isSignedIn || !user || !profile) return;
+    const img = user.imageUrl;
+    if (img && profile.photoUrl !== img) updateProfile({ photoUrl: img });
+  }, [isSignedIn, user, profile, updateProfile]);
 
   return null;
 }

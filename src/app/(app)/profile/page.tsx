@@ -9,6 +9,7 @@
  * profile" reopens the wizard pre-filled if you want to change something.
  */
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
@@ -56,6 +57,73 @@ function AccountPanel({ t }: { t: (key: string) => string }) {
       </div>
       <div className="overflow-x-auto">
         <ClerkUserProfile routing="hash" />
+      </div>
+    </Card>
+  );
+}
+
+/** Editable Tandem-style profile fields — shown to others when they tap you. */
+function AboutYouCard() {
+  const { profile, updateProfile, t } = useApp();
+  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [goals, setGoals] = useState(profile?.goals ?? "");
+  const [idealPartner, setIdealPartner] = useState(profile?.idealPartner ?? "");
+  const [certs, setCerts] = useState((profile?.certificates ?? []).join(", "));
+  const [saved, setSaved] = useState(false);
+
+  const save = () => {
+    updateProfile({
+      bio: bio.trim() || undefined,
+      goals: goals.trim() || undefined,
+      idealPartner: idealPartner.trim() || undefined,
+      certificates: certs
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean),
+    });
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1800);
+  };
+
+  const area = (label: string, value: string, set: (v: string) => void, rows: number) => (
+    <label className="block">
+      <span className="text-xs font-bold uppercase tracking-widest text-muted">{label}</span>
+      <textarea
+        value={value}
+        onChange={(e) => set(e.target.value)}
+        rows={rows}
+        className="mt-2 w-full resize-none rounded-xl border border-line bg-white/5 px-4 py-2.5 text-sm text-ink caret-violet outline-none transition-colors focus:border-violet"
+      />
+    </label>
+  );
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <h2 className="headline text-xl">🪪 {t("prfbAboutYou")}</h2>
+        <button
+          type="button"
+          onClick={save}
+          className="pill bg-violet px-4 py-2 text-sm font-semibold text-white"
+          style={{ boxShadow: "var(--shadow-glow-violet)" }}
+        >
+          {saved ? `✓ ${t("prfbSaved")}` : t("prfbSave")}
+        </button>
+      </div>
+      <p className="mb-4 text-xs text-muted">{t("prfbAboutYouSub")}</p>
+      <div className="space-y-4">
+        {area(t("prfbBio"), bio, setBio, 3)}
+        {area(t("prfbGoals"), goals, setGoals, 2)}
+        {area(t("prfbIdealPartner"), idealPartner, setIdealPartner, 2)}
+        <label className="block">
+          <span className="text-xs font-bold uppercase tracking-widest text-muted">{t("prfbCertificates")}</span>
+          <input
+            value={certs}
+            onChange={(e) => setCerts(e.target.value)}
+            className="mt-2 w-full rounded-xl border border-line bg-white/5 px-4 py-2.5 text-sm text-ink caret-violet outline-none transition-colors focus:border-violet"
+          />
+          <span className="mt-1 block text-[11px] text-muted">{t("prfbCertsHint")}</span>
+        </label>
       </div>
     </Card>
   );
@@ -115,7 +183,7 @@ export default function ProfilePage() {
         transition={{ delay: 0.06, duration: 0.5, ease: "easeOut" }}
       >
         <Card className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
-          <Avatar name={profile.name || "G"} color="#ffb52e" size={72} ring />
+          <Avatar name={profile.name || "G"} color="#ffb52e" size={72} ring src={profile.photoUrl} />
           <div className="min-w-0 flex-1">
             <p className="font-display text-2xl font-bold">{profile.name}</p>
             <p className="mt-0.5 text-sm text-muted">{roleLabel}</p>
@@ -241,6 +309,8 @@ export default function ProfilePage() {
           )}
         </Card>
       </div>
+
+      <AboutYouCard />
 
       {/* account & security (Clerk) */}
       {CLERK_ON && <AccountPanel t={t} />}

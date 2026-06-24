@@ -93,6 +93,17 @@ export interface Profile {
   dailyMinutes?: number;
   /** open to language exchange — you nurture yours, they nurture theirs */
   exchange?: boolean;
+  /* ---- Tandem-style profile (shown when someone taps you on /world) ---- */
+  /** profile photo (synced from the Clerk account image) */
+  photoUrl?: string;
+  /** a short "about me" */
+  bio?: string;
+  /** the kind of exchange partner you're hoping to meet */
+  idealPartner?: string;
+  /** what you want to achieve in the language */
+  goals?: string;
+  /** certificates / credentials, e.g. "DELE B2", "TEFL" */
+  certificates?: string[];
 }
 
 export interface Nurturer {

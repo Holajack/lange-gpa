@@ -140,6 +140,12 @@ type PersonView = {
   exchange: boolean;
   /** the signed-in user themselves (hide "request" on your own pin) */
   me?: boolean;
+  /* ---- Tandem profile (Stage B) ---- */
+  hoursLogged?: number;
+  photoUrl?: string;
+  idealPartner?: string;
+  goals?: string;
+  certificates?: string[];
 };
 
 const nurturerView = (raw: Nurturer, t: (key: string) => string): PersonView => {
@@ -247,6 +253,11 @@ export default function WorldPage() {
         phase: p.phase,
         exchange: p.exchange,
         me: p.me,
+        hoursLogged: p.hoursLogged,
+        photoUrl: p.photoUrl,
+        idealPartner: p.idealPartner,
+        goals: p.goals,
+        certificates: p.certificates,
       };
       return { view, lat: p.lat, lng: p.lng, me: p.me };
     });
@@ -703,7 +714,7 @@ export default function WorldPage() {
               </button>
 
               <div className="relative flex items-center gap-4">
-                <Avatar name={person.name} color={person.color} size={64} ring />
+                <Avatar name={person.name} color={person.color} size={64} ring src={person.photoUrl} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-display text-xl font-bold">{person.name}</p>
@@ -732,6 +743,7 @@ export default function WorldPage() {
                   {person.phase !== undefined && (
                     <span className="rounded-full bg-violet/15 px-2.5 py-1 text-[11px] font-semibold text-violet">
                       🌱 {t("phaseWord")} {person.phase}
+                      {person.hoursLogged ? ` · ${Math.round(person.hoursLogged)} ${t("hours")}` : ""}
                     </span>
                   )}
                   {person.kind === "grower" && (person.exchange || profile?.exchange) && (
@@ -750,6 +762,35 @@ export default function WorldPage() {
                     </Tag>
                   ))}
                 </div>
+
+                {(person.goals || person.idealPartner || (person.certificates?.length ?? 0) > 0) && (
+                  <div className="space-y-2.5 border-t border-line pt-3">
+                    {person.goals && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted">🎯 {t("prfbGoals")}</p>
+                        <p className="mt-0.5 text-sm leading-relaxed text-ink">{person.goals}</p>
+                      </div>
+                    )}
+                    {person.idealPartner && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted">🤝 {t("prfbIdealPartner")}</p>
+                        <p className="mt-0.5 text-sm leading-relaxed text-ink">{person.idealPartner}</p>
+                      </div>
+                    )}
+                    {person.certificates && person.certificates.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted">🏅 {t("prfbCertificates")}</p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {person.certificates.map((c) => (
+                            <Tag key={c} className="px-2 py-0.5 text-[10px]">
+                              {c}
+                            </Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {person.me ? (
                   <p className="pill mt-1 flex justify-center bg-white/5 px-5 py-2.5 text-sm font-semibold text-muted">
