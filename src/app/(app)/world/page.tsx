@@ -116,6 +116,9 @@ const CULTURE: Partial<Record<LangCode, string[]>> = {
 const NURTURER_DOT = "#ff8a1e"; // orange
 const GROWER_DOT = "#7c5cff"; // violet
 
+/** Demo growers/nurturers are hidden — the map shows only real signed-up people. */
+const SHOW_DEMO_PEOPLE: boolean = false;
+
 /** One card-able human, whichever side of the session they sit on. */
 type PersonView = {
   kind: "nurturer" | "grower";
@@ -191,8 +194,9 @@ export default function WorldPage() {
   const mascot = MASCOTS.find((m) => m.id === selId) ?? MASCOTS[0];
   const lang = langByCode(mascot.lang);
   const spot = spotOf(mascot.lang);
-  const nurturers = nurturersForLang(mascot.lang);
-  const growers = participantsForLang(mascot.lang);
+  // demo people off — show only real signed-up growers/nurturers
+  const nurturers = SHOW_DEMO_PEOPLE ? nurturersForLang(mascot.lang) : [];
+  const growers = SHOW_DEMO_PEOPLE ? participantsForLang(mascot.lang) : [];
   const bullets = CULTURE[mascot.lang] ?? [];
 
   const globeRef = useRef<NuriGlobeHandle>(null);
@@ -241,8 +245,8 @@ export default function WorldPage() {
       return { view, lat: p.lat, lng: p.lng, me: p.me };
     });
 
-  /** demo + real, merged for the globe pins and click lookup */
-  const demoPins = peopleOnGlobe(mascot.lang, t);
+  /** demo (off) + real, merged for the globe pins and click lookup */
+  const demoPins = SHOW_DEMO_PEOPLE ? peopleOnGlobe(mascot.lang, t) : [];
   const realPins = realForLang.filter((r) => r.lat != null && r.lng != null);
   const peoplePins = [
     ...demoPins,
