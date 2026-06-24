@@ -6,7 +6,6 @@ import { useApp } from "@/lib/store";
 import { langByCode } from "@/lib/languages";
 import { Logo } from "./Logo";
 import { Avatar } from "./Avatar";
-import { AuthCorner } from "./AuthCorner";
 
 const TABS = [
   { key: "courses", href: "/courses" },
@@ -102,9 +101,6 @@ export function AppNav() {
             </span>
             <Avatar name={profile.name || "G"} color="#ffb52e" size={38} />
           </button>
-
-          {/* account (only renders when Clerk is configured) */}
-          <AuthCorner />
         </div>
       </header>
 
