@@ -141,4 +141,24 @@ export default defineSchema({
     .index("by_to", ["toClerkId"])
     .index("by_from", ["fromClerkId"])
     .index("by_pair", ["fromClerkId", "toClerkId"]),
+
+  /**
+   * 1:1 messages between two people (Stage D). `convoKey` is the sorted pair of
+   * Clerk ids so both directions land in one thread. `kind` is "text" for now;
+   * voice notes (Convex storage) and call invites will reuse this table.
+   */
+  messages: defineTable({
+    convoKey: v.string(),
+    fromClerkId: v.string(),
+    fromName: v.string(),
+    toClerkId: v.string(),
+    kind: v.string(),
+    text: v.string(),
+    ts: v.number(),
+    readByTo: v.boolean(),
+  })
+    .index("by_convo", ["convoKey"])
+    .index("by_from", ["fromClerkId"])
+    .index("by_to", ["toClerkId"])
+    .index("by_to_unread", ["toClerkId", "readByTo"]),
 });

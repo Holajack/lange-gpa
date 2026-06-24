@@ -821,6 +821,15 @@ export default function WorldPage() {
                     📨 {t("reqRequestSession")}
                   </button>
                 )}
+
+                {!person.me && (
+                  <Link
+                    href={`/messages?with=${person.id}`}
+                    className="pill mt-2 flex w-full items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
+                  >
+                    💬 {t("msgMessage")}
+                  </Link>
+                )}
               </div>
             </motion.div>
           </motion.div>

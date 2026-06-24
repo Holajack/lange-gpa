@@ -6,6 +6,7 @@ import { useApp } from "@/lib/store";
 import { langByCode } from "@/lib/languages";
 import { Logo } from "./Logo";
 import { Avatar } from "./Avatar";
+import { useUnread } from "@/lib/messages";
 
 const TABS = [
   { key: "courses", href: "/courses" },
@@ -13,6 +14,7 @@ const TABS = [
   { key: "marketplace", href: "/marketplace" },
   { key: "schedule", href: "/schedule" },
   { key: "world", href: "/world" },
+  { key: "messages", href: "/messages" },
   { key: "forum", href: "/forum" },
   { key: "wallet", href: "/wallet" },
 ];
@@ -24,8 +26,16 @@ export function AppNav() {
   const { profile, t, toggleImmersion } = useApp();
   const pathname = usePathname();
   const router = useRouter();
+  const unread = useUnread();
 
   if (!profile) return null;
+
+  const unreadBadge = (key: string) =>
+    key === "messages" && unread > 0 ? (
+      <span className="ml-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-lime px-1 text-[10px] font-bold text-canvas">
+        {unread}
+      </span>
+    ) : null;
 
   const target = langByCode(profile.targetLang);
   const known = profile.knownLangs.map(langByCode);
@@ -54,6 +64,7 @@ export function AppNav() {
             {tabs.map((tab) => (
               <Link key={tab.key} href={tab.href} className={tabClass(tab, "px-4 py-2.5 text-sm lg:px-6")}>
                 {t(tab.key)}
+                {unreadBadge(tab.key)}
               </Link>
             ))}
           </nav>
@@ -113,6 +124,7 @@ export function AppNav() {
           {tabs.map((tab) => (
             <Link key={tab.key} href={tab.href} className={tabClass(tab, "shrink-0 px-4 py-2 text-sm")}>
               {t(tab.key)}
+              {unreadBadge(tab.key)}
             </Link>
           ))}
         </div>
