@@ -35,6 +35,7 @@ import { Card, SectionTitle, Tag } from "@/components/ui";
 import { NuriGlobe } from "@/components/NuriGlobe";
 import type { NuriGlobeHandle, GlobeCapital, GlobePerson } from "@/components/NuriGlobe";
 import { useRealPeople } from "@/lib/useRealPeople";
+import { useRequests } from "@/lib/requests";
 import type { LangCode, Nurturer } from "@/lib/types";
 
 type Spot = { city: string; lat: number; lon: number };
@@ -137,6 +138,8 @@ type PersonView = {
   phase?: number;
   /** role "both" — they nurture back, open to exchange */
   exchange: boolean;
+  /** the signed-in user themselves (hide "request" on your own pin) */
+  me?: boolean;
 };
 
 const nurturerView = (raw: Nurturer, t: (key: string) => string): PersonView => {
@@ -201,6 +204,8 @@ export default function WorldPage() {
 
   const globeRef = useRef<NuriGlobeHandle>(null);
   const realPeople = useRealPeople();
+  const { send: sendRequest, outgoing: outgoingRequests } = useRequests();
+  const [requested, setRequested] = useState<Set<string>>(new Set());
 
   /** every language's capital as a globe pin, recolored for the selected one */
   const capitals: GlobeCapital[] = MASCOTS.map((m) => {
@@ -241,6 +246,7 @@ export default function WorldPage() {
         speaks: p.knownLangs,
         phase: p.phase,
         exchange: p.exchange,
+        me: p.me,
       };
       return { view, lat: p.lat, lng: p.lng, me: p.me };
     });
@@ -745,20 +751,34 @@ export default function WorldPage() {
                   ))}
                 </div>
 
-                {person.kind === "nurturer" ? (
-                  <Link
-                    href="/schedule"
-                    className="pill mt-1 flex justify-center bg-orange px-5 py-2.5 text-sm font-semibold text-canvas"
-                  >
-                    📅 {t("bookSession")}
-                  </Link>
+                {person.me ? (
+                  <p className="pill mt-1 flex justify-center bg-white/5 px-5 py-2.5 text-sm font-semibold text-muted">
+                    ⭐ {t("reqThisIsYou")}
+                  </p>
+                ) : requested.has(person.id) ||
+                  outgoingRequests.some((o) => o.toName === person.name && o.status === "pending") ? (
+                  <p className="pill mt-1 flex justify-center bg-lime/15 px-5 py-2.5 text-sm font-semibold text-lime">
+                    ✓ {t("reqRequested")}
+                  </p>
                 ) : (
-                  <Link
-                    href="/forum"
-                    className="pill mt-1 flex justify-center bg-violet px-5 py-2.5 text-sm font-semibold text-white"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const id = person.id;
+                      setRequested((s) => new Set(s).add(id));
+                      void sendRequest(id, mascot.lang).catch(() =>
+                        setRequested((s) => {
+                          const n = new Set(s);
+                          n.delete(id);
+                          return n;
+                        }),
+                      );
+                    }}
+                    className="pill mt-1 flex w-full justify-center bg-violet px-5 py-2.5 text-sm font-semibold text-white"
+                    style={{ boxShadow: "var(--shadow-glow-violet)" }}
                   >
-                    👋 {t("wldWaveHello")}
-                  </Link>
+                    📨 {t("reqRequestSession")}
+                  </button>
                 )}
               </div>
             </motion.div>

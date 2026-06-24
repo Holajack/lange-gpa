@@ -119,4 +119,26 @@ export default defineSchema({
     /** Client timestamp (ms since epoch). */
     ts: v.number(),
   }).index("by_clerkId", ["clerkId"]),
+
+  /**
+   * Session requests between two real people (Tandem-style): one person taps
+   * another on /world and asks to practice together; the recipient sees it and
+   * accepts or declines. Keyed by Clerk ids resolved server-side from the
+   * opaque profile id the client sends — the client never sees Clerk ids.
+   */
+  requests: defineTable({
+    fromClerkId: v.string(),
+    fromName: v.string(),
+    toClerkId: v.string(),
+    toName: v.string(),
+    /** LangCode they'd practice together, e.g. "ru". */
+    lang: v.string(),
+    message: v.optional(v.string()),
+    /** "pending" | "accepted" | "declined" */
+    status: v.string(),
+    ts: v.number(),
+  })
+    .index("by_to", ["toClerkId"])
+    .index("by_from", ["fromClerkId"])
+    .index("by_pair", ["fromClerkId", "toClerkId"]),
 });

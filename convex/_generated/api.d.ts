@@ -11,6 +11,7 @@
 import type * as bookings from "../bookings.js";
 import type * as credits from "../credits.js";
 import type * as profiles from "../profiles.js";
+import type * as requests from "../requests.js";
 import type * as sessions from "../sessions.js";
 import type * as waitlist from "../waitlist.js";
 
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   bookings: typeof bookings;
   credits: typeof credits;
   profiles: typeof profiles;
+  requests: typeof requests;
   sessions: typeof sessions;
   waitlist: typeof waitlist;
 }>;

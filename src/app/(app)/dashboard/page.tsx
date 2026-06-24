@@ -19,6 +19,7 @@ import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
 import { MascotImage } from "@/components/MascotImage";
 import { ProgressBar, SectionTitle } from "@/components/ui";
+import { SessionRequests } from "@/components/SessionRequests";
 
 /* ---------------------------------------------------------------- *
  *  Content maps (GPA practice content — target language ONLY)
@@ -210,6 +211,7 @@ export default function DashboardPage() {
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
+      <SessionRequests />
       {/* ============ Greeting ============ */}
       <motion.header variants={fadeUp} className="flex flex-wrap items-end justify-between gap-3 pt-2">
         <div>
@@ -883,6 +885,7 @@ function FreshDashboard({ profile, t }: { profile: Profile; t: (key: string) => 
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-6">
+      <SessionRequests />
       {/* ============ 1 · WELCOME HERO ============ */}
       <motion.header variants={fadeUp}>
         <div className="card relative overflow-hidden p-5 sm:p-7">
