@@ -68,8 +68,8 @@ export interface Profile {
   knownLangs: LangCode[];
   /** the language being grown into (grower) */
   targetLang: LangCode;
-  /** languages a nurturer can nurture in */
-  nurtureLangs: LangCode[];
+  /** languages a nurturer can nurture in — absent on accounts saved before this field existed */
+  nurtureLangs?: LangCode[];
   /** show UI in target language for immersion */
   immersion: boolean;
   phase: PhaseId;

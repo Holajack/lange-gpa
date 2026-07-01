@@ -137,7 +137,7 @@ export default function ProfilePage() {
 
   const target = langByCode(profile.targetLang);
   const known = profile.knownLangs.filter((c) => c !== profile.targetLang).map(langByCode);
-  const nurture = profile.nurtureLangs.map(langByCode);
+  const nurture = (profile.nurtureLangs ?? []).map(langByCode);
   const roleLabel =
     profile.role === "nurturer"
       ? t("nurturerWord")

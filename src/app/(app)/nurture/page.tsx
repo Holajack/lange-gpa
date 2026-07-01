@@ -696,7 +696,8 @@ export default function NurturePage() {
   const [lang, setLang] = useState<LangCode | null>(null);
   const langChoices = useMemo(() => {
     if (!profile) return [] as LangCode[];
-    const all = profile.nurtureLangs.length > 0 ? profile.nurtureLangs : [profile.targetLang];
+    const nurtureLangs = profile.nurtureLangs ?? [];
+    const all = nurtureLangs.length > 0 ? nurtureLangs : [profile.targetLang];
     return [...new Set(all)];
   }, [profile]);
 
