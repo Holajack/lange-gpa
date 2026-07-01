@@ -686,6 +686,47 @@ function GrowerGate() {
 }
 
 /* ---------------------------------------------------------------- *
+ *  Training gate — a nurturer must pass the golden-rules check once
+ *  before the bench unlocks. See /nurture/training.
+ * ---------------------------------------------------------------- */
+
+function TrainingGate() {
+  const { t, profile } = useApp();
+  const failedBefore = profile?.nurturerCertStatus === "failed";
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 26, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.55, ease: "easeOut" }}
+        className="w-full max-w-xl"
+      >
+        <Card className="relative overflow-hidden p-8 text-center sm:p-10">
+          <div className="orb -left-20 -top-20 h-56 w-56 bg-orange/20" />
+          <div className="flex justify-center">
+            <Mascot size={150} mood="cheer" />
+          </div>
+          <h1 className="headline mt-4 text-3xl lg:text-4xl">{t("nurTrainGateTitle")}</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">{t("nurTrainGateBody")}</p>
+          {failedBefore && (
+            <p className="mx-auto mt-3 max-w-md text-sm font-semibold text-orange">{t("nurTrainGateRetryNote")}</p>
+          )}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/nurture/training"
+              className="pill bg-orange px-7 py-3.5 font-semibold text-canvas"
+              style={{ boxShadow: "var(--shadow-glow-orange)" }}
+            >
+              {t("nurTrainGateCta")} →
+            </Link>
+          </div>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- *
  *  Page
  * ---------------------------------------------------------------- */
 
@@ -703,6 +744,7 @@ export default function NurturePage() {
 
   if (!profile) return null;
   if (profile.role === "grower") return <GrowerGate />;
+  if (profile.nurturerCertStatus !== "passed") return <TrainingGate />;
 
   const activeLang: LangCode = lang ?? langChoices[0] ?? profile.targetLang;
   /** card decks + cues exist for the eight core languages; demo langs borrow Spanish */

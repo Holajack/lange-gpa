@@ -44,6 +44,50 @@ export const getProfile = query({
 });
 
 /**
+ * Site-owner allowlist for admin-only queries. Checked against the Clerk
+ * identity's email claim (present when the JWT template includes it) — if
+ * your Clerk JWT template doesn't emit `email`, this check fails closed
+ * (nobody gets through) rather than open, so tighten by adding the claim
+ * or switching to a `identity.subject` (Clerk user id) allowlist instead.
+ */
+const OWNER_EMAILS = ["jacken.holland@gmail.com"];
+
+/**
+ * Admin-only roster of everyone who has taken (or needs to take) the
+ * nurturer training quiz, so the site owner can spot-check readiness after
+ * the fact rather than gating live sign-ups on manual review. Throws for
+ * anyone not on `OWNER_EMAILS`.
+ */
+export const listNurturerCertifications = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const email = identity?.email ? String(identity.email) : undefined;
+    if (!email || !OWNER_EMAILS.includes(email)) {
+      throw new Error("Not authorized");
+    }
+    const rows = await ctx.db.query("profiles").collect();
+    return rows
+      .filter((r) => r.role !== "grower")
+      .map((r) => {
+        const data = (r.data ?? {}) as Record<string, unknown>;
+        const arr = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+        return {
+          id: r._id,
+          name: r.name,
+          role: r.role,
+          nurtureLangs: arr(data.nurtureLangs),
+          certStatus: typeof data.nurturerCertStatus === "string" ? data.nurturerCertStatus : "not_started",
+          certScore: typeof data.nurturerCertScore === "number" ? data.nurturerCertScore : undefined,
+          certAttempts: typeof data.nurturerCertAttempts === "number" ? data.nurturerCertAttempts : 0,
+          certPassedAt: typeof data.nurturerCertPassedAt === "string" ? data.nurturerCertPassedAt : undefined,
+          certMissed: arr(data.nurturerCertMissed),
+        };
+      });
+  },
+});
+
+/**
  * Public, privacy-preserving roster of real growers/nurturers for the /world
  * map. Returns CITY-LEVEL info only — never an exact location, email, or the
  * Clerk id (each row carries an opaque `id` plus a server-computed `me` flag).

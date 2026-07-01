@@ -70,6 +70,16 @@ export interface Profile {
   targetLang: LangCode;
   /** languages a nurturer can nurture in — absent on accounts saved before this field existed */
   nurtureLangs?: LangCode[];
+  /** nurturer training/certification status — gates the Nurturer Studio beyond role selection */
+  nurturerCertStatus?: "not_started" | "passed" | "failed";
+  /** most recent training-quiz score, 0-100 */
+  nurturerCertScore?: number;
+  /** total training-quiz attempts (pass or fail) */
+  nurturerCertAttempts?: number;
+  /** ISO date the nurturer most recently passed the training quiz */
+  nurturerCertPassedAt?: string;
+  /** ids of golden-rule quiz questions missed on the most recent attempt — for later owner review */
+  nurturerCertMissed?: string[];
   /** show UI in target language for immersion */
   immersion: boolean;
   phase: PhaseId;
