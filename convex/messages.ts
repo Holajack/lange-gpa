@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { displayName, requireIdentity, resolveTarget } from "./util";
 
 /**
  * 1:1 messaging (Stage D, text layer). The client targets a person by their
@@ -13,26 +14,17 @@ const convoKeyOf = (a: string, b: string) => [a, b].sort().join("|");
 export const sendMessage = mutation({
   args: { toProfileId: v.id("profiles"), text: v.string() },
   handler: async (ctx, { toProfileId, text }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    const from = await requireIdentity(ctx);
     const body = text.trim();
     if (!body) return null;
-    const from = identity.subject;
-
-    const toProfile = await ctx.db.get(toProfileId);
-    if (!toProfile) throw new Error("Person not found");
+    const toProfile = await resolveTarget(ctx, toProfileId, from, "message");
     const to = toProfile.clerkId;
-    if (to === from) throw new Error("Cannot message yourself");
-
-    const me = await ctx.db
-      .query("profiles")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", from))
-      .unique();
+    const fromName = await displayName(ctx, from);
 
     return await ctx.db.insert("messages", {
       convoKey: convoKeyOf(from, to),
       fromClerkId: from,
-      fromName: me?.name ?? "Someone",
+      fromName,
       toClerkId: to,
       kind: "text",
       text: body.slice(0, 2000),
@@ -193,21 +185,14 @@ export const generateUploadUrl = mutation({
 export const sendVoice = mutation({
   args: { toProfileId: v.id("profiles"), storageId: v.id("_storage"), durationSec: v.number() },
   handler: async (ctx, { toProfileId, storageId, durationSec }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-    const from = identity.subject;
-    const toProfile = await ctx.db.get(toProfileId);
-    if (!toProfile) throw new Error("Person not found");
+    const from = await requireIdentity(ctx);
+    const toProfile = await resolveTarget(ctx, toProfileId, from, "message");
     const to = toProfile.clerkId;
-    if (to === from) throw new Error("Cannot message yourself");
-    const me = await ctx.db
-      .query("profiles")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", from))
-      .unique();
+    const fromName = await displayName(ctx, from);
     return await ctx.db.insert("messages", {
       convoKey: convoKeyOf(from, to),
       fromClerkId: from,
-      fromName: me?.name ?? "Someone",
+      fromName,
       toClerkId: to,
       kind: "voice",
       text: "",

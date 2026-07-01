@@ -8,13 +8,13 @@
  * @module
  */
 
-import type * as bookings from "../bookings.js";
 import type * as calls from "../calls.js";
 import type * as credits from "../credits.js";
 import type * as messages from "../messages.js";
+import type * as parties from "../parties.js";
 import type * as profiles from "../profiles.js";
 import type * as requests from "../requests.js";
-import type * as sessions from "../sessions.js";
+import type * as util from "../util.js";
 import type * as waitlist from "../waitlist.js";
 
 import type {
@@ -24,13 +24,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  bookings: typeof bookings;
   calls: typeof calls;
   credits: typeof credits;
   messages: typeof messages;
+  parties: typeof parties;
   profiles: typeof profiles;
   requests: typeof requests;
-  sessions: typeof sessions;
+  util: typeof util;
   waitlist: typeof waitlist;
 }>;
 

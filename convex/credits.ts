@@ -14,30 +14,6 @@ import { v } from "convex/values";
  * recordEntry keeps the cache in step with each appended row.
  */
 
-/** A grower's wallet totals, or null before their first entry. */
-export const getWallet = query({
-  args: { clerkId: v.string() },
-  handler: async (ctx, { clerkId }) => {
-    return await ctx.db
-      .query("wallets")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .unique();
-  },
-});
-
-/** The wallet's history, newest first. `limit` caps the rows returned. */
-export const listLedger = query({
-  args: { clerkId: v.string(), limit: v.optional(v.number()) },
-  handler: async (ctx, { clerkId, limit }) => {
-    const rows = await ctx.db
-      .query("ledger")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .collect();
-    rows.sort((a, b) => b.ts - a.ts);
-    return typeof limit === "number" ? rows.slice(0, limit) : rows;
-  },
-});
-
 /**
  * Append one ledger row and fold its effect into the wallet totals:
  *   earned    → exchangeHours += amount, lifetimeEarned += amount

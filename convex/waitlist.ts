@@ -43,12 +43,3 @@ export const join = mutation({
     });
   },
 });
-
-/** How many people are waiting at the door. */
-export const count = query({
-  args: {},
-  handler: async (ctx) => {
-    const rows = await ctx.db.query("waitlist").collect();
-    return rows.length;
-  },
-});

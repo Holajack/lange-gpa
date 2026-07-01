@@ -20,14 +20,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/lib/store";
 import { langByCode } from "@/lib/languages";
 import { MASCOTS, mascotForLang, type MascotDef } from "@/lib/mascots";
-import { nurturersForLang } from "@/lib/nurturers";
-import { localizedNurturer, tagKey } from "@/lib/nurturerI18n";
-import {
-  NURTURER_COORDS,
-  NURTURER_COUNTRIES,
-  participantsForLang,
-  type Participant,
-} from "@/lib/participants";
 import { speak } from "@/lib/tts";
 import { Avatar } from "@/components/Avatar";
 import { MascotImage } from "@/components/MascotImage";
@@ -37,7 +29,7 @@ import type { NuriGlobeHandle, GlobeCapital, GlobePerson } from "@/components/Nu
 import { useRealPeople } from "@/lib/useRealPeople";
 import { useRequests } from "@/lib/requests";
 import { useCallActions } from "@/components/CallProvider";
-import type { LangCode, Nurturer } from "@/lib/types";
+import type { LangCode } from "@/lib/types";
 
 type Spot = { city: string; lat: number; lon: number };
 
@@ -118,9 +110,6 @@ const CULTURE: Partial<Record<LangCode, string[]>> = {
 const NURTURER_DOT = "#ff8a1e"; // orange
 const GROWER_DOT = "#7c5cff"; // violet
 
-/** Demo growers/nurturers are hidden — the map shows only real signed-up people. */
-const SHOW_DEMO_PEOPLE: boolean = false;
-
 /** One card-able human, whichever side of the session they sit on. */
 type PersonView = {
   kind: "nurturer" | "grower";
@@ -149,50 +138,6 @@ type PersonView = {
   certificates?: string[];
 };
 
-const nurturerView = (raw: Nurturer, t: (key: string) => string): PersonView => {
-  const n = localizedNurturer(raw, t);
-  return {
-    kind: "nurturer",
-    id: n.id,
-    name: n.name,
-    color: n.color,
-    city: n.city,
-    country: NURTURER_COUNTRIES[n.id],
-    online: n.online,
-    bio: n.bio,
-    tags: n.tags,
-    speaks: n.langs,
-    exchange: false,
-  };
-};
-
-const participantView = (p: Participant): PersonView => ({
-  kind: "grower",
-  id: p.id,
-  name: p.name,
-  color: p.color,
-  city: p.city,
-  country: p.country,
-  online: p.online,
-  bio: p.bio,
-  tags: p.tags,
-  growing: p.growingLang,
-  speaks: p.knownLangs,
-  phase: p.phase,
-  exchange: p.role === "both",
-});
-
-/** Everyone pinned on the planet for a language — city coords + card data. */
-const peopleOnGlobe = (
-  lang: LangCode,
-  t: (key: string) => string,
-): { lat: number; lng: number; view: PersonView }[] => [
-  ...nurturersForLang(lang).flatMap((n) => {
-    const c = NURTURER_COORDS[n.id];
-    return c ? [{ lat: c.lat, lng: c.lng, view: nurturerView(n, t) }] : [];
-  }),
-  ...participantsForLang(lang).map((p) => ({ lat: p.lat, lng: p.lng, view: participantView(p) })),
-];
 
 export default function WorldPage() {
   const { profile, t } = useApp();
@@ -204,9 +149,6 @@ export default function WorldPage() {
   const mascot = MASCOTS.find((m) => m.id === selId) ?? MASCOTS[0];
   const lang = langByCode(mascot.lang);
   const spot = spotOf(mascot.lang);
-  // demo people off — show only real signed-up growers/nurturers
-  const nurturers = SHOW_DEMO_PEOPLE ? nurturersForLang(mascot.lang) : [];
-  const growers = SHOW_DEMO_PEOPLE ? participantsForLang(mascot.lang) : [];
   const bullets = CULTURE[mascot.lang] ?? [];
 
   const globeRef = useRef<NuriGlobeHandle>(null);
@@ -264,43 +206,27 @@ export default function WorldPage() {
       return { view, lat: p.lat, lng: p.lng, me: p.me };
     });
 
-  /** demo (off) + real, merged for the globe pins and click lookup */
-  const demoPins = SHOW_DEMO_PEOPLE ? peopleOnGlobe(mascot.lang, t) : [];
+  /** real signed-up people, placed by city; click lookup by id */
   const realPins = realForLang.filter((r) => r.lat != null && r.lng != null);
-  const peoplePins = [
-    ...demoPins,
-    ...realPins.map((r) => ({ lat: r.lat as number, lng: r.lng as number, view: r.view })),
-  ];
-  const people: GlobePerson[] = [
-    ...demoPins.map(({ lat, lng, view }) => ({
-      id: view.id,
-      lat,
-      lng,
-      color: view.color,
-      name: view.name,
-      kind: view.kind,
-    })),
-    ...realPins.map((r) => ({
-      id: r.view.id,
-      lat: r.lat as number,
-      lng: r.lng as number,
-      color: r.view.color,
-      name: r.view.name,
-      kind: r.view.kind,
-      me: r.me,
-    })),
-  ];
+  const peoplePins = realPins.map((r) => ({ lat: r.lat as number, lng: r.lng as number, view: r.view }));
+  const people: GlobePerson[] = realPins.map((r) => ({
+    id: r.view.id,
+    lat: r.lat as number,
+    lng: r.lng as number,
+    color: r.view.color,
+    name: r.view.name,
+    kind: r.view.kind,
+    me: r.me,
+  }));
   const viewById = new Map(peoplePins.map(({ view }) => [view.id, view] as const));
 
-  /** side-panel lists: demo + real, by their role for this language */
-  const nurturerViews: PersonView[] = [
-    ...nurturers.map((n) => nurturerView(n, t)),
-    ...realForLang.filter((r) => r.view.kind === "nurturer").map((r) => r.view),
-  ];
-  const growerViews: PersonView[] = [
-    ...growers.map((p) => participantView(p)),
-    ...realForLang.filter((r) => r.view.kind === "grower").map((r) => r.view),
-  ];
+  /** side-panel lists: real people by their role for this language */
+  const nurturerViews: PersonView[] = realForLang
+    .filter((r) => r.view.kind === "nurturer")
+    .map((r) => r.view);
+  const growerViews: PersonView[] = realForLang
+    .filter((r) => r.view.kind === "grower")
+    .map((r) => r.view);
   const growerContext = (v: PersonView) =>
     v.growing === mascot.lang
       ? `${t("wldGrowing")} ${lang.flag}`
@@ -623,56 +549,12 @@ export default function WorldPage() {
                   {/* nurturers who live there */}
                   <SectionTitle sub={`${lang.flag} ${lang.nativeName}`}>{t("availableNurturers")}</SectionTitle>
 
-                  {nurturers.length === 0 ? (
-                    <Card className="flex items-center gap-3 p-4">
-                      <span className="text-2xl">🌍</span>
-                      <p className="text-sm text-muted">
-                        {lang.nativeName} {t("wldMoreNurturersWide")}
-                      </p>
-                    </Card>
-                  ) : (
-                    <div className="space-y-3">
-                      {nurturers.map((n, i) => (
-                        <motion.div
-                          key={n.id}
-                          initial={{ opacity: 0, x: -18 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.06 * i, duration: 0.4, ease: "easeOut" }}
-                        >
-                          <Card hover className="flex items-center gap-3 p-4">
-                            <Avatar name={n.name} color={n.color} size={48} ring />
-                            <button
-                              type="button"
-                              onClick={() => setPerson(nurturerView(n, t))}
-                              className="min-w-0 flex-1 text-left"
-                            >
-                              <div className="flex items-center gap-2">
-                                <p className="truncate font-display text-sm font-bold">{n.name}</p>
-                                {n.online && (
-                                  <span
-                                    className="pulsedot h-2 w-2 shrink-0 rounded-full bg-mint"
-                                    title={t("online")}
-                                    aria-label={t("online")}
-                                  />
-                                )}
-                              </div>
-                              <p className="truncate text-xs text-muted">📍 {n.city}</p>
-                              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                {n.tags.slice(0, 3).map((tag) => (
-                                  <Tag key={tag} className="px-2 py-0.5 text-[10px]">
-                                    {t(tagKey(tag))}
-                                  </Tag>
-                                ))}
-                              </div>
-                            </button>
-                            <Link href="/schedule" className="pill shrink-0 bg-violet px-4 py-2 text-xs font-semibold text-white sm:text-sm">
-                              {t("bookSession")}
-                            </Link>
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
+                  <Card className="flex items-center gap-3 p-4">
+                    <span className="text-2xl">🌍</span>
+                    <p className="text-sm text-muted">
+                      {lang.nativeName} {t("wldMoreNurturersWide")}
+                    </p>
+                  </Card>
                 </>
               )}
             </motion.div>

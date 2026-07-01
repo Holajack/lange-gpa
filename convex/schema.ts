@@ -6,9 +6,6 @@ import { v } from "convex/values";
  *
  * Mirrors the localStorage `Profile` shape in src/lib/types.ts so that
  * profile sync can replace localStorage without a data-model change.
- * `sessionEvents` is the realtime channel for nurturer-led sessions:
- * the nurturer's device appends events; the grower's device subscribes
- * via `eventsByRoom` and replays them (card reveals, review asks, etc.).
  */
 export default defineSchema({
   profiles: defineTable({
@@ -36,17 +33,6 @@ export default defineSchema({
     data: v.optional(v.any()),
   }).index("by_clerkId", ["clerkId"]),
 
-  bookings: defineTable({
-    /** Clerk id of the grower who booked the slot. */
-    growerClerkId: v.string(),
-    /** Nurturer id from the in-app directory (or "nuri" for the AI nurturer). */
-    nurturerId: v.string(),
-    /** Slot start time as an ISO 8601 string. */
-    slotISO: v.string(),
-    /** "pending" | "confirmed" | "completed" | "cancelled". */
-    status: v.string(),
-  }).index("by_grower", ["growerClerkId"]),
-
   /**
    * Pre-launch interest list (the /early page).
    * One row per email — `waitlist:join` dedupes on the by_email index,
@@ -62,24 +48,6 @@ export default defineSchema({
     /** Client timestamp (ms since epoch). */
     ts: v.number(),
   }).index("by_email", ["email"]),
-
-  /**
-   * Realtime event log for live two-device GPA sessions.
-   * Event types (see the CONVEX_SYNC marker in the session room):
-   *   "reveal"      — nurturer reveals a picture card to the grower
-   *   "review_ask"  — nurturer asks a review question ("Где …?")
-   *   "answer"      — grower's answer (card index / correctness)
-   *   "role_switch" — dictation control passes to the other participant
-   */
-  sessionEvents: defineTable({
-    roomId: v.string(),
-    /** Monotonic per-room sequence number, assigned server-side. */
-    seq: v.number(),
-    type: v.string(),
-    payload: v.any(),
-    /** Server timestamp (ms since epoch). */
-    ts: v.number(),
-  }).index("by_room", ["roomId"]),
 
   /**
    * One wallet per Clerk user — the running totals for the credit system.
@@ -193,4 +161,44 @@ export default defineSchema({
     candidate: v.string(),
     ts: v.number(),
   }).index("by_call", ["callId"]),
+
+  /**
+   * Language parties (Stage E) — Tandem/Meetup-style group sessions. Anyone can
+   * host a party in a language and others RSVP; past parties become the user's
+   * session history. The host's Clerk id is resolved server-side (clients only
+   * ever see the opaque party doc id). One `partyGuests` row per attendee; the
+   * host is auto-added as the first guest.
+   */
+  parties: defineTable({
+    hostClerkId: v.string(),
+    hostName: v.string(),
+    title: v.string(),
+    /** what you'll actually do together (optional free text) */
+    topic: v.optional(v.string()),
+    /** LangCode the party runs in, e.g. "ru" */
+    lang: v.string(),
+    /** "party" | "club" | "practice" — flavour only, no behaviour change */
+    kind: v.string(),
+    /** start time, ms since epoch */
+    startsAt: v.number(),
+    durationMin: v.number(),
+    /** max attendees incl. host; undefined = open / unlimited */
+    capacity: v.optional(v.number()),
+    /** "scheduled" | "cancelled" */
+    status: v.string(),
+    ts: v.number(),
+  })
+    .index("by_starts", ["startsAt"])
+    .index("by_host", ["hostClerkId"]),
+
+  /** One row per person attending a party (the host included). */
+  partyGuests: defineTable({
+    partyId: v.id("parties"),
+    clerkId: v.string(),
+    name: v.string(),
+    ts: v.number(),
+  })
+    .index("by_party", ["partyId"])
+    .index("by_guest", ["clerkId"])
+    .index("by_party_guest", ["partyId", "clerkId"]),
 });

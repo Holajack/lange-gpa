@@ -32,7 +32,6 @@ const DELAY_MS = 300;
 const LANGS = {
   ru: {
     voiceId: "hpp4J3VqNfWAUOO0d1Us", // Bella — Listik (matryoshka, female)
-    maleVoiceId: "nPczCjzI2devNBz1zQrb", // Brian — male nurturers (e.g. Dmitri)
     question: (word) => `Где ${word}?`,
     cues: {
       greeting: "Привет! Я Листик.",

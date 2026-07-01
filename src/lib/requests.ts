@@ -8,7 +8,9 @@
  * isn't configured, so it never calls useConvex() without a provider.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { CONVEX_ON } from "@/lib/convexClient";
+import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 
 export type IncomingRequest = {
@@ -36,37 +38,22 @@ export type RequestsApi = {
   refresh: () => void;
 };
 
-const CONVEX_ON = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CONVEX_URL
-);
 
 function useRequestsLive(): RequestsApi {
   const convex = useConvex();
-  const [incoming, setIncoming] = useState<IncomingRequest[]>([]);
-  const [outgoing, setOutgoing] = useState<OutgoingRequest[]>([]);
-  const [tick, setTick] = useState(0);
-
-  const refresh = useCallback(() => setTick((t) => t + 1), []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [inc, out] = await Promise.all([
-          convex.query("requests:myIncoming" as never, {} as never),
-          convex.query("requests:myOutgoing" as never, {} as never),
-        ]);
-        if (cancelled) return;
-        setIncoming(Array.isArray(inc) ? (inc as IncomingRequest[]) : []);
-        setOutgoing(Array.isArray(out) ? (out as OutgoingRequest[]) : []);
-      } catch {
-        /* offline / transient — keep what we have */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [convex, tick]);
+  const { data, refresh } = usePolledQuery<{ incoming: IncomingRequest[]; outgoing: OutgoingRequest[] }>(
+    async () => {
+      const [inc, out] = await Promise.all([
+        convex.query("requests:myIncoming" as never, {} as never),
+        convex.query("requests:myOutgoing" as never, {} as never),
+      ]);
+      return {
+        incoming: Array.isArray(inc) ? (inc as IncomingRequest[]) : [],
+        outgoing: Array.isArray(out) ? (out as OutgoingRequest[]) : [],
+      };
+    },
+    { incoming: [], outgoing: [] }
+  );
 
   const send = useCallback(
     async (toProfileId: string, lang: string, message?: string) => {
@@ -84,7 +71,7 @@ function useRequestsLive(): RequestsApi {
     [convex, refresh]
   );
 
-  return { incoming, outgoing, send, respond, refresh };
+  return { incoming: data.incoming, outgoing: data.outgoing, send, respond, refresh };
 }
 
 const STUB: RequestsApi = {

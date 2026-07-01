@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { profileByClerkId, requireIdentity, resolveTarget } from "./util";
 
 /**
  * WebRTC 1:1 call signalling (Stage D3). Convex only relays SDP + ICE between
@@ -11,17 +12,9 @@ import { v } from "convex/values";
 export const startCall = mutation({
   args: { toProfileId: v.id("profiles"), offer: v.string() },
   handler: async (ctx, { toProfileId, offer }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-    const caller = identity.subject;
-    const callee = await ctx.db.get(toProfileId);
-    if (!callee) throw new Error("Person not found");
-    if (callee.clerkId === caller) throw new Error("Cannot call yourself");
-
-    const me = await ctx.db
-      .query("profiles")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", caller))
-      .unique();
+    const caller = await requireIdentity(ctx);
+    const callee = await resolveTarget(ctx, toProfileId, caller, "call");
+    const me = await profileByClerkId(ctx, caller);
 
     return await ctx.db.insert("calls", {
       callerClerkId: caller,

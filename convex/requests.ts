@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { displayName, requireIdentity, resolveTarget } from "./util";
 
 /**
  * Session requests between two real people (Tandem-style). The client sends the
@@ -15,19 +16,10 @@ export const sendRequest = mutation({
     message: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-    const fromClerkId = identity.subject;
-
-    const toProfile = await ctx.db.get(args.toProfileId);
-    if (!toProfile) throw new Error("Person not found");
+    const fromClerkId = await requireIdentity(ctx);
+    const toProfile = await resolveTarget(ctx, args.toProfileId, fromClerkId, "request");
     const toClerkId = toProfile.clerkId;
-    if (toClerkId === fromClerkId) throw new Error("Cannot request yourself");
-
-    const me = await ctx.db
-      .query("profiles")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", fromClerkId))
-      .unique();
+    const fromName = await displayName(ctx, fromClerkId);
 
     // refresh an existing pending request instead of inserting a duplicate
     const existing = await ctx.db
@@ -42,7 +34,7 @@ export const sendRequest = mutation({
 
     return await ctx.db.insert("requests", {
       fromClerkId,
-      fromName: me?.name ?? "Someone",
+      fromName,
       toClerkId,
       toName: toProfile.name,
       lang: args.lang,

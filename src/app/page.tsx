@@ -49,32 +49,30 @@ const DEMO_CARDS: { id: string; emoji: string; word: string }[] = [
   { id: "llave", emoji: "🔑", word: "la llave" },
 ];
 
-const TESTIMONIALS: {
-  name: string;
-  color: string;
-  meta: string;
-  quote: string;
-}[] = [
+/**
+ * Illustrative GPA "moments" — NOT customer testimonials. Written in the second
+ * person so they read as scenarios of how the method feels, never as fabricated
+ * quotes attributed to invented people. Swap in real, attributed stories here
+ * once growers have them.
+ */
+const MOMENTS: { emoji: string; meta: string; quote: string }[] = [
   {
-    name: "Sofía M.",
-    color: "#7c5cff",
+    emoji: "🐱",
     meta: "Phase 1 · Russian 🇷🇺",
     quote:
-      "Six weeks in, my nurturer made a joke about the cat picture card — and I laughed before I realized I'd understood it. No translation. It just landed.",
+      "Six weeks in, your nurturer jokes about the cat picture card — and you laugh before you realize you understood it. No translation. It just lands.",
   },
   {
-    name: "Yuki T.",
-    color: "#ff8a1e",
+    emoji: "🥄",
     meta: "Phase 2 · Spanish 🇪🇸",
     quote:
-      "Lucía's picture cards are photos of her own kitchen in Valencia. I didn't learn 'la cuchara' from a list — I met it in a real kitchen, held by a real grandmother.",
+      "The picture cards are photos of a real kitchen in Valencia. You don't learn 'la cuchara' from a list — you meet it in a real kitchen, held by a real grandmother.",
   },
   {
-    name: "Marcus W.",
-    color: "#3ddc84",
+    emoji: "🪴",
     meta: "Phase 1 · French 🇫🇷",
     quote:
-      "For two months I never said a word of French. I pointed, I acted, I laughed. Then one day I asked Camille for the watering can — out loud. It was just… there.",
+      "For two months you never say a word of French. You point, you act, you laugh. Then one day you ask for the watering can — out loud. It's just… there.",
   },
 ];
 
@@ -510,24 +508,18 @@ export default function LandingPage() {
       <section id="community" className="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-24 lg:py-32">
         <div className="orb -left-36 bottom-10 h-[360px] w-[360px] bg-lime/10" />
         <SectionHead
-          eyebrow="Community"
-          title="Growers, growing"
-          sub="Small moments from the village — the kind no flashcard app can give you."
+          eyebrow="What it feels like"
+          title="Growing, not memorizing"
+          sub="Illustrative moments of the GPA method — not customer testimonials."
         />
 
         <div className="mt-14 grid gap-5 md:grid-cols-3">
-          {TESTIMONIALS.map((tm, i) => (
-            <Reveal key={tm.name} delay={i * 0.1}>
+          {MOMENTS.map((m, i) => (
+            <Reveal key={m.meta} delay={i * 0.1}>
               <div className="card card-hover flex h-full flex-col p-5 sm:p-7">
-                <p className="text-2xl" aria-hidden>&ldquo;</p>
-                <p className="flex-1 text-[15px] leading-relaxed text-ink/90">{tm.quote}</p>
-                <div className="mt-6 flex items-center gap-3 border-t border-line pt-5">
-                  <Avatar name={tm.name} color={tm.color} size={40} />
-                  <div>
-                    <p className="font-display text-sm font-bold">{tm.name}</p>
-                    <p className="text-xs text-muted">{tm.meta}</p>
-                  </div>
-                </div>
+                <p className="text-3xl" aria-hidden>{m.emoji}</p>
+                <p className="mt-3 flex-1 text-[15px] leading-relaxed text-ink/90">{m.quote}</p>
+                <p className="mt-6 border-t border-line pt-5 text-xs font-semibold text-muted">{m.meta}</p>
               </div>
             </Reveal>
           ))}

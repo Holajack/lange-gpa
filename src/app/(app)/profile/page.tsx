@@ -166,14 +166,23 @@ export default function ProfilePage() {
         className="flex flex-wrap items-end justify-between gap-4"
       >
         <h1 className="headline text-4xl lg:text-5xl">{t("prfTitle")}</h1>
-        <button
-          type="button"
-          onClick={() => router.push("/onboarding")}
-          className="pill flex items-center gap-2 bg-violet px-5 py-3 font-semibold text-white"
-          style={{ boxShadow: "var(--shadow-glow-violet)" }}
-        >
-          <Pencil size={16} /> {t("prfEditProfile")}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.push("/wallet")}
+            className="pill flex items-center gap-2 bg-raised-2 px-5 py-3 font-semibold text-ink hover:bg-white/10"
+          >
+            👛 {t("wallet")}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/onboarding")}
+            className="pill flex items-center gap-2 bg-violet px-5 py-3 font-semibold text-white"
+            style={{ boxShadow: "var(--shadow-glow-violet)" }}
+          >
+            <Pencil size={16} /> {t("prfEditProfile")}
+          </button>
+        </div>
       </motion.div>
 
       {/* hero — who you are */}

@@ -24,6 +24,7 @@ const isProtected = createRouteMatcher([
   "/courses(.*)",
   "/schedule(.*)",
   "/world(.*)",
+  "/events(.*)",
   "/forum(.*)",
   "/wallet(.*)",
   "/marketplace(.*)",

@@ -10,12 +10,10 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { CONVEX_ON } from "@/lib/convexClient";
 import { useConvex } from "convex/react";
 import { useApp } from "@/lib/store";
 
-const CONVEX_ON = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CONVEX_URL
-);
 
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },

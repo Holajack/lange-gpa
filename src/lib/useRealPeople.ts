@@ -14,7 +14,8 @@
  * is safe at runtime.
  */
 
-import { useEffect, useState } from "react";
+import { CONVEX_ON } from "@/lib/convexClient";
+import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 import { geocodeCity } from "./geocode";
 import type { LangCode } from "./types";
@@ -43,41 +44,21 @@ export type RealPerson = {
   lng?: number;
 };
 
-const CONVEX_ON = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CONVEX_URL
-);
 
 function useRealPeopleLive(): RealPerson[] {
   const convex = useConvex();
-  const [people, setPeople] = useState<RealPerson[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = (await convex.query(
-          "profiles:listPeople" as never,
-          {} as never
-        )) as RealPerson[];
-        if (!Array.isArray(rows)) return;
-        const withCoords = await Promise.all(
-          rows.map(async (r) => {
-            if (!r.city) return r;
-            const coord = await geocodeCity(r.city, r.country);
-            return coord ? { ...r, lat: coord.lat, lng: coord.lng } : r;
-          })
-        );
-        if (!cancelled) setPeople(withCoords);
-      } catch {
-        /* offline / transient — keep whatever we have */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [convex]);
-
-  return people;
+  const { data } = usePolledQuery<RealPerson[]>(async () => {
+    const rows = (await convex.query("profiles:listPeople" as never, {} as never)) as RealPerson[];
+    if (!Array.isArray(rows)) return EMPTY;
+    return await Promise.all(
+      rows.map(async (r) => {
+        if (!r.city) return r;
+        const coord = await geocodeCity(r.city, r.country);
+        return coord ? { ...r, lat: coord.lat, lng: coord.lng } : r;
+      })
+    );
+  }, EMPTY);
+  return data;
 }
 
 const EMPTY: RealPerson[] = [];

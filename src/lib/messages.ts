@@ -7,7 +7,9 @@
  * keyless-safe gating as the other hooks — no-op when Convex is unconfigured.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { CONVEX_ON } from "@/lib/convexClient";
+import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 
 export type ChatMessage = {
@@ -38,46 +40,28 @@ export type ConversationApi = {
   refresh: () => void;
 };
 
-const CONVEX_ON = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.NEXT_PUBLIC_CONVEX_URL
-);
 
 function useConversationLive(withProfileId: string | null): ConversationApi {
   const convex = useConvex();
-  const [other, setOther] = useState<ChatOther>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-  const refresh = useCallback(async () => {
-    if (!withProfileId) {
-      setOther(null);
-      setMessages([]);
-      return;
-    }
-    try {
+  const { data, refresh } = usePolledQuery<{ other: ChatOther; messages: ChatMessage[] }>(
+    async () => {
+      if (!withProfileId) return { other: null, messages: [] };
       const res = (await convex.query("messages:conversation" as never, { withProfileId } as never)) as {
         other: ChatOther;
         messages: ChatMessage[];
       };
-      setOther(res?.other ?? null);
-      setMessages(Array.isArray(res?.messages) ? res.messages : []);
       void convex.mutation("messages:markRead" as never, { withProfileId } as never).catch(() => {});
-    } catch {
-      /* offline / transient */
-    }
-  }, [convex, withProfileId]);
-
-  useEffect(() => {
-    if (!withProfileId) return;
-    void refresh();
-    const id = window.setInterval(() => void refresh(), 3000);
-    return () => window.clearInterval(id);
-  }, [withProfileId, refresh]);
+      return { other: res?.other ?? null, messages: Array.isArray(res?.messages) ? res.messages : [] };
+    },
+    { other: null, messages: [] },
+    { intervalMs: 3000, enabled: !!withProfileId, deps: [withProfileId] }
+  );
 
   const send = useCallback(
     async (text: string) => {
       if (!withProfileId || !text.trim()) return;
       await convex.mutation("messages:sendMessage" as never, { toProfileId: withProfileId, text } as never);
-      void refresh();
+      refresh();
     },
     [convex, withProfileId, refresh]
   );
@@ -96,58 +80,38 @@ function useConversationLive(withProfileId: string | null): ConversationApi {
         "messages:sendVoice" as never,
         { toProfileId: withProfileId, storageId, durationSec } as never
       );
-      void refresh();
+      refresh();
     },
     [convex, withProfileId, refresh]
   );
 
-  return { other, messages, send, sendVoice, refresh: () => void refresh() };
+  return { other: data.other, messages: data.messages, send, sendVoice, refresh };
 }
 
 function useConversationsLive(): Convo[] {
   const convex = useConvex();
-  const [convos, setConvos] = useState<Convo[]>([]);
-  useEffect(() => {
-    let on = true;
-    const run = async () => {
-      try {
-        const res = (await convex.query("messages:myConversations" as never, {} as never)) as Convo[];
-        if (on) setConvos(Array.isArray(res) ? res : []);
-      } catch {
-        /* ignore */
-      }
-    };
-    void run();
-    const id = window.setInterval(run, 4000);
-    return () => {
-      on = false;
-      window.clearInterval(id);
-    };
-  }, [convex]);
-  return convos;
+  const { data } = usePolledQuery<Convo[]>(
+    async () => {
+      const res = (await convex.query("messages:myConversations" as never, {} as never)) as Convo[];
+      return Array.isArray(res) ? res : [];
+    },
+    [],
+    { intervalMs: 4000 }
+  );
+  return data;
 }
 
 function useUnreadLive(): number {
   const convex = useConvex();
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let on = true;
-    const run = async () => {
-      try {
-        const res = (await convex.query("messages:unreadCount" as never, {} as never)) as number;
-        if (on) setN(typeof res === "number" ? res : 0);
-      } catch {
-        /* ignore */
-      }
-    };
-    void run();
-    const id = window.setInterval(run, 5000);
-    return () => {
-      on = false;
-      window.clearInterval(id);
-    };
-  }, [convex]);
-  return n;
+  const { data } = usePolledQuery<number>(
+    async () => {
+      const res = (await convex.query("messages:unreadCount" as never, {} as never)) as number;
+      return typeof res === "number" ? res : 0;
+    },
+    0,
+    { intervalMs: 5000 }
+  );
+  return data;
 }
 
 const STUB_CONV: ConversationApi = {
