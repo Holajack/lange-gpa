@@ -35,7 +35,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useApp } from "@/lib/store";
-import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
+import { nurturerById } from "@/lib/nurturers";
 import { phaseById } from "@/lib/phases";
 import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
 import { speak, stopSpeaking } from "@/lib/tts";
@@ -67,6 +67,13 @@ import { ConsentDialog } from "./ConsentDialog";
 import { CardFace } from "./CardFace";
 import type { LangCode, Nurturer } from "@/lib/types";
 
+const DEMO_FAST_FORWARD =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_SPEED === "true";
+const SEEDED_SESSION_NURTURERS =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_SEEDED_NURTURERS === "true";
+
 /** MascotImage is built by the mascot agent (registry contract). The cast
  *  keeps this page strict-clean against its exact prop surface; we pass
  *  both the def and its id so either prop style resolves the portrait. */
@@ -77,7 +84,8 @@ const Portrait = MascotImage as unknown as ComponentType<{
   className?: string;
 }>;
 
-const TOTAL_SECONDS = 30 * 60;
+/** fallback length for open/solo joins that carry no explicit ?duration= */
+const DEFAULT_DURATION_MIN = 30;
 const DECK_SIZE = 12;
 const BARS = [14, 26, 18, 32, 22, 28, 16];
 
@@ -163,28 +171,39 @@ function SessionRoom() {
   const activityParam = params.get("activity");
 
   const nurturer = useMemo(() => {
-    if (nurturerParam === "ai") return NURI;
-    const fromParam = nurturerParam ? nurturerById(nurturerParam) : undefined;
-    return (
-      fromParam ??
-      nurturersForLang(targetLang).find((n) => n.online) ??
-      nurturersForLang(targetLang)[0] ??
-      NURTURERS[0]
-    );
-  }, [nurturerParam, targetLang]);
+    // Beta builds never turn a guessed/static ID into an apparent live human.
+    // Seeded characters are available only in an explicitly flagged demo build.
+    if (!SEEDED_SESSION_NURTURERS || nurturerParam === "ai") return NURI;
+    return (nurturerParam ? nurturerById(nurturerParam) : undefined) ?? NURI;
+  }, [nurturerParam]);
 
   const isAI = nurturer.id === "ai";
   /** the language sibling who hosts AI sessions */
   const mascot = useMemo(() => mascotForLang(targetLang), [targetLang]);
 
+  /** booked/selected session length (?duration=<minutes>) — the timer is the
+   *  single source of truth for when a session ends, never the deck size. */
+  const totalSeconds = useMemo(() => {
+    const raw = Number(params.get("duration"));
+    const minutes = Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_DURATION_MIN;
+    return minutes * 60;
+  }, [params]);
+
+  const phase1 = phaseById(1);
+  const phase1aIds = new Set(phase1.parts?.find((part) => part.id === "1a")?.activityIds ?? []);
+  const phase1Activities =
+    (profile?.hoursLogged ?? 0) < 40
+      ? phase1.activities.filter((candidate) => phase1aIds.has(candidate.id))
+      : phase1.activities;
+  const requestedActivity = activityParam?.trim();
   const activity =
-    activityParam && activityParam.trim().length > 0
-      ? activityParam
-      : phaseById(profile?.phase ?? 1).activities[0]?.name ?? t("ses2GrowingSession");
+    requestedActivity && phase1Activities.some((candidate) => candidate.name === requestedActivity)
+      ? requestedActivity
+      : phase1Activities[0]?.name ?? t("ses2GrowingSession");
 
   // ---- room state ----
   const [stage, setStage] = useState<Stage>("pre");
-  const [remaining, setRemaining] = useState(TOTAL_SECONDS);
+  const [remaining, setRemaining] = useState(totalSeconds);
   const [fast, setFast] = useState(false);
   const [halfBanner, setHalfBanner] = useState(false);
 
@@ -215,6 +234,8 @@ function SessionRoom() {
 
   const halfRef = useRef(false);
   const loggedRef = useRef(false);
+  /** latest countdown value, read (not depended on) by the keep-going loop below */
+  const remainingRef = useRef(totalSeconds);
 
   // ---- recording: the talking picture dictionary ----
   const rec = useRecorder();
@@ -262,9 +283,31 @@ function SessionRoom() {
     if (stage === "live" && remaining === 0) setStage("end");
   }, [stage, remaining]);
 
+  useEffect(() => {
+    remainingRef.current = remaining;
+  }, [remaining]);
+
+  /**
+   * Keep the room productive for the WHOLE booked duration: the deck (12
+   * cards, the authentic "never a dump" Dirty Dozen) can finish long before
+   * a 60/90/120-minute booking runs out. When it does, loop into another
+   * full review sweep of every introduced card rather than sitting idle —
+   * this drives both the AI runner (which reacts to phase "review") and the
+   * human nurturer tray (same UI) identically. Only the countdown — never
+   * the deck — decides when a session actually ends.
+   */
+  useEffect(() => {
+    if (stage !== "live" || flow.phase !== "complete") return;
+    const id = window.setTimeout(() => {
+      if (remainingRef.current <= 0) return;
+      setFlow((f) => (f.phase === "complete" ? startReview(f) : f));
+    }, 2500);
+    return () => window.clearTimeout(id);
+  }, [stage, flow.phase]);
+
   // half-time banner — nudge toward the role switch
   useEffect(() => {
-    if (stage === "live" && !halfRef.current && remaining <= TOTAL_SECONDS / 2) {
+    if (stage === "live" && !halfRef.current && remaining <= totalSeconds / 2) {
       halfRef.current = true;
       setHalfBanner(true);
       const id = window.setTimeout(() => setHalfBanner(false), 6000);
@@ -412,7 +455,7 @@ function SessionRoom() {
     loggedRef.current = true;
     stopSpeaking();
     recStop();
-    const mins = Math.max(1, Math.round((TOTAL_SECONDS - remaining) / 60));
+    const mins = Math.max(1, Math.round((totalSeconds - remaining) / 60));
     completeActivity(`live-${nurturer.id}-${profile.completed.length}`, mins, points);
   }, [stage, profile, remaining, points, nurturer.id, completeActivity, recStop]);
 
@@ -524,7 +567,7 @@ function SessionRoom() {
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
-  const elapsedMin = Math.max(1, Math.round((TOTAL_SECONDS - remaining) / 60));
+  const elapsedMin = Math.max(1, Math.round((totalSeconds - remaining) / 60));
   const speaking = isAI ? aiSpeaking : humanSpeaking;
 
   /* ============================== PRE-JOIN ============================== */
@@ -602,9 +645,11 @@ function SessionRoom() {
               className="mt-8 flex flex-col items-center gap-3"
             >
               <Pill onClick={() => setStage("live")} className="bg-violet px-6 py-3.5 sm:px-10 sm:py-4 text-lg font-semibold text-white">
-                <span style={{ textShadow: "none" }}>▶ {t("start")} · 30:00</span>
+                <span style={{ textShadow: "none" }}>▶ {t("start")} · {fmtClock(totalSeconds)}</span>
               </Pill>
-              <p className="text-xs text-muted">{t("ses2DemoFastForward")}</p>
+              {DEMO_FAST_FORWARD && (
+                <p className="text-xs text-muted">{t("ses2DemoFastForward")}</p>
+              )}
             </motion.div>
           </Card>
         </motion.div>
@@ -642,7 +687,7 @@ function SessionRoom() {
               {[
                 ["⏱️", String(elapsedMin), t("minutes")],
                 ["🃏", String(points), t("words")],
-                ["🔥", String(profile.streak), t("dayStreak")],
+                ["🌱", "1", t("phaseWord")],
               ].map(([emoji, num, label], i) => (
                 <motion.div
                   key={label}
@@ -757,14 +802,16 @@ function SessionRoom() {
           </div>
           <Tag className="hidden bg-black/45 text-ink backdrop-blur sm:inline-flex">🌱 {activity}</Tag>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFast((f) => !f)}
-              title={t("ses2DemoSpeed")}
-              className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-black/45 text-muted backdrop-blur"}`}
-            >
-              ⚡ ×60
-            </button>
+            {DEMO_FAST_FORWARD && (
+              <button
+                type="button"
+                onClick={() => setFast((f) => !f)}
+                title={t("ses2DemoSpeed")}
+                className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-black/45 text-muted backdrop-blur"}`}
+              >
+                ⚡ ×60
+              </button>
+            )}
             <div className="pill bg-black/45 px-4 py-1.5 backdrop-blur">
               <span className="font-display text-sm font-bold tabular-nums">
                 {mm}:{ss}

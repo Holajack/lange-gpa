@@ -12,6 +12,7 @@ import {
   Globe2,
   HeartHandshake,
   Images,
+  LockKeyhole,
   MessageCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -103,6 +104,7 @@ export default function PhasePage() {
   const lp = localizedPhase(phase, t);
 
   const progress = phaseProgress(phase, profile.hoursLogged);
+  const executablePhase = phase.id === 1;
   const current = profile.phase === phase.id;
   const phasePassed = phase.id < profile.phase;
   const prevPhase = PHASES.find((p) => p.id === phase.id - 1);
@@ -119,7 +121,7 @@ export default function PhasePage() {
 
   const renderActivity = (a: PhaseActivity) => {
     const Icon = KIND_ICON[a.kind];
-    const done = profile.completed.includes(a.id);
+    const done = executablePhase && profile.completed.includes(a.id);
     return (
       <div
         key={a.id}
@@ -152,7 +154,12 @@ export default function PhasePage() {
 
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <Tag>⏱ {a.minutes} {t("minutes")}</Tag>
-          {a.practiceHref ? (
+          {!executablePhase ? (
+            <Tag className="ml-auto">
+              <LockKeyhole size={12} strokeWidth={2.5} aria-hidden />
+              {t("crsMethodPreview")}
+            </Tag>
+          ) : a.practiceHref ? (
             <Link
               href={a.practiceHref}
               className={`pill ml-auto px-4 py-2 text-xs font-bold ${onAccent}`}
@@ -212,6 +219,12 @@ export default function PhasePage() {
                     <Check size={12} strokeWidth={3.5} /> {t("done")}
                   </span>
                 )}
+                {!executablePhase && (
+                  <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
+                    <LockKeyhole size={12} strokeWidth={2.5} aria-hidden />
+                    {t("crsMethodPreview")}
+                  </span>
+                )}
               </div>
 
               <h1 className="headline mt-3 text-3xl leading-tight sm:text-4xl lg:text-5xl">{lp.name}</h1>
@@ -225,26 +238,50 @@ export default function PhasePage() {
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <span className="rounded-full bg-white/6 px-3.5 py-1.5 text-xs font-semibold text-ink">
-                  ⏱ {phase.hours}h
+                  ⏱ {phase.ongoing ? "∞" : `${phase.hours}h`}
                 </span>
                 <span className="rounded-full bg-white/6 px-3.5 py-1.5 text-xs font-semibold text-ink">
                   💬 {lp.vocabTarget}
                 </span>
               </div>
 
-              <div className="mt-6 max-w-xl">
-                <div className="mb-1.5 flex items-center justify-between text-xs font-bold">
-                  <span className="text-muted">
-                    {profile.hoursLogged}h / {phase.startHour + phase.hours}h
-                  </span>
-                  <span style={{ color: phase.color }}>{Math.round(progress)}%</span>
+              {!phase.ongoing && (
+                <div className="mt-6 max-w-xl">
+                  <div className="mb-1.5 flex items-center justify-between text-xs font-bold">
+                    <span className="text-muted">
+                      {profile.hoursLogged}h / {phase.startHour + phase.hours}h
+                    </span>
+                    <span style={{ color: phase.color }}>{Math.round(progress)}%</span>
+                  </div>
+                  <ProgressBar value={progress} color={phase.color} height={10} />
                 </div>
-                <ProgressBar value={progress} color={phase.color} height={10} />
-              </div>
+              )}
             </div>
           </div>
         </div>
       </motion.section>
+
+      {!executablePhase && (
+        <motion.section variants={fadeUp} aria-labelledby="method-preview-title">
+          <div className="card flex items-start gap-4 border border-white/10 p-5 sm:p-6">
+            <span
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+              style={{ background: phase.color + "22", color: phase.color }}
+              aria-hidden
+            >
+              <LockKeyhole size={20} strokeWidth={2.25} />
+            </span>
+            <div>
+              <h2 id="method-preview-title" className="font-display text-lg font-bold text-ink">
+                {t("crsMethodPreview")}
+              </h2>
+              <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted">
+                {t("crsMethodPreviewBody")}
+              </p>
+            </div>
+          </div>
+        </motion.section>
+      )}
 
       {/* ============ Principles ============ */}
       <motion.section variants={fadeUp} className="space-y-4">

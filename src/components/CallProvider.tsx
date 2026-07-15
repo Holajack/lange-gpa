@@ -11,6 +11,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { useConvex } from "convex/react";
 import { useApp } from "@/lib/store";
 
@@ -75,7 +76,6 @@ function CallEngine({ children }: { children: React.ReactNode }) {
           void convex
             .mutation("calls:addIce" as never, {
               callId: callIdRef.current,
-              sender: role,
               candidate: JSON.stringify(e.candidate.toJSON()),
             } as never)
             .catch(() => {});
@@ -98,7 +98,7 @@ function CallEngine({ children }: { children: React.ReactNode }) {
   }, [bindEls]);
 
   const startPolling = useCallback(
-    (otherSide: "caller" | "callee") => {
+    () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
       pollRef.current = window.setInterval(async () => {
         const callId = callIdRef.current;
@@ -118,7 +118,7 @@ function CallEngine({ children }: { children: React.ReactNode }) {
             await pc.setRemoteDescription(JSON.parse(call.answer));
             setState("active");
           }
-          const cands = (await convex.query("calls:getIce" as never, { callId, from: otherSide } as never)) as {
+          const cands = (await convex.query("calls:getIce" as never, { callId } as never)) as {
             id: string;
             candidate: string;
           }[];
@@ -158,7 +158,7 @@ function CallEngine({ children }: { children: React.ReactNode }) {
           offer: JSON.stringify(offer),
         } as never)) as string;
         callIdRef.current = callId;
-        startPolling("callee");
+        startPolling();
       } catch {
         await convex.mutation("calls:endCall" as never, { callId: callIdRef.current, declined: false } as never).catch(() => {});
         cleanup();
@@ -182,7 +182,7 @@ function CallEngine({ children }: { children: React.ReactNode }) {
       await pc.setLocalDescription(answer);
       await convex.mutation("calls:answerCall" as never, { callId: inc.callId, answer: JSON.stringify(answer) } as never);
       setState("active");
-      startPolling("caller");
+      startPolling();
     } catch {
       cleanup();
     }
@@ -288,6 +288,6 @@ function CallEngine({ children }: { children: React.ReactNode }) {
 }
 
 export function CallProvider({ children }: { children: React.ReactNode }) {
-  if (!CONVEX_ON) return <>{children}</>;
+  if (!CONVEX_ON || !COMMUNITY_EXCHANGE_ON) return <>{children}</>;
   return <CallEngine>{children}</CallEngine>;
 }

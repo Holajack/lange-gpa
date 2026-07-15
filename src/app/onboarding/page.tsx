@@ -19,11 +19,14 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Volume2 } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { Logo } from "@/components/Logo";
-import { blankProfile, useApp } from "@/lib/store";
+import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON, NURTURER_STUDIO_ON } from "@/lib/featureFlags";
+import { blankProfile, switchLanguageJourney, useApp } from "@/lib/store";
 import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
 import { speak } from "@/lib/tts";
 import type { LangCode, Language, Profile, Role } from "@/lib/types";
@@ -174,6 +177,7 @@ function RoleCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
+      aria-pressed={selected}
       className="card relative flex h-full flex-col items-start gap-3 p-6 text-left transition-[border-color,box-shadow] duration-200"
       style={selected ? { borderColor: accent, boxShadow: glow } : undefined}
     >
@@ -206,6 +210,7 @@ function LangChip({
       variants={item}
       whileTap={{ scale: 0.93 }}
       onClick={onClick}
+      aria-pressed={selected}
       className={`pill border px-4 py-2.5 text-sm font-semibold ${
         selected ? on : "border-line bg-white/5 text-ink hover:bg-white/10"
       }`}
@@ -242,6 +247,7 @@ function TargetCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
+      aria-pressed={selected}
       className="card relative flex flex-col items-center gap-1.5 px-3 py-5 text-center transition-[border-color,box-shadow] duration-200"
       style={selected ? { borderColor: "var(--color-violet)", boxShadow: "var(--shadow-glow-violet)" } : undefined}
     >
@@ -311,6 +317,7 @@ function MotivationCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
+      aria-pressed={selected}
       className="card relative flex flex-col items-start gap-2 p-4 text-left transition-[border-color,box-shadow] duration-200 sm:p-5"
       style={
         selected
@@ -342,6 +349,7 @@ function InterestChip({
       variants={item}
       whileTap={{ scale: 0.93 }}
       onClick={onClick}
+      aria-pressed={selected}
       className={`pill border px-4 py-2.5 text-sm font-semibold ${
         selected
           ? "border-transparent bg-lime text-canvas"
@@ -381,6 +389,7 @@ function PaceRow({
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
+      aria-pressed={selected}
       className="card flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-[border-color,box-shadow] duration-200"
       style={
         selected
@@ -500,14 +509,17 @@ function PlanVisual() {
 function OnboardingFlow() {
   const router = useRouter();
   const params = useSearchParams();
-  const { profile, ready, t, saveProfile, resetAll } = useApp();
+  const addingLanguage = params.get("addLanguage") === "1";
+  const { profile, ready, cloudState, t, saveProfile } = useApp();
+  const accountReady = ready && (!CONVEX_ON || cloudState === "ready");
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => (addingLanguage ? 2 : 0));
   const [dir, setDir] = useState(1);
 
   const [role, setRole] = useState<Role | null>(() => {
     const r = params.get("role");
-    return r === "grower" || r === "nurturer" || r === "both" ? r : null;
+    if (r === "grower") return r;
+    return NURTURER_STUDIO_ON && (r === "nurturer" || r === "both") ? r : null;
   });
   const [knownLangs, setKnownLangs] = useState<LangCode[]>(["en"]);
   const [targetLang, setTargetLang] = useState<LangCode | null>(null);
@@ -527,7 +539,7 @@ function OnboardingFlow() {
   }, []);
   const [nurtureLangs, setNurtureLangs] = useState<LangCode[]>([]);
   const [name, setName] = useState("");
-  const [immersion, setImmersion] = useState(true);
+  const [immersion, setImmersion] = useState(false);
 
   // the invitation steps — every one of these may stay empty
   const [city, setCity] = useState("");
@@ -542,14 +554,16 @@ function OnboardingFlow() {
   // the profile first loads; never runs for brand-new growers (no profile).
   const prefilled = useRef(false);
   useEffect(() => {
-    if (prefilled.current || !ready || !profile) return;
+    if (prefilled.current || !accountReady || !profile) return;
     prefilled.current = true;
     setRole(profile.role);
     if (profile.knownLangs?.length) setKnownLangs(profile.knownLangs);
-    setTargetLang(profile.targetLang ?? null);
+    // Adding a language must be an explicit new enrollment, never an
+    // accidental re-save of the currently active journey.
+    setTargetLang(addingLanguage ? null : profile.targetLang ?? null);
     setNurtureLangs(profile.nurtureLangs ?? []);
     setName(profile.name ?? "");
-    setImmersion(profile.immersion ?? true);
+    setImmersion(profile.immersion ?? false);
     setCity(profile.city ?? "");
     setCountry(profile.country ?? "");
     // back-compat: older accounts stored a single motivation string
@@ -560,7 +574,7 @@ function OnboardingFlow() {
     setInterests(profile.interests ?? []);
     setDailyMinutes(profile.dailyMinutes ?? null);
     setExchange(profile.exchange ?? false);
-  }, [ready, profile]);
+  }, [accountReady, addingLanguage, profile]);
 
   const nurturerOnly = role === "nurturer";
   const trimmed = name.trim();
@@ -638,10 +652,11 @@ function OnboardingFlow() {
     const finalTarget: LangCode = nurturerOnly
       ? (nurture[0] ?? knownLangs[0] ?? "en")
       : (targetLang ?? "es");
+    const progressBase = profile ? switchLanguageJourney(profile, finalTarget) : blankProfile();
     const out: Profile = {
-      // Editing an existing account keeps all progress (hours, words, streak,
+      // Editing an existing account keeps all progress (hours, words,
       // completed, bookings, week, createdAt); a brand-new grower starts fresh.
-      ...(profile ?? blankProfile()),
+      ...progressBase,
       name: trimmed,
       role,
       knownLangs: knownLangs.length > 0 ? knownLangs : ["en"],
@@ -654,7 +669,7 @@ function OnboardingFlow() {
       motivation: motivation.length ? motivation : undefined,
       interests,
       dailyMinutes: dailyMinutes ?? undefined,
-      exchange,
+      exchange: COMMUNITY_EXCHANGE_ON ? exchange : false,
     };
     saveProfile(out);
     router.replace("/dashboard");
@@ -679,6 +694,14 @@ function OnboardingFlow() {
       </>
     );
 
+  if (!accountReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" role="status" aria-label="Loading your profile">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-violet border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* ambient orbs */}
@@ -695,14 +718,18 @@ function OnboardingFlow() {
           className="flex items-center justify-between gap-4"
         >
           <Logo size="sm" />
-          <Dots step={step} onJump={jump} />
+          {addingLanguage ? (
+            <span className="headline text-sm">{t("prfAddLanguage")}</span>
+          ) : (
+            <Dots step={step} onJump={jump} />
+          )}
           <span className="hidden w-[72px] text-right text-xs font-medium text-muted sm:block">
-            {step + 1} / {STEP_COUNT}
+            {addingLanguage ? "" : `${step + 1} / ${STEP_COUNT}`}
           </span>
         </motion.header>
 
         {/* returning-user banner */}
-        {ready && profile && (
+        {accountReady && profile && !addingLanguage && (
           <motion.div
             initial={{ opacity: 0, y: -14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -710,22 +737,13 @@ function OnboardingFlow() {
             className="card mt-6 flex flex-wrap items-center justify-between gap-3 px-5 py-4"
           >
             <p className="text-sm font-medium">{t("dshOnbGardenGrowing")} 🌱</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => router.push("/dashboard")}
-                className="pill bg-lime px-4 py-2 text-xs font-bold text-canvas"
-              >
-                {t("continue")} →
-              </button>
-              <button
-                type="button"
-                onClick={resetAll}
-                className="pill bg-white/8 px-4 py-2 text-xs font-semibold text-muted hover:text-ink"
-              >
-                {t("dshOnbStartOver")}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard")}
+              className="pill bg-lime px-4 py-2 text-xs font-bold text-canvas"
+            >
+              {t("continue")} →
+            </button>
           </motion.div>
         )}
 
@@ -759,7 +777,7 @@ function OnboardingFlow() {
                     <span className="font-semibold text-lime">{t("dshOnbZeroTranslation")}</span>{t("dshOnbTaglinePost")}
                   </motion.p>
 
-                  <div className="mt-9 grid gap-3 sm:grid-cols-2">
+                  <div className={`mt-9 grid gap-3 ${NURTURER_STUDIO_ON ? "sm:grid-cols-2" : "mx-auto max-w-md"}`}>
                     <RoleCard
                       emoji="🌱"
                       title={t("dshOnbRoleGrowerTitle")}
@@ -769,31 +787,41 @@ function OnboardingFlow() {
                       glow="var(--shadow-glow-violet)"
                       onClick={() => setRole("grower")}
                     />
-                    <RoleCard
-                      emoji="🤝"
-                      title={t("dshOnbRoleNurturerTitle")}
-                      desc={t("dshOnbRoleNurturerDesc")}
-                      selected={role === "nurturer"}
-                      accent="var(--color-orange)"
-                      glow="var(--shadow-glow-orange)"
-                      onClick={() => setRole("nurturer")}
-                    />
+                    {NURTURER_STUDIO_ON && (
+                      <RoleCard
+                        emoji="🤝"
+                        title={t("dshOnbRoleNurturerTitle")}
+                        desc={t("dshOnbRoleNurturerDesc")}
+                        selected={role === "nurturer"}
+                        accent="var(--color-orange)"
+                        glow="var(--shadow-glow-orange)"
+                        onClick={() => setRole("nurturer")}
+                      />
+                    )}
                   </div>
 
-                  <motion.div variants={item} className="mt-3 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setRole("both")}
-                      className={`pill border px-5 py-2.5 text-sm font-semibold transition-colors ${
-                        role === "both"
-                          ? "border-lime bg-lime/15 text-lime"
-                          : "border-line bg-white/4 text-muted hover:text-ink"
-                      }`}
-                    >
-                      🌱🤝 {t("dshOnbBothPlease")}
-                      {role === "both" && <Check size={14} strokeWidth={3} />}
-                    </button>
-                  </motion.div>
+                  {NURTURER_STUDIO_ON ? (
+                    <motion.div variants={item} className="mt-3 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setRole("both")}
+                        className={`pill border px-5 py-2.5 text-sm font-semibold transition-colors ${
+                          role === "both"
+                            ? "border-lime bg-lime/15 text-lime"
+                            : "border-line bg-white/4 text-muted hover:text-ink"
+                        }`}
+                      >
+                        🌱🤝 {t("dshOnbBothPlease")}
+                        {role === "both" && <Check size={14} strokeWidth={3} />}
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div variants={item} className="mt-4 text-center">
+                      <Link href="/early" className="text-sm font-semibold text-orange hover:text-orange-soft">
+                        🤝 {t("dshOnbRoleNurturerTitle")} →
+                      </Link>
+                    </motion.div>
+                  )}
                 </>
               )}
 
@@ -831,12 +859,17 @@ function OnboardingFlow() {
                     {t("dshOnbTargetSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {LANGUAGES.filter((l) => !knownLangs.includes(l.code)).map((l) => (
+                    {LANGUAGES.filter(
+                      (l) =>
+                        !knownLangs.includes(l.code) &&
+                        FULL_CONTENT_LANGS.includes(l.code) &&
+                        (!addingLanguage || !profile?.journeys?.some((journey) => journey.lang === l.code))
+                    ).map((l) => (
                       <TargetCard
                         key={l.code}
                         lang={l}
                         selected={targetLang === l.code}
-                        full={FULL_CONTENT_LANGS.includes(l.code)}
+                        full
                         fullLabel={t("dshOnbFullImmersion")}
                         onClick={() => pickTarget(l.code)}
                       />
@@ -992,23 +1025,25 @@ function OnboardingFlow() {
                   >
                     🍂 {t("dshOnbWaterSplit")}
                   </motion.p>
-                  <motion.div
-                    variants={item}
-                    className="card mt-6 flex items-center justify-between gap-4 p-5"
-                  >
-                    <div>
-                      <p className="font-semibold">🤝 {t("wldOpenToExchange")}</p>
-                      <p className="mt-1 text-sm text-muted">
-                        {t("dshOnbExchangeSub")}
-                      </p>
-                    </div>
-                    <Toggle
-                      on={exchange}
-                      onClick={() => setExchange((v) => !v)}
-                      label={t("wldOpenToExchange")}
-                      knob="🤝"
-                    />
-                  </motion.div>
+                  {COMMUNITY_EXCHANGE_ON && (
+                    <motion.div
+                      variants={item}
+                      className="card mt-6 flex items-center justify-between gap-4 p-5"
+                    >
+                      <div>
+                        <p className="font-semibold">🤝 {t("wldOpenToExchange")}</p>
+                        <p className="mt-1 text-sm text-muted">
+                          {t("dshOnbExchangeSub")}
+                        </p>
+                      </div>
+                      <Toggle
+                        on={exchange}
+                        onClick={() => setExchange((v) => !v)}
+                        label={t("wldOpenToExchange")}
+                        knob="🤝"
+                      />
+                    </motion.div>
+                  )}
                 </>
               )}
 
@@ -1054,8 +1089,9 @@ function OnboardingFlow() {
                 <>
                   <NuriSays mood="cheer">{t("dshOnbPicturesExplain")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    {t("dshOnbLangeSpeaksPre")}{" "}
-                    <span className="text-violet-soft">{target.nativeName}</span>{t("dshOnbLangeSpeaksPost")}
+                    <span className="text-violet-soft">{target.nativeName}</span>
+                    <span aria-hidden="true"> · </span>
+                    {t("dshOnbImmersionMode")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
                     {t("dshOnbImmersionBody").replace("{flag}", target.flag)}
@@ -1151,7 +1187,7 @@ function OnboardingFlow() {
           >
             <button
               type="button"
-              onClick={back}
+              onClick={() => (addingLanguage ? router.push("/profile") : back())}
               className={`pill bg-white/6 px-6 py-3 text-sm font-semibold text-muted hover:text-ink ${
                 step === 0 ? "invisible" : ""
               }`}
@@ -1159,10 +1195,10 @@ function OnboardingFlow() {
               <ArrowLeft size={16} /> {t("back")}
             </button>
 
-            {step < STEP_COUNT - 1 ? (
+            {step < STEP_COUNT - 1 && !(addingLanguage && step === 2) ? (
               <button
                 type="button"
-                disabled={!valid}
+                disabled={!valid || (addingLanguage && (!profile || !role || !trimmed))}
                 onClick={next}
                 className="pill bg-violet px-8 py-3 font-semibold text-white disabled:pointer-events-none disabled:opacity-35"
                 style={valid ? { boxShadow: "var(--shadow-glow-violet)" } : undefined}
@@ -1184,7 +1220,11 @@ function OnboardingFlow() {
                 className="pill bg-lime px-8 py-3 font-bold text-canvas disabled:pointer-events-none disabled:opacity-35"
                 style={{ boxShadow: "0 0 50px -12px rgba(184,240,60,0.55)" }}
               >
-                {nurturerOnly ? `${t("dshOnbOpenToolkit")} 🤝` : `${t("dshOnbStartGrowing")} 🌱`}
+                {addingLanguage
+                  ? `${t("prfAddLanguage")} 🌱`
+                  : nurturerOnly
+                    ? `${t("dshOnbOpenToolkit")} 🤝`
+                    : `${t("dshOnbStartGrowing")} 🌱`}
               </button>
             )}
           </motion.div>

@@ -9,6 +9,15 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
  */
 type AnyCtx = QueryCtx | MutationCtx;
 
+/** Stranger discovery, messaging, and calls are closed until operations opt in. */
+export function communityExchangeEnabled(): boolean {
+  return process.env.ENABLE_COMMUNITY_EXCHANGE === "true";
+}
+
+export function requireCommunityExchangeEnabled(): void {
+  if (!communityExchangeEnabled()) throw new Error("Community exchange is not enabled");
+}
+
 /** The signed-in Clerk subject, or throw (for mutations that require auth). */
 export async function requireIdentity(ctx: AnyCtx): Promise<string> {
   const identity = await ctx.auth.getUserIdentity();

@@ -18,12 +18,29 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
  */
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+if (process.env.NODE_ENV === "production" && !demoMode && (!clerkKey || !convexUrl)) {
+  throw new Error(
+    "Nurilang production requires NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and NEXT_PUBLIC_CONVEX_URL. " +
+      "Set NEXT_PUBLIC_DEMO_MODE=true only for an intentional non-account demo."
+  );
+}
 
 const convexClient =
   clerkKey && convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  if (!clerkKey || !convexClient) return <>{children}</>;
+  if (!clerkKey) return <>{children}</>;
+
+  const accountTree = convexClient ? (
+    <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
+      {children}
+    </ConvexProviderWithClerk>
+  ) : (
+    children
+  );
+
   return (
     <ClerkProvider
       publishableKey={clerkKey}
@@ -31,13 +48,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       signUpUrl="/sign-up"
       afterSignOutUrl="/"
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/onboarding"
     >
-      {/* Cloud account sync lives in CloudProfileBridge, mounted inside
-          AppProvider so it can read/write the live profile. */}
-      <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-        {children}
-      </ConvexProviderWithClerk>
+      {accountTree}
     </ClerkProvider>
   );
 }

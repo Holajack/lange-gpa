@@ -1,5 +1,5 @@
 /**
- * Pre-generate ElevenLabs voice clips for LANGE's GPA practice content.
+ * Pre-generate ElevenLabs voice clips for Nurilang's GPA practice content.
  *
  * Run with:
  *   export PATH=~/.nvm/versions/node/v22.22.0/bin:$PATH && \

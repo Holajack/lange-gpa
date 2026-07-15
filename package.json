@@ -1,8 +1,8 @@
 {
-  "name": "lange-gpa",
+  "name": "nurilang",
   "version": "1.0.0",
   "private": true,
-  "description": "LANGE — language growth through the Growing Participator Approach",
+  "description": "Nurilang — language growth through the Growing Participator Approach",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

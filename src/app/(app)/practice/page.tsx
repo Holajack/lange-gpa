@@ -20,6 +20,7 @@ interface Launcher {
   accent: string; // css color
   glow: string;
   dark: boolean; // pill text dark on bright accents
+  minHours?: number;
 }
 
 const GAMES: Launcher[] = [
@@ -52,6 +53,7 @@ const GAMES: Launcher[] = [
     accent: "var(--color-orange)",
     glow: "rgba(255,138,30,0.45)",
     dark: true,
+    minHours: 40,
   },
   {
     href: "/practice/repeat",
@@ -62,11 +64,12 @@ const GAMES: Launcher[] = [
     accent: "var(--color-violet)",
     glow: "rgba(124,92,255,0.5)",
     dark: false,
+    minHours: 40,
   },
 ];
 
 export default function PracticeHubPage() {
-  const { t } = useApp();
+  const { profile, t } = useApp();
 
   return (
     <div className="relative">
@@ -96,59 +99,73 @@ export default function PracticeHubPage() {
 
       {/* launcher cards */}
       <div className="grid gap-5 md:grid-cols-2">
-        {GAMES.map((g, i) => (
-          <motion.div
-            key={g.href}
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 + i * 0.09, duration: 0.5, ease: [0.2, 0.9, 0.3, 1.2] }}
-          >
-            <Link href={g.href} className="group block">
-              <div className="card card-hover relative overflow-hidden p-7 lg:p-8">
-                <div
-                  className="orb right-[-70px] top-[-70px] h-[200px] w-[200px] opacity-60 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: g.glow }}
-                />
-                <div className="relative flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <span
-                      className="floaty flex h-20 w-20 items-center justify-center rounded-[24px] text-5xl"
-                      style={{
-                        background: `color-mix(in srgb, ${g.accent} 16%, var(--color-raised-2))`,
-                        animationDelay: `${i * 0.45}s`,
-                      }}
-                    >
-                      {g.emoji}
-                    </span>
-                    <span
-                      className="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
-                      style={{
-                        color: g.accent,
-                        background: `color-mix(in srgb, ${g.accent} 14%, transparent)`,
-                      }}
-                    >
-                      {t(g.labelKey)}
-                    </span>
-                  </div>
+        {GAMES.map((g, i) => {
+          const locked = Boolean(
+            g.minHours &&
+            (profile?.hoursLogged ?? 0) < g.minHours &&
+            (profile?.phase ?? 1) === 1
+          );
+          const card = (
+            <div className={`card relative overflow-hidden p-7 lg:p-8 ${locked ? "opacity-65" : "card-hover"}`}>
+              <div
+                className="orb right-[-70px] top-[-70px] h-[200px] w-[200px] opacity-60 transition-opacity duration-300 group-hover:opacity-100"
+                style={{ background: g.glow }}
+              />
+              <div className="relative flex flex-col gap-4">
+                <div className="flex items-start justify-between gap-4">
+                  <span
+                    className="floaty flex h-20 w-20 items-center justify-center rounded-[24px] text-5xl"
+                    style={{
+                      background: `color-mix(in srgb, ${g.accent} 16%, var(--color-raised-2))`,
+                      animationDelay: `${i * 0.45}s`,
+                    }}
+                  >
+                    {g.emoji}
+                  </span>
+                  <span
+                    className="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
+                    style={{
+                      color: g.accent,
+                      background: `color-mix(in srgb, ${g.accent} 14%, transparent)`,
+                    }}
+                  >
+                    {locked ? `🔒 ${g.minHours}h` : t(g.labelKey)}
+                  </span>
+                </div>
 
-                  <div>
-                    <h2 className="headline text-2xl lg:text-[28px]">{t(g.nameKey)}</h2>
-                    <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">{t(g.blurbKey)}</p>
-                  </div>
+                <div>
+                  <h2 className="headline text-2xl lg:text-[28px]">{t(g.nameKey)}</h2>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
+                    {locked ? t("ph_1_part_1a_focus") : t(g.blurbKey)}
+                  </p>
+                </div>
 
-                  <div className="mt-1">
-                    <span
-                      className={`pill px-6 py-2.5 text-sm font-bold ${g.dark ? "text-canvas" : "text-white"}`}
-                      style={{ background: g.accent }}
-                    >
-                      {t("start")} →
-                    </span>
-                  </div>
+                <div className="mt-1">
+                  <span
+                    className={`pill px-6 py-2.5 text-sm font-bold ${g.dark ? "text-canvas" : "text-white"}`}
+                    style={{ background: locked ? "var(--color-raised-2)" : g.accent }}
+                  >
+                    {locked ? t("ph_1_part_1b_title") : `${t("start")} →`}
+                  </span>
                 </div>
               </div>
-            </Link>
-          </motion.div>
-        ))}
+            </div>
+          );
+          return (
+            <motion.div
+              key={g.href}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 + i * 0.09, duration: 0.5, ease: [0.2, 0.9, 0.3, 1.2] }}
+            >
+              {locked ? (
+                <div aria-disabled="true" className="group block">{card}</div>
+              ) : (
+                <Link href={g.href} className="group block">{card}</Link>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* GPA footnote */}

@@ -1,5 +1,5 @@
 /**
- * Pre-generate flat sticker-style picture-card illustrations for LANGE's
+ * Pre-generate flat sticker-style picture-card illustrations for Nurilang's
  * GPA vocab decks via the Replicate HTTP API.
  *
  * Run with:

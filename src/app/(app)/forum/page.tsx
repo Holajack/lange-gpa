@@ -33,7 +33,10 @@ const catMeta = (id: Category) => CATEGORIES.find((c) => c.id === id) ?? CATEGOR
 const GROWER_COLOR = "#7c5cff";
 const NURTURER_COLOR = "#ff8a1e";
 
-/** Seed replies mark nurturers as "Name (nurturer)" — reuse that convention. */
+/** Fallback only: pre-fix seed replies mark nurturers as "Name (nurturer)"
+ *  in English regardless of UI language. Live replies carry an explicit
+ *  `isNurturer` flag instead (see submitReply) since the localized
+ *  "(nurturer)"-equivalent suffix text won't match this regex. */
 const replyIsNurturer = (author: string) => /\(nurturer\)/i.test(author);
 
 const accentFor = (cat: Category): string | undefined =>
@@ -140,7 +143,9 @@ export default function ForumPage() {
     const author = userIsNurturer ? t("frm2NurturerSuffix").replace("{name}", userName) : userName;
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === postId ? { ...p, replies: [...p.replies, { author, body: text, ago: t("frm2Now") }] } : p
+        p.id === postId
+          ? { ...p, replies: [...p.replies, { author, body: text, ago: t("frm2Now"), isNurturer: userIsNurturer }] }
+          : p
       )
     );
     setDrafts((prev) => ({ ...prev, [postId]: "" }));
@@ -512,7 +517,7 @@ function PostCard({
             >
               <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5">
                 {post.replies.map((r, idx) => {
-                  const rColor = replyIsNurturer(r.author) ? NURTURER_COLOR : GROWER_COLOR;
+                  const rColor = (r.isNurturer ?? replyIsNurturer(r.author)) ? NURTURER_COLOR : GROWER_COLOR;
                   return (
                     <motion.div
                       key={`${post.id}-r${idx}`}

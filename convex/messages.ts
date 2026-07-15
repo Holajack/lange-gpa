@@ -1,6 +1,13 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { displayName, requireIdentity, resolveTarget } from "./util";
+import {
+  communityExchangeEnabled,
+  displayName,
+  requireCommunityExchangeEnabled,
+  requireIdentity,
+  resolveTarget,
+} from "./util";
+import { blockedClerkIdsFor, isBlockedEitherWay } from "./safety";
 
 /**
  * 1:1 messaging (Stage D, text layer). The client targets a person by their
@@ -14,11 +21,22 @@ const convoKeyOf = (a: string, b: string) => [a, b].sort().join("|");
 export const sendMessage = mutation({
   args: { toProfileId: v.id("profiles"), text: v.string() },
   handler: async (ctx, { toProfileId, text }) => {
+    requireCommunityExchangeEnabled();
     const from = await requireIdentity(ctx);
     const body = text.trim();
     if (!body) return null;
+    const recent = await ctx.db
+      .query("messages")
+      .withIndex("by_from", (q) => q.eq("fromClerkId", from))
+      .collect();
+    if (recent.filter((message) => Date.now() - message.ts < 60_000).length >= 30) {
+      throw new Error("Please wait before sending more messages");
+    }
     const toProfile = await resolveTarget(ctx, toProfileId, from, "message");
     const to = toProfile.clerkId;
+    if (await isBlockedEitherWay(ctx, from, to)) {
+      throw new Error("This conversation is unavailable");
+    }
     const fromName = await displayName(ctx, from);
 
     return await ctx.db.insert("messages", {
@@ -38,11 +56,15 @@ export const sendMessage = mutation({
 export const conversation = query({
   args: { withProfileId: v.id("profiles") },
   handler: async (ctx, { withProfileId }) => {
+    if (!communityExchangeEnabled()) return { other: null, messages: [] };
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return { other: null, messages: [] };
     const me = identity.subject;
     const other = await ctx.db.get(withProfileId);
     if (!other) return { other: null, messages: [] };
+    if (await isBlockedEitherWay(ctx, me, other.clerkId)) {
+      return { other: null, messages: [] };
+    }
     const data = (other.data ?? {}) as Record<string, unknown>;
     const key = convoKeyOf(me, other.clerkId);
     const rows = await ctx.db
@@ -75,10 +97,12 @@ export const conversation = query({
 export const markRead = mutation({
   args: { withProfileId: v.id("profiles") },
   handler: async (ctx, { withProfileId }) => {
+    requireCommunityExchangeEnabled();
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return;
     const other = await ctx.db.get(withProfileId);
     if (!other) return;
+    if (await isBlockedEitherWay(ctx, identity.subject, other.clerkId)) return;
     const key = convoKeyOf(identity.subject, other.clerkId);
     const rows = await ctx.db
       .query("messages")
@@ -94,9 +118,11 @@ export const markRead = mutation({
 export const myConversations = query({
   args: {},
   handler: async (ctx) => {
+    if (!communityExchangeEnabled()) return [];
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
     const me = identity.subject;
+    const blockedIds = await blockedClerkIdsFor(ctx, me);
     const incoming = await ctx.db
       .query("messages")
       .withIndex("by_to", (q) => q.eq("toClerkId", me))
@@ -110,6 +136,7 @@ export const myConversations = query({
     const byOther = new Map<string, Acc>();
     for (const m of [...incoming, ...outgoing]) {
       const otherClerk = m.fromClerkId === me ? m.toClerkId : m.fromClerkId;
+      if (blockedIds.has(otherClerk)) continue;
       const unreadToMe = m.toClerkId === me && !m.readByTo ? 1 : 0;
       const cur = byOther.get(otherClerk);
       if (!cur) {
@@ -159,13 +186,15 @@ export const myConversations = query({
 export const unreadCount = query({
   args: {},
   handler: async (ctx) => {
+    if (!communityExchangeEnabled()) return 0;
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return 0;
     const rows = await ctx.db
       .query("messages")
       .withIndex("by_to_unread", (q) => q.eq("toClerkId", identity.subject).eq("readByTo", false))
       .collect();
-    return rows.length;
+    const blockedIds = await blockedClerkIdsFor(ctx, identity.subject);
+    return rows.filter((row) => !blockedIds.has(row.fromClerkId)).length;
   },
 });
 
@@ -175,6 +204,7 @@ export const unreadCount = query({
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
+    requireCommunityExchangeEnabled();
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
     return await ctx.storage.generateUploadUrl();
@@ -185,9 +215,23 @@ export const generateUploadUrl = mutation({
 export const sendVoice = mutation({
   args: { toProfileId: v.id("profiles"), storageId: v.id("_storage"), durationSec: v.number() },
   handler: async (ctx, { toProfileId, storageId, durationSec }) => {
+    requireCommunityExchangeEnabled();
     const from = await requireIdentity(ctx);
+    if (!Number.isFinite(durationSec) || durationSec < 1 || durationSec > 300) {
+      throw new Error("Voice notes must be between 1 second and 5 minutes");
+    }
+    const recent = await ctx.db
+      .query("messages")
+      .withIndex("by_from", (q) => q.eq("fromClerkId", from))
+      .collect();
+    if (recent.filter((message) => Date.now() - message.ts < 60_000).length >= 30) {
+      throw new Error("Please wait before sending more messages");
+    }
     const toProfile = await resolveTarget(ctx, toProfileId, from, "message");
     const to = toProfile.clerkId;
+    if (await isBlockedEitherWay(ctx, from, to)) {
+      throw new Error("This conversation is unavailable");
+    }
     const fromName = await displayName(ctx, from);
     return await ctx.db.insert("messages", {
       convoKey: convoKeyOf(from, to),

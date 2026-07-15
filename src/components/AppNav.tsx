@@ -7,18 +7,23 @@ import { langByCode } from "@/lib/languages";
 import { Logo } from "./Logo";
 import { Avatar } from "./Avatar";
 import { useUnread } from "@/lib/messages";
+import { COMMUNITY_EXCHANGE_ON, NURTURER_STUDIO_ON } from "@/lib/featureFlags";
 
 /**
  * Three primary clusters instead of nine flat tabs (consolidation, 2026-06):
  *   Learn      — the GPA curriculum (today / journey / practice)
  *   Sessions   — booking a nurturer (find / upcoming)
- *   Community  — real people (world / chats / events / forum)
+ *   Community  — real people (world / chats; parties and forum are flagged)
  * Nurture is appended for nurturer/both roles. Wallet + Profile moved to the
  * account page (the profile pill). Each cluster opens its default child and
  * surfaces a secondary sub-tab strip for its siblings.
  */
 type SubTab = { key: string; href: string };
 type Cluster = { key: string; href: string; kids: SubTab[] };
+
+const COMMERCE_ON = process.env.NEXT_PUBLIC_ENABLE_COMMERCE === "true";
+const PARTIES_ON = process.env.NEXT_PUBLIC_ENABLE_PARTIES === "true";
+const FORUM_ON = process.env.NEXT_PUBLIC_ENABLE_FORUM === "true";
 
 const CLUSTERS: Cluster[] = [
   {
@@ -32,20 +37,22 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "sessions",
-    href: "/marketplace",
-    kids: [
-      { key: "marketplace", href: "/marketplace" },
-      { key: "schedule", href: "/schedule" },
-    ],
+    href: COMMERCE_ON ? "/marketplace" : "/schedule",
+    kids: COMMERCE_ON
+      ? [
+          { key: "marketplace", href: "/marketplace" },
+          { key: "schedule", href: "/schedule" },
+        ]
+      : [{ key: "schedule", href: "/schedule" }],
   },
   {
     key: "community",
     href: "/world",
     kids: [
       { key: "world", href: "/world" },
-      { key: "messages", href: "/messages" },
-      { key: "events", href: "/events" },
-      { key: "forum", href: "/forum" },
+      ...(COMMUNITY_EXCHANGE_ON ? [{ key: "messages", href: "/messages" }] : []),
+      ...(PARTIES_ON ? [{ key: "events", href: "/events" }] : []),
+      ...(FORUM_ON ? [{ key: "forum", href: "/forum" }] : []),
     ],
   },
 ];
@@ -62,7 +69,9 @@ export function AppNav() {
   if (!profile) return null;
 
   const clusters =
-    profile.role === "nurturer" || profile.role === "both" ? [...CLUSTERS, NURTURE_CLUSTER] : CLUSTERS;
+    NURTURER_STUDIO_ON && (profile.role === "nurturer" || profile.role === "both")
+      ? [...CLUSTERS, NURTURE_CLUSTER]
+      : CLUSTERS;
 
   const inCluster = (c: Cluster) =>
     pathname.startsWith(c.href) || c.kids.some((k) => pathname.startsWith(k.href));
@@ -152,7 +161,7 @@ export function AppNav() {
             </span>
           </button>
 
-          {/* profile — opens the account page (NOT onboarding); Wallet lives there now */}
+          {/* profile — opens account settings, language journeys, and security */}
           <button
             onClick={() => router.push("/profile")}
             className="card flex shrink-0 items-center gap-3 rounded-full bg-raised/85 py-1.5 pl-1.5 pr-1.5 backdrop-blur-xl card-hover sm:pl-4"

@@ -9,6 +9,7 @@
 
 import { useCallback } from "react";
 import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 
@@ -122,8 +123,10 @@ const STUB_CONV: ConversationApi = {
   refresh: () => {},
 };
 
-export const useConversation: (withProfileId: string | null) => ConversationApi = CONVEX_ON
+export const useConversation: (withProfileId: string | null) => ConversationApi = CONVEX_ON && COMMUNITY_EXCHANGE_ON
   ? useConversationLive
   : () => STUB_CONV;
-export const useConversations: () => Convo[] = CONVEX_ON ? useConversationsLive : () => [];
-export const useUnread: () => number = CONVEX_ON ? useUnreadLive : () => 0;
+export const useConversations: () => Convo[] =
+  CONVEX_ON && COMMUNITY_EXCHANGE_ON ? useConversationsLive : () => [];
+export const useUnread: () => number =
+  CONVEX_ON && COMMUNITY_EXCHANGE_ON ? useUnreadLive : () => 0;

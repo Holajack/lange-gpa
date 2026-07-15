@@ -8,7 +8,6 @@ import { Logo } from "@/components/Logo";
 import { Mascot } from "@/components/Mascot";
 import { MascotImage } from "@/components/MascotImage";
 import { Avatar } from "@/components/Avatar";
-import { useApp } from "@/lib/store";
 import { speak } from "@/lib/tts";
 import { PHASES, TOTAL_HOURS } from "@/lib/phases";
 import { MASCOTS } from "@/lib/mascots";
@@ -36,10 +35,10 @@ const GREETINGS: { flag: string; word: string }[] = [
   { flag: "🇬🇧", word: "hello" },
 ];
 
-const DEMO_NURTURERS: { name: string; color: string; who: string; from: string }[] = [
-  { name: "Lucía Ferrer", color: "#ff8a1e", who: "Retired baker", from: "Valencia" },
-  { name: "Anya Sokolova", color: "#b8f03c", who: "Nurse, mother of two", from: "Tbilisi" },
-  { name: "Karim Haddad", color: "#ff5d5d", who: "Fishmonger at the old port", from: "Marseille" },
+const NURTURER_EXAMPLES: { title: string; color: string; who: string }[] = [
+  { title: "A local baker", color: "#ff8a1e", who: "Food, family, and everyday routines" },
+  { title: "A community nurse", color: "#b8f03c", who: "Care, daily life, and warm conversation" },
+  { title: "A market vendor", color: "#ff5d5d", who: "Objects, actions, and the life of a neighborhood" },
 ];
 
 const DEMO_CARDS: { id: string; emoji: string; word: string }[] = [
@@ -147,7 +146,6 @@ function Iceberg() {
 /* ---------------------------------- page --------------------------------- */
 
 export default function LandingPage() {
-  const { profile, ready } = useApp();
   const [met, setMet] = useState<Record<string, boolean>>({});
   const metAny = Object.values(met).some(Boolean);
 
@@ -160,8 +158,6 @@ export default function LandingPage() {
       el.style.scrollBehavior = prev;
     };
   }, []);
-
-  const hasProfile = ready && profile !== null;
 
   const meetCard = (id: string, word: string) => {
     setMet((m) => ({ ...m, [id]: true }));
@@ -179,16 +175,9 @@ export default function LandingPage() {
             <a href="#phases" className="transition-colors hover:text-ink">The six phases</a>
             <a href="#community" className="transition-colors hover:text-ink">Community</a>
           </div>
-          {hasProfile ? (
-            <Link href="/dashboard" className="pill bg-violet px-5 py-2.5 text-sm font-bold text-white">
-              Continue growing
-              <ArrowRight size={16} />
-            </Link>
-          ) : (
-            <Link href="/onboarding" className="pill bg-lime px-5 py-2.5 text-sm font-bold text-canvas">
-              Start growing
-            </Link>
-          )}
+          <Link href="/onboarding" className="pill bg-lime px-5 py-2.5 text-sm font-bold text-canvas">
+            Start growing
+          </Link>
         </nav>
       </header>
 
@@ -247,19 +236,23 @@ export default function LandingPage() {
                     No lesson plans to invent, either — Nuri guides every minute of every session.
                   </p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {DEMO_NURTURERS.map((n, i) => (
-                    <Reveal key={n.name} delay={0.1 + i * 0.1}>
+                <div>
+                  <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-muted">
+                    Illustrative roles — not live profiles
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                  {NURTURER_EXAMPLES.map((n, i) => (
+                    <Reveal key={n.title} delay={0.1 + i * 0.1}>
                       <div className="card flex h-full flex-col items-center gap-3 border-white/10 bg-raised-2/60 p-5 text-center">
-                        <Avatar name={n.name} color={n.color} size={64} ring />
+                        <Avatar name={n.title} color={n.color} size={64} ring />
                         <div>
-                          <p className="font-display text-sm font-bold">{n.name}</p>
+                          <p className="font-display text-sm font-bold">{n.title}</p>
                           <p className="mt-1 text-xs leading-relaxed text-muted">{n.who}</p>
-                          <p className="text-xs text-muted">{n.from}</p>
                         </div>
                       </div>
                     </Reveal>
                   ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -337,8 +330,8 @@ export default function LandingPage() {
                   <span className="text-xs font-bold uppercase tracking-[0.22em] text-violet-soft">03 — Comprehension first</span>
                   <h3 className="headline mt-3 text-3xl sm:text-4xl">Listen first, speak when ready</h3>
                   <p className="mt-4 leading-relaxed text-muted">
-                    In your first hundred hours you don&rsquo;t speak at all — you point, act and
-                    laugh while ~1,000 words sink in by ear. Speech isn&rsquo;t forced; it{" "}
+                    In your first 30–40 hours you don&rsquo;t speak at all — you point, act and
+                    laugh while hundreds of words sink in by ear. Speech isn&rsquo;t forced; it{" "}
                     <span className="font-semibold text-ink">emerges</span>, like a child&rsquo;s
                     first words, on top of everything you already understand.
                   </p>
@@ -488,12 +481,12 @@ export default function LandingPage() {
                 You already speak the most needed language on earth — yours.
               </h2>
               <p className="mt-5 max-w-xl text-base font-medium leading-relaxed opacity-90">
-                No teaching degree. No grammar explanations. No lesson prep. If you can show a
-                picture, name what&rsquo;s in it and play, you can nurture someone into your world —
-                Nuri guides every session, card by card, minute by minute.
+                You do not need to lecture about grammar. The closed beta will train, review,
+                and support people who can share pictures, objects, stories, and everyday life
+                warmly in the language they already live in.
               </p>
               <Link
-                href="/onboarding?role=nurturer"
+                href="/early"
                 className="pill mt-8 inline-flex bg-canvas px-7 py-3.5 text-base font-bold text-ink"
               >
                 🤝 Become a nurturer
@@ -539,8 +532,8 @@ export default function LandingPage() {
             to become a <span className="italic text-lime">window</span>.
           </h2>
           <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted">
-            Pick a language, meet a nurturer, point at your first picture card. You&rsquo;ll
-            understand from minute one.
+            Pick a language, meet your picture-card buddy, and begin listening. You&rsquo;ll
+            understand from minute one while the real nurturer community is being trained.
           </p>
           <div className="mt-9 flex justify-center">
             <Link

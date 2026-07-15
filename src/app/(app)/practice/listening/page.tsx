@@ -49,7 +49,7 @@ function cmdWord(c: TprCommand, lang: ContentLang): string {
 
 export default function ListeningPage() {
   const { lang, fellBack, t } = useContentLang();
-  const { completeActivity } = useApp();
+  const { completeActivity, profile } = useApp();
 
   const [roundIx, setRoundIx] = useState(0);
   const [results, setResults] = useState<RoundResult[]>([]);
@@ -92,9 +92,9 @@ export default function ListeningPage() {
   useEffect(() => {
     if (finished && !loggedRef.current) {
       loggedRef.current = true;
-      completeActivity("tpr-listen-do", 10);
+      completeActivity(profile?.phase === 1 ? "p1-listen-do" : "maintenance-listening", 10);
     }
-  }, [finished, completeActivity]);
+  }, [finished, completeActivity, profile?.phase]);
 
   useEffect(
     () => () => {

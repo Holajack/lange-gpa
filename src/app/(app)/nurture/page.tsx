@@ -36,6 +36,10 @@ import { Mascot } from "@/components/Mascot";
 import { Card, Pill, Tag } from "@/components/ui";
 import type { LangCode, Phase, PhaseActivity, VocabItem } from "@/lib/types";
 
+const DEMO_FAST_FORWARD =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_SPEED === "true";
+
 /* ---------------------------------------------------------------- *
  *  Motion choreography (matches the rest of the app)
  * ---------------------------------------------------------------- */
@@ -571,14 +575,16 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
           <h2 className="headline text-2xl lg:text-3xl">⏱️ {t("nurMeetingTimer")}</h2>
           <p className="mt-1 text-sm text-muted">{t("nurMeetingTimerSub")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setFast((f) => !f)}
-          title={t("nur2DemoSpeed")}
-          className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-white/6 text-muted"}`}
-        >
-          ⚡ ×60
-        </button>
+        {DEMO_FAST_FORWARD && (
+          <button
+            type="button"
+            onClick={() => setFast((f) => !f)}
+            title={t("nur2DemoSpeed")}
+            className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-white/6 text-muted"}`}
+          >
+            ⚡ ×60
+          </button>
+        )}
       </div>
 
       {/* big clock */}

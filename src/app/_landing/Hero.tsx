@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { NURTURERS } from "@/lib/nurturers";
 import { speak } from "@/lib/tts";
 import type { LangCode } from "@/lib/types";
 
@@ -17,7 +16,7 @@ interface FloatChip {
 }
 
 const CHIPS: FloatChip[] = [
-  { flag: "🇪🇸", word: "hola", lang: "es", pos: "left-[3%] top-[6%] -rotate-6", delay: 0 },
+  { flag: "🇪🇸", word: "hola", lang: "es", pos: "left-[3%] top-[6%] -rotate-6 hidden sm:block", delay: 0 },
   { flag: "🇷🇺", word: "привет", lang: "ru", pos: "right-[5%] top-[7%] rotate-3 hidden sm:block", delay: 0.5 },
   { flag: "🇫🇷", word: "salut", lang: "fr", pos: "left-[6%] bottom-[10%] rotate-2 hidden md:block", delay: 1.1 },
   { flag: "🇯🇵", word: "こんにちは", lang: "ja", pos: "right-[2%] bottom-[26%] rotate-6 hidden sm:block", delay: 1.7 },
@@ -28,8 +27,6 @@ const CHIPS: FloatChip[] = [
 const EASE = [0.2, 0.65, 0.3, 1] as const;
 
 export function Hero() {
-  const onlineNow = NURTURERS.filter((n) => n.online).length;
-
   return (
     <section className="relative overflow-hidden">
       {/* ambient glows */}
@@ -68,7 +65,7 @@ export function Hero() {
             transition={{ duration: 0.55, ease: EASE }}
             className="inline-flex items-center gap-2 rounded-full border border-line bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-muted"
           >
-            🌱 Grow into a language — with a real person
+            🌱 Built for growing with real people
           </motion.div>
 
           <motion.h1
@@ -90,11 +87,10 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.24, ease: EASE }}
             className="mt-6 max-w-lg text-lg leading-relaxed text-muted"
           >
-            A real person from your new language — your{" "}
-            <span className="font-semibold text-ink">nurturer</span> — meets you with picture
-            cards, play, and <span className="font-semibold text-ink">zero translation</span>.
-            You understand from minute one and speak only when you’re ready: from your first
-            100 hours to truly belonging.
+            Start with picture-based listening and play. As the closed beta opens, trained
+            people from your new language — <span className="font-semibold text-ink">nurturers</span> —
+            will guide live sessions with <span className="font-semibold text-ink">zero translation</span>.
+            You understand from minute one and speak only when you’re ready.
           </motion.p>
 
           <motion.div
@@ -112,7 +108,7 @@ export function Hero() {
               <ArrowRight size={18} />
             </Link>
             <Link
-              href="/onboarding?role=nurturer"
+              href="/early"
               className="pill border border-line bg-white/5 px-7 py-3.5 text-base font-semibold text-ink"
             >
               🤝 I can nurture
@@ -126,8 +122,8 @@ export function Hero() {
             className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted"
           >
             <span className="flex items-center gap-2">
-              <span className="pulsedot h-2.5 w-2.5 rounded-full bg-mint" />
-              {onlineNow} nurturers online right now
+              <span className="h-2.5 w-2.5 rounded-full bg-lime" />
+              Closed beta · recruiting and training real nurturers now
             </span>
             <span className="hidden text-muted/50 sm:inline">·</span>
             <span>No textbooks. No grammar drills. No translation — ever.</span>

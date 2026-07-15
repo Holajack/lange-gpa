@@ -1,6 +1,6 @@
-# LANGE — Launch Roadmap & Deep-Dive Audit
+# Nurilang — Legacy Launch Roadmap & Deep-Dive Audit
 
-_Last updated: 2026-06-12. Live at https://lange-gpa.vercel.app_
+_Historical snapshot from 2026-06-12. Superseded for release decisions by `docs/BETA_READINESS_AUDIT.md`._
 
 ## ✅ Built and live
 

@@ -24,6 +24,9 @@ import type { Nurturer } from "@/lib/types";
 
 const HOURS = Array.from({ length: 12 }, (_, i) => `${String(9 + i).padStart(2, "0")}:00`);
 const CONFETTI = ["🎉", "✨", "🌱", "💜", "⭐", "🎊", "🧡", "💚", "🌍", "🪄"];
+const SEEDED_NURTURERS =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_SEEDED_NURTURERS === "true";
 
 /** Nuri — the AI nurturer. Lives in every language; never sleeps. */
 const NURI: Nurturer = {
@@ -183,19 +186,32 @@ export default function SchedulePage() {
   const target = langByCode(targetLang);
   /** The target language's toy sibling — the AI nurturer's face and name */
   const sibling = mascotForLang(targetLang);
-  const phase = phaseById(profile?.phase ?? 1);
-  const defaultActivity = phase.activities[0]?.name ?? t("schGrowingSession");
+  // The closed beta executes Phase 1 only; later phases remain method previews.
+  const phase = phaseById(1);
+  const phase1aIds = new Set(phase.parts?.find((part) => part.id === "1a")?.activityIds ?? []);
+  const availableActivities =
+    (profile?.hoursLogged ?? 0) < 40
+      ? phase.activities.filter((activity) => phase1aIds.has(activity.id))
+      : phase.activities;
+  const defaultActivity = availableActivities[0]?.name ?? t("schGrowingSession");
 
   // t() returns the key itself when missing — fall back to the schedule-local key
   const aiLabelRaw = t("aiNurturer");
   const aiLabel = aiLabelRaw === "aiNurturer" ? t("schAiNurturer") : aiLabelRaw;
 
   const forLang = useMemo(() => nurturersForLang(targetLang), [targetLang]);
-  const fallbackAll = forLang.length === 0;
-  const roster = fallbackAll ? NURTURERS : forLang;
+  const roster = SEEDED_NURTURERS ? (forLang.length > 0 ? forLang : NURTURERS) : [];
+  const noVerifiedNurturers = roster.length === 0;
 
   const bookings = useMemo(
-    () => (profile ? [...profile.bookings].sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)) : []),
+    () =>
+      profile
+        ? [...profile.bookings]
+            // Old prototype bookings can contain seeded character IDs. Do not
+            // present them as real appointments outside the explicit seed demo.
+            .filter((b) => b.nurturerId === "ai" || SEEDED_NURTURERS)
+            .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
+        : [],
     [profile]
   );
 
@@ -203,7 +219,7 @@ export default function SchedulePage() {
 
   const openSheet = (preset: Partial<SheetState> = {}) => {
     setSheet({
-      nurturerId: preset.nurturerId ?? roster.find((n) => n.online)?.id ?? roster[0]?.id ?? NURTURERS[0].id,
+      nurturerId: preset.nurturerId ?? roster.find((n) => n.online)?.id ?? roster[0]?.id ?? "ai",
       date: preset.date ?? selectedIso,
       time: preset.time ?? "18:00",
       activity: preset.activity ?? defaultActivity,
@@ -248,7 +264,7 @@ export default function SchedulePage() {
             {target.flag} {target.nativeName} · 30 {t("minutes")} · GPA
           </p>
         </div>
-        <Pill onClick={() => openSheet()} className="bg-orange px-6 py-3 font-semibold text-canvas" >
+        <Pill onClick={() => openSheet({ nurturerId: "ai" })} className="bg-orange px-6 py-3 font-semibold text-canvas" >
           ＋ {t("bookSession")}
         </Pill>
       </motion.div>
@@ -307,7 +323,7 @@ export default function SchedulePage() {
                         {b.minutes} {t("minutes")}
                       </Tag>
                       <Link
-                        href={`/session?nurturer=${b.nurturerId}&activity=${encodeURIComponent(b.activity)}`}
+                        href={`/session?nurturer=${b.nurturerId}&activity=${encodeURIComponent(b.activity)}&duration=${b.minutes}`}
                         className="pill shrink-0 bg-violet px-4 py-2 text-sm text-white"
                       >
                         ▶ <span className="hidden sm:inline">{t("start")}</span>
@@ -447,12 +463,15 @@ export default function SchedulePage() {
             <p className="text-xs text-muted/80">{t("schRealPeopleSub")}</p>
           </div>
 
-          {fallbackAll && (
-            <Card className="flex items-center gap-3 p-4">
+          {noVerifiedNurturers && (
+            <Card className="flex flex-wrap items-center gap-3 p-4">
               <span className="text-2xl">🌍</span>
-              <p className="text-sm text-muted">
+              <p className="min-w-0 flex-1 text-sm text-muted">
                 {t("schMoreJoining").replace("{language}", target.nativeName)}
               </p>
+              <Link href="/world" className="pill bg-violet px-4 py-2 text-sm font-semibold text-white">
+                {t("world")} →
+              </Link>
             </Card>
           )}
 
@@ -593,7 +612,7 @@ export default function SchedulePage() {
                     {phase.emoji} {t("phaseWord")} {phase.id} — {phase.name}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {phase.activities.map((a) => {
+                    {availableActivities.map((a) => {
                       const sel = sheet.activity === a.name;
                       return (
                         <button

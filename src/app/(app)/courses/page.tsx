@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, LockKeyhole } from "lucide-react";
 
 import { useApp } from "@/lib/store";
 import { PHASES, TOTAL_HOURS, phaseProgress } from "@/lib/phases";
@@ -66,6 +66,7 @@ function JourneyCard({
   phaseWord,
   currentLabel,
   openLabel,
+  previewLabel,
 }: {
   phase: Phase;
   hours: number;
@@ -73,11 +74,13 @@ function JourneyCard({
   phaseWord: string;
   currentLabel: string;
   openLabel: string;
+  previewLabel: string;
 }) {
-  const completed = hours >= phase.startHour + phase.hours;
-  const current = currentPhaseId === phase.id;
-  const future = !current && phase.id > currentPhaseId;
-  const progress = phaseProgress(phase, hours);
+  const betaPreview = phase.id > 1;
+  const completed = !betaPreview && !phase.ongoing && hours >= phase.startHour + phase.hours;
+  const current = !betaPreview && currentPhaseId === phase.id;
+  const future = betaPreview || (!current && phase.id > currentPhaseId);
+  const progress = betaPreview ? 0 : phaseProgress(phase, hours);
 
   return (
     <Link href={`/courses/${phase.slug}`} className="group block">
@@ -127,6 +130,12 @@ function JourneyCard({
                   <Check size={13} strokeWidth={3.5} />
                 </span>
               )}
+              {betaPreview && (
+                <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-muted">
+                  <LockKeyhole size={11} strokeWidth={2.5} aria-hidden />
+                  {previewLabel}
+                </span>
+              )}
             </div>
 
             <h3 className="headline mt-2 text-2xl leading-tight lg:text-[27px]">{phase.name}</h3>
@@ -137,7 +146,7 @@ function JourneyCard({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Tag>⏱ {phase.hours}h</Tag>
+          <Tag>⏱ {phase.ongoing ? "∞" : `${phase.hours}h`}</Tag>
           <Tag>💬 {phase.vocabTarget}</Tag>
         </div>
 
@@ -145,15 +154,15 @@ function JourneyCard({
 
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-xs font-bold">
-            <span className="text-muted">{Math.round(progress)}%</span>
+            <span className="text-muted">{phase.ongoing ? "∞" : `${Math.round(progress)}%`}</span>
             <span
               className="inline-flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               style={{ color: phase.color }}
             >
-              {openLabel} <ArrowRight size={13} strokeWidth={2.5} />
+              {betaPreview ? previewLabel : openLabel} <ArrowRight size={13} strokeWidth={2.5} />
             </span>
           </div>
-          <ProgressBar value={progress} color={phase.color} />
+          {!phase.ongoing && <ProgressBar value={progress} color={phase.color} />}
         </div>
       </div>
     </Link>
@@ -286,6 +295,7 @@ export default function CoursesPage() {
                     phaseWord={t("phaseWord")}
                     currentLabel={t("currentPhase")}
                     openLabel={t("openPhase")}
+                    previewLabel={t("crsMethodPreview")}
                   />
                 </div>
               </motion.div>

@@ -17,6 +17,7 @@ import { ProgressBar } from "@/components/ui";
 import {
   FallbackBanner,
   FinishScreen,
+  Phase1BGuard,
   PracticeHeader,
   ReplayButton,
   useContentLang,
@@ -174,9 +175,9 @@ type RecState = "idle" | "recording" | "done";
 
 /* ---------------------------------- page ---------------------------------- */
 
-export default function SpeakingPage() {
+function SpeakingExperience() {
   const { lang, fellBack, t } = useContentLang();
-  const { completeActivity } = useApp();
+  const { completeActivity, profile } = useApp();
 
   const [ix, setIx] = useState(0);
   const [heard, setHeard] = useState(false); // text reveals only after the 1st listen
@@ -327,9 +328,9 @@ export default function SpeakingPage() {
   useEffect(() => {
     if (finished && !loggedRef.current) {
       loggedRef.current = true;
-      completeActivity("power-phrases", 10);
+      completeActivity(profile?.phase === 1 ? "p1-power" : "maintenance-speaking", 10);
     }
-  }, [finished, completeActivity]);
+  }, [finished, completeActivity, profile?.phase]);
 
   /* --------------------------------- views -------------------------------- */
 
@@ -515,5 +516,13 @@ export default function SpeakingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SpeakingPage() {
+  return (
+    <Phase1BGuard>
+      <SpeakingExperience />
+    </Phase1BGuard>
   );
 }

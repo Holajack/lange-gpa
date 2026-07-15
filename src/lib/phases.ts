@@ -1,4 +1,4 @@
-import type { Phase } from "./types";
+import type { Phase, PhaseId } from "./types";
 
 /**
  * The Six-Phase Programme of the Growing Participator Approach
@@ -615,7 +615,8 @@ export const PHASES: Phase[] = [
     slug: "ever-growing",
     name: "Ever Participating, Ever Growing",
     tagline: "Self-sustaining growth — a life to be lived",
-    hours: 500,
+    hours: 0,
+    ongoing: true,
     startHour: 1500,
     color: "#3ddc84",
     emoji: "🌍",
@@ -739,6 +740,16 @@ export const TOTAL_HOURS = 1500;
 
 /** Where a grower stands inside their current phase, 0..100 */
 export function phaseProgress(phase: Phase, hoursLogged: number): number {
+  if (phase.ongoing || phase.hours <= 0) return 0;
   const into = hoursLogged - phase.startHour;
   return Math.min(100, Math.max(0, (into / phase.hours) * 100));
+}
+
+/** The phase hoursLogged actually places a grower in (PHASES are contiguous). */
+export function phaseForHours(hoursLogged: number): PhaseId {
+  let current: PhaseId = PHASES[0].id;
+  for (const p of PHASES) {
+    if (hoursLogged >= p.startHour) current = p.id;
+  }
+  return current;
 }

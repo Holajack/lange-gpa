@@ -1,4 +1,4 @@
-# LANGE 🌱 — Grow into a language, not just learn it
+# Nurilang 🌱 — Grow into a language, not just learn it
 
 A web app built on the **Growing Participator Approach** (GPA, by Greg & Angela Thomson):
 language is a life to be lived, not a subject to be studied. Learners are **growers**;

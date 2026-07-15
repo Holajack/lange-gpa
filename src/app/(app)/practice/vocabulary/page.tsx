@@ -106,7 +106,8 @@ function wordOf(item: VocabItem, lang: ContentLang): string {
 
 function Game({ domain }: { domain: VocabDomain }) {
   const { lang, fellBack, uiLang, t } = useContentLang();
-  const { completeActivity } = useApp();
+  const { completeActivity, profile } = useApp();
+  const writtenWordsReady = Boolean(profile && (profile.phase > 1 || profile.hoursLogged >= 40));
 
   const [rounds] = useState<VocabItem[]>(() => buildRounds(domain));
   const [round, setRound] = useState(0);
@@ -155,9 +156,17 @@ function Game({ domain }: { domain: VocabDomain }) {
   useEffect(() => {
     if (finished && !loggedRef.current) {
       loggedRef.current = true;
-      completeActivity(`vocab-${domain.id}`, 10, metIds.size);
+      completeActivity(
+        profile?.phase === 1
+          ? metIds.size >= 10
+            ? "p1-dozen"
+            : "p1-dozen-practice"
+          : `maintenance-vocab-${domain.id}`,
+        10,
+        [...metIds]
+      );
     }
-  }, [finished, completeActivity, domain.id, metIds]);
+  }, [finished, completeActivity, domain.id, metIds, profile?.phase]);
 
   useEffect(
     () => () => {
@@ -257,7 +266,8 @@ function Game({ domain }: { domain: VocabDomain }) {
         <div className={`grid ${cols} gap-4`} key={`${round}-${choices.length}`}>
           {choices.map((item, i) => {
             const isTarget = target !== null && item.id === target.id;
-            const showWord = revealed && isTarget;
+            const correctReveal = revealed && isTarget;
+            const showWord = correctReveal && writtenWordsReady;
             const cardImage = getCardImage(item.id);
             return (
               <motion.button
@@ -271,10 +281,10 @@ function Game({ domain }: { domain: VocabDomain }) {
                 className={[
                   "card card-hover relative flex flex-col items-center justify-center gap-2 px-4 py-8 outline-none",
                   wrongId === item.id ? "shake border-coral/60" : "",
-                  showWord ? "popin border-lime ring-2 ring-lime" : "",
+                  correctReveal ? "popin border-lime ring-2 ring-lime" : "",
                   revealed && !isTarget ? "opacity-40" : "",
                 ].join(" ")}
-                style={showWord ? { boxShadow: "0 0 50px -12px rgba(184,240,60,0.7)" } : undefined}
+                style={correctReveal ? { boxShadow: "0 0 50px -12px rgba(184,240,60,0.7)" } : undefined}
               >
                 {cardImage ? (
                   // eslint-disable-next-line @next/next/no-img-element -- static public/ asset, no optimization needed
@@ -289,7 +299,7 @@ function Game({ domain }: { domain: VocabDomain }) {
                 ) : (
                   <span className="text-6xl leading-none">{item.emoji}</span>
                 )}
-                {/* the written word is revealed only after the ear succeeds */}
+                {/* Writing waits until Phase 1B; early success stays image + audio only. */}
                 {showWord ? (
                   <motion.span
                     initial={{ opacity: 0, y: 6 }}

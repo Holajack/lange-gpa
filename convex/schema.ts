@@ -2,7 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 /**
- * LANGE backend schema.
+ * Nurilang backend schema.
  *
  * Mirrors the localStorage `Profile` shape in src/lib/types.ts so that
  * profile sync can replace localStorage without a data-model change.
@@ -32,6 +32,49 @@ export default defineSchema({
      */
     data: v.optional(v.any()),
   }).index("by_clerkId", ["clerkId"]),
+
+  /**
+   * Private, directional community blocks. Both Clerk ids remain server-only;
+   * clients address people by their opaque profile document id. A block hides
+   * both people from one another in the exchange roster.
+   */
+  blocks: defineTable({
+    blockerClerkId: v.string(),
+    blockedClerkId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_blocker", ["blockerClerkId"])
+    .index("by_blocked", ["blockedClerkId"])
+    .index("by_pair", ["blockerClerkId", "blockedClerkId"]),
+
+  /**
+   * Private safety reports. Reports are never returned in the public roster;
+   * only a fail-closed moderator allowlist may review them.
+   */
+  safetyReports: defineTable({
+    reporterClerkId: v.string(),
+    reportedClerkId: v.string(),
+    category: v.union(
+      v.literal("harassment"),
+      v.literal("hate"),
+      v.literal("sexual_content"),
+      v.literal("spam"),
+      v.literal("impersonation"),
+      v.literal("dangerous_behavior"),
+      v.literal("privacy"),
+      v.literal("underage_safety"),
+      v.literal("other")
+    ),
+    details: v.optional(v.string()),
+    surface: v.literal("world"),
+    status: v.union(v.literal("open"), v.literal("reviewing"), v.literal("closed")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_reporter", ["reporterClerkId"])
+    .index("by_reported", ["reportedClerkId"])
+    .index("by_pair", ["reporterClerkId", "reportedClerkId"])
+    .index("by_status", ["status"]),
 
   /**
    * Pre-launch interest list (the /early page).

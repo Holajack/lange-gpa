@@ -14,10 +14,12 @@
  * dot or a panel row to meet someone.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { useConvex } from "convex/react";
 import { useApp } from "@/lib/store";
+import { CONVEX_ON } from "@/lib/convexClient";
 import { langByCode } from "@/lib/languages";
 import { MASCOTS, mascotForLang, type MascotDef } from "@/lib/mascots";
 import { speak } from "@/lib/tts";
@@ -32,6 +34,63 @@ import { useCallActions } from "@/components/CallProvider";
 import type { LangCode } from "@/lib/types";
 
 type Spot = { city: string; lat: number; lon: number };
+
+type ReportCategory =
+  | "harassment"
+  | "hate"
+  | "sexual_content"
+  | "spam"
+  | "impersonation"
+  | "dangerous_behavior"
+  | "privacy"
+  | "underage_safety"
+  | "other";
+
+const REPORT_CATEGORIES: ReportCategory[] = [
+  "harassment",
+  "hate",
+  "sexual_content",
+  "spam",
+  "impersonation",
+  "dangerous_behavior",
+  "privacy",
+  "underage_safety",
+  "other",
+];
+
+type SafetyActions = {
+  block: (profileId: string) => Promise<void>;
+  report: (profileId: string, category: ReportCategory, details?: string) => Promise<void>;
+};
+
+function useSafetyActionsLive(): SafetyActions {
+  const convex = useConvex();
+  const block = useCallback(
+    async (profileId: string) => {
+      await convex.mutation("safety:blockPerson" as never, { profileId } as never);
+    },
+    [convex]
+  );
+  const report = useCallback(
+    async (profileId: string, category: ReportCategory, details?: string) => {
+      await convex.mutation(
+        "safety:reportPerson" as never,
+        { profileId, category, details: details || undefined } as never
+      );
+    },
+    [convex]
+  );
+  return { block, report };
+}
+
+const SAFETY_STUB: SafetyActions = {
+  block: async () => {},
+  report: async () => {},
+};
+
+const useSafetyActions: () => SafetyActions = CONVEX_ON
+  ? useSafetyActionsLive
+  : () => SAFETY_STUB;
 
 /** Where each language sibling stands on the planet. */
 const SPOTS: Partial<Record<LangCode, Spot>> = {
@@ -155,7 +214,14 @@ export default function WorldPage() {
   const realPeople = useRealPeople();
   const { send: sendRequest, outgoing: outgoingRequests } = useRequests();
   const { startCall: startVideoCall } = useCallActions();
+  const { block: blockPerson, report: reportPerson } = useSafetyActions();
   const [requested, setRequested] = useState<Set<string>>(new Set());
+  const [locallyBlocked, setLocallyBlocked] = useState<Set<string>>(new Set());
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportCategory, setReportCategory] = useState<ReportCategory>("harassment");
+  const [reportDetails, setReportDetails] = useState("");
+  const [safetyBusy, setSafetyBusy] = useState<"block" | "report" | null>(null);
+  const [safetyFeedback, setSafetyFeedback] = useState<string | null>(null);
 
   /** every language's capital as a globe pin, recolored for the selected one */
   const capitals: GlobeCapital[] = MASCOTS.map((m) => {
@@ -174,6 +240,7 @@ export default function WorldPage() {
   /** Real signed-up people tied to this language: growing into it (grower) or
    *  speaking/nurturing it (nurturer). City-level pins, with `me` highlighted. */
   const realForLang = realPeople
+    .filter((p) => !locallyBlocked.has(p.id))
     .filter(
       (p) =>
         p.targetLang === mascot.lang ||
@@ -189,7 +256,9 @@ export default function WorldPage() {
         color: kind === "nurturer" ? NURTURER_DOT : GROWER_DOT,
         city: p.city ?? "",
         country: p.country,
-        online: true,
+        // Presence is not implemented yet. Never imply that a real person is
+        // online merely because their profile appears in the directory.
+        online: false,
         bio: p.bio ?? "",
         tags: p.interests,
         growing: kind === "grower" ? p.targetLang : undefined,
@@ -245,6 +314,14 @@ export default function WorldPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [person]);
+
+  useEffect(() => {
+    setReportOpen(false);
+    setReportCategory("harassment");
+    setReportDetails("");
+    setSafetyBusy(null);
+    setSafetyFeedback(null);
+  }, [person?.id]);
 
   if (!profile) return null;
 
@@ -707,26 +784,132 @@ export default function WorldPage() {
                 )}
 
                 {!person.me && (
-                  <div className="mt-2 flex gap-2">
-                    <Link
-                      href={`/messages?with=${person.id}`}
-                      className="pill flex flex-1 items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
-                    >
-                      💬 {t("msgMessage")}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const id = person.id;
-                        const name = person.name;
-                        setPerson(null);
-                        startVideoCall(id, name);
-                      }}
-                      className="pill flex flex-1 items-center justify-center gap-1.5 bg-violet/15 px-5 py-2.5 text-sm font-semibold text-violet-soft hover:bg-violet/25"
-                    >
-                      📹 {t("callVideo")}
-                    </button>
-                  </div>
+                  <>
+                    <div className="mt-2 flex gap-2">
+                      <Link
+                        href={`/messages?with=${person.id}`}
+                        className="pill flex flex-1 items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
+                      >
+                        💬 {t("msgMessage")}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const id = person.id;
+                          const name = person.name;
+                          setPerson(null);
+                          startVideoCall(id, name);
+                        }}
+                        className="pill flex flex-1 items-center justify-center gap-1.5 bg-violet/15 px-5 py-2.5 text-sm font-semibold text-violet-soft hover:bg-violet/25"
+                      >
+                        📹 {t("callVideo")}
+                      </button>
+                    </div>
+
+                    <div className="mt-3 border-t border-line pt-3">
+                      <div className="flex items-center justify-center gap-4 text-xs">
+                        <button
+                          type="button"
+                          disabled={safetyBusy !== null}
+                          onClick={() => {
+                            setSafetyFeedback(null);
+                            setReportOpen((open) => !open);
+                          }}
+                          aria-expanded={reportOpen}
+                          className="font-semibold text-muted transition hover:text-ink disabled:opacity-50"
+                        >
+                          🚩 {t("safReport")}
+                        </button>
+                        <span className="text-line" aria-hidden>•</span>
+                        <button
+                          type="button"
+                          disabled={safetyBusy !== null}
+                          onClick={() => {
+                            if (!window.confirm(`${t("safBlockConfirm")} ${person.name}?`)) return;
+                            const id = person.id;
+                            setSafetyBusy("block");
+                            setSafetyFeedback(null);
+                            void blockPerson(id)
+                              .then(() => {
+                                setLocallyBlocked((blocked) => new Set(blocked).add(id));
+                                setPerson(null);
+                              })
+                              .catch(() => setSafetyFeedback(t("safTryAgain")))
+                              .finally(() => setSafetyBusy(null));
+                          }}
+                          className="font-semibold text-orange transition hover:text-orange-soft disabled:opacity-50"
+                        >
+                          {safetyBusy === "block" ? "…" : "⛔"} {t("safBlock")}
+                        </button>
+                      </div>
+
+                      <AnimatePresence initial={false}>
+                        {reportOpen && (
+                          <motion.form
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-3 overflow-hidden"
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              setSafetyBusy("report");
+                              setSafetyFeedback(null);
+                              void reportPerson(person.id, reportCategory, reportDetails)
+                                .then(() => {
+                                  setReportOpen(false);
+                                  setReportDetails("");
+                                  setSafetyFeedback(t("safReportSent"));
+                                })
+                                .catch(() => setSafetyFeedback(t("safTryAgain")))
+                                .finally(() => setSafetyBusy(null));
+                            }}
+                          >
+                            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted">
+                              {t("safReason")}
+                              <select
+                                value={reportCategory}
+                                onChange={(event) => setReportCategory(event.target.value as ReportCategory)}
+                                className="mt-1.5 w-full rounded-xl border border-line bg-raised-2 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-ink"
+                              >
+                                {REPORT_CATEGORIES.map((category) => (
+                                  <option key={category} value={category}>
+                                    {t(`safReason_${category}`)}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="mt-2.5 block text-[11px] font-bold uppercase tracking-wider text-muted">
+                              {t("safDetails")}
+                              <textarea
+                                value={reportDetails}
+                                onChange={(event) => setReportDetails(event.target.value)}
+                                maxLength={500}
+                                required={reportCategory === "other"}
+                                rows={3}
+                                className="mt-1.5 w-full resize-none rounded-xl border border-line bg-raised-2 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-ink"
+                              />
+                            </label>
+                            <p className="mt-1 text-right text-[10px] text-muted">
+                              {reportDetails.length}/500
+                            </p>
+                            <button
+                              type="submit"
+                              disabled={safetyBusy !== null}
+                              className="pill mt-2 flex w-full justify-center bg-orange/15 px-4 py-2.5 text-sm font-semibold text-orange disabled:opacity-50"
+                            >
+                              {safetyBusy === "report" ? "…" : t("safSendReport")}
+                            </button>
+                          </motion.form>
+                        )}
+                      </AnimatePresence>
+
+                      {safetyFeedback && (
+                        <p className="mt-2 text-center text-xs text-muted" role="status" aria-live="polite">
+                          {safetyFeedback}
+                        </p>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </motion.div>
