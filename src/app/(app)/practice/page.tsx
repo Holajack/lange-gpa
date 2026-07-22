@@ -9,6 +9,8 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useApp } from "@/lib/store";
+import { gate1bPassed, gateLegs1b } from "@/lib/gates";
+import { weakestLegChip } from "@/components/CheckpointCard";
 import { Mascot } from "@/components/Mascot";
 
 interface Launcher {
@@ -20,7 +22,8 @@ interface Launcher {
   accent: string; // css color
   glow: string;
   dark: boolean; // pill text dark on bright accents
-  minHours?: number;
+  /** advancement gate that opens this game (see src/lib/gates.ts) */
+  gate?: "1b";
 }
 
 const GAMES: Launcher[] = [
@@ -53,7 +56,7 @@ const GAMES: Launcher[] = [
     accent: "var(--color-orange)",
     glow: "rgba(255,138,30,0.45)",
     dark: true,
-    minHours: 40,
+    gate: "1b",
   },
   {
     href: "/practice/repeat",
@@ -64,12 +67,17 @@ const GAMES: Launcher[] = [
     accent: "var(--color-violet)",
     glow: "rgba(124,92,255,0.5)",
     dark: false,
-    minHours: 40,
+    gate: "1b",
   },
 ];
 
 export default function PracticeHubPage() {
   const { profile, t } = useApp();
+  /* 1B status from the real gate (stamp-or-predicate) — the same check the
+     session room and Phase1BGuard apply, so the surfaces can never disagree */
+  const locked1b = !profile || (profile.phase === 1 && !gate1bPassed(profile));
+  /* the weakest remaining leg — a specific, actionable lock chip */
+  const gate1bChip = profile && locked1b ? weakestLegChip(gateLegs1b(profile), t) : "";
 
   return (
     <div className="relative">
@@ -100,11 +108,7 @@ export default function PracticeHubPage() {
       {/* launcher cards */}
       <div className="grid gap-5 md:grid-cols-2">
         {GAMES.map((g, i) => {
-          const locked = Boolean(
-            g.minHours &&
-            (profile?.hoursLogged ?? 0) < g.minHours &&
-            (profile?.phase ?? 1) === 1
-          );
+          const locked = Boolean(g.gate) && locked1b;
           const card = (
             <div className={`card relative overflow-hidden p-7 lg:p-8 ${locked ? "opacity-65" : "card-hover"}`}>
               <div
@@ -129,7 +133,7 @@ export default function PracticeHubPage() {
                       background: `color-mix(in srgb, ${g.accent} 14%, transparent)`,
                     }}
                   >
-                    {locked ? `🔒 ${g.minHours}h` : t(g.labelKey)}
+                    {locked ? `🔒 ${gate1bChip}` : t(g.labelKey)}
                   </span>
                 </div>
 

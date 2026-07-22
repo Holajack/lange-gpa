@@ -16,6 +16,8 @@ import { getCardImage, whenCardsReady } from "@/lib/cards";
 import { speak, stopSpeaking } from "@/lib/tts";
 import type { VocabDomain, VocabItem } from "@/lib/types";
 import { useApp } from "@/lib/store";
+import { gate1bPassed } from "@/lib/gates";
+import { INTERESTS } from "@/lib/onboardingOptions";
 import {
   FallbackBanner,
   FinishScreen,
@@ -33,6 +35,103 @@ import {
 const TOTAL_ROUNDS = 12;
 const LIME = "var(--color-lime)";
 
+/* ------------------------------ interests ask ----------------------------- */
+
+/**
+ * The in-context home of the "what do you love?" question deferred out of
+ * onboarding (SPEC-onboarding §1): asked immediately before the first deck
+ * session, where the answer visibly shapes the picture-card worlds. Gates
+ * nothing — the deck grid below stays fully usable, and skipping never asks
+ * again.
+ */
+const INTERESTS_ASK_DONE_KEY = "lange.interestsAsk.v1";
+
+function InterestsAsk() {
+  const { profile, t, updateProfile } = useApp();
+  const [done, setDone] = useState(true); // assume answered until the browser says otherwise
+  const [picked, setPicked] = useState<string[]>([]);
+
+  useEffect(() => {
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(INTERESTS_ASK_DONE_KEY) === "1";
+    } catch {}
+    if (!dismissed) setDone(false);
+  }, []);
+
+  if (done || !profile || profile.role === "nurturer" || (profile.interests?.length ?? 0) > 0) {
+    return null;
+  }
+
+  const markDone = () => {
+    try {
+      localStorage.setItem(INTERESTS_ASK_DONE_KEY, "1");
+    } catch {}
+    setDone(true);
+  };
+
+  const toggle = (id: string) =>
+    setPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const save = () => {
+    if (picked.length > 0) updateProfile({ interests: picked });
+    markDone();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="card relative mb-6 overflow-hidden p-5 sm:p-6"
+    >
+      <div className="orb -right-14 -top-16 h-40 w-40 bg-lime/15" />
+      <div className="relative">
+        <h2 className="headline text-xl sm:text-2xl">💛 {t("dshOnbWhatLoveHead")}</h2>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted">{t("dshOnbWhatLoveSub")}</p>
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          {INTERESTS.map((interest) => {
+            const on = picked.includes(interest.id);
+            return (
+              <button
+                key={interest.id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(interest.id)}
+                className={`pill border px-4 py-2.5 text-sm font-semibold ${
+                  on
+                    ? "border-transparent bg-lime text-canvas"
+                    : "border-line bg-white/5 text-ink hover:bg-white/10"
+                }`}
+              >
+                <span aria-hidden>{interest.emoji}</span> {t(interest.labelKey)}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={save}
+            disabled={picked.length === 0}
+            className="pill justify-center bg-lime px-6 py-3 text-sm font-bold text-canvas disabled:pointer-events-none disabled:opacity-35"
+          >
+            ✓ {t("done")}
+          </button>
+          <button
+            type="button"
+            onClick={markDone}
+            className="pill justify-center bg-white/6 px-6 py-3 text-sm font-semibold text-muted hover:text-ink"
+          >
+            {t("dshOnbSkipForNow")}
+          </button>
+        </div>
+        <p className="mt-3 text-[11px] text-muted">🌱 {t("dshOnbLoveLives")}</p>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ----------------------------- domain chooser ----------------------------- */
 
 function DomainChooser() {
@@ -45,6 +144,8 @@ function DomainChooser() {
         kicker={t("chooseCategory")}
         accent={LIME}
       />
+      {/* deferred in-context ask — never a gate, the decks stay open below */}
+      <InterestsAsk />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {VOCAB_DOMAINS.map((d, i) => (
           <motion.div
@@ -107,7 +208,8 @@ function wordOf(item: VocabItem, lang: ContentLang): string {
 function Game({ domain }: { domain: VocabDomain }) {
   const { lang, fellBack, uiLang, t } = useContentLang();
   const { completeActivity, profile } = useApp();
-  const writtenWordsReady = Boolean(profile && (profile.phase > 1 || profile.hoursLogged >= 40));
+  // written word reveals wait for the real 1A → 1B gate (ears before eyes)
+  const writtenWordsReady = Boolean(profile && (profile.phase > 1 || gate1bPassed(profile)));
 
   const [rounds] = useState<VocabItem[]>(() => buildRounds(domain));
   const [round, setRound] = useState(0);

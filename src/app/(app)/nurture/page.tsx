@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 import { useApp } from "@/lib/store";
+import { gate1bPassed } from "@/lib/gates";
 import { PHASES, phaseById } from "@/lib/phases";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { getCardImage, whenCardsReady } from "@/lib/cards";
@@ -183,13 +184,16 @@ function buildPlan(phase: Phase, length: MeetingLength, roll: number, part1a: bo
 }
 
 function SessionPlanner() {
-  const { t } = useApp();
+  const { t, profile } = useApp();
   const [phaseId, setPhaseId] = useState<number>(1);
   const [length, setLength] = useState<MeetingLength>(30);
   const [roll, setRoll] = useState(0);
-  // safe default: 1A (listening only) — a nurturer planning for an unknown
-  // grower should get the pre-40h set, never a premature talking game
-  const [part1a, setPart1a] = useState(true);
+  // default from the signed-in profile's own 1A → 1B gate state (the only
+  // grower context the studio has today — there is no grower picker yet);
+  // 1A stays the safe fallback and the manual toggle below always overrides
+  const [part1a, setPart1a] = useState(
+    () => !(profile && (profile.phase > 1 || gate1bPassed(profile)))
+  );
 
   const phase = phaseById(phaseId);
   const plan = useMemo(() => buildPlan(phase, length, roll, part1a), [phase, length, roll, part1a]);

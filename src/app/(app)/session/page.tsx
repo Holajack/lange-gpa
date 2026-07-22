@@ -58,6 +58,7 @@ import {
   startReview,
 } from "@/lib/sessionFlow";
 import type { DeckCard, FlowState } from "@/lib/sessionFlow";
+import { gate1bPassed, gateLegs1b, gateLegsPhase2, phase1Complete } from "@/lib/gates";
 import { mascotForLang } from "@/lib/mascots";
 import type { MascotDef } from "@/lib/mascots";
 import { MascotImage } from "@/components/MascotImage";
@@ -206,8 +207,10 @@ function SessionRoom() {
 
   const phase1 = phaseById(1);
   const phase1aIds = new Set(phase1.parts?.find((part) => part.id === "1a")?.activityIds ?? []);
+  /* 1A-only until the real 1A → 1B gate is earned (stamp-or-predicate) —
+     the same check the practice hub applies, so the two can never disagree */
   const phase1Activities =
-    (profile?.hoursLogged ?? 0) < 40
+    !profile || (profile.phase === 1 && !gate1bPassed(profile))
       ? phase1.activities.filter((candidate) => phase1aIds.has(candidate.id))
       : phase1.activities;
   const requestedActivity = activityParam?.trim();
@@ -763,6 +766,28 @@ function SessionRoom() {
                 </motion.div>
               ))}
             </div>
+
+            {/* gate delta — every live session visibly moves the next checkpoint
+                (numbers straight from gates.ts; profile already logged above) */}
+            {profile && !phase1Complete(profile) && (() => {
+              const legs = gate1bPassed(profile) ? gateLegsPhase2(profile) : gateLegs1b(profile);
+              const completedMeeting =
+                remaining === 0 && flow.introduced > 0 ? deckMeetingRef.current : null;
+              return (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-4 text-xs font-semibold tabular-nums text-muted"
+                >
+                  {completedMeeting !== null && (
+                    <>🃏 {t("meetingWord")} {completedMeeting} ✓ · </>
+                  )}
+                  🤝 {legs.meetings.done}/{legs.meetings.total} · 💬 {legs.words.done}/
+                  {legs.words.total} · ⏱ {legs.hours.done}/{legs.hours.total}
+                </motion.p>
+              );
+            })()}
 
             {rec.clip && (
               <motion.div

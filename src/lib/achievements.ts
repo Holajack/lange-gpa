@@ -128,6 +128,28 @@ export const ACHIEVEMENTS: Achievement[] = [
     check: () => false,
   },
 
+  // ---- advancement gates: the moments the guide itself celebrates ----
+  // Checked against the persisted gatesPassed STAMP (never the live
+  // predicate) so the badge lands exactly once, in the same beat the store
+  // stamps the gate — and the ACHIEVEMENT_EVENT it fires is what triggers
+  // the full-screen gate ceremony (see components/CheckpointCard.tsx).
+  {
+    id: "gate-1b",
+    emoji: "🗣️",
+    title: "Talking begins",
+    sub: "Phase 1A complete — time to speak your first words, gently.",
+    kind: "phase",
+    check: (profile) => Boolean(profile.gatesPassed?.["1b"]),
+  },
+  {
+    id: "gate-phase2",
+    emoji: "🎓",
+    title: "Phase 1 complete",
+    sub: "The first hundred hours are yours. Congratulations — celebrate!",
+    kind: "phase",
+    check: (profile) => Boolean(profile.gatesPassed?.phase2),
+  },
+
   // ---- phase completions: the six doors of the GPA journey ----
   ...PHASES.filter((phase) => !phase.ongoing).map(
     (p): Achievement => ({

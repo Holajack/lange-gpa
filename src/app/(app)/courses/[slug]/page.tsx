@@ -21,6 +21,7 @@ import { useApp } from "@/lib/store";
 import { PHASES, phaseBySlug, phaseProgress } from "@/lib/phases";
 import { localizedPhase } from "@/lib/phaseI18n";
 import type { PhaseActivity } from "@/lib/types";
+import { CheckpointCard } from "@/components/CheckpointCard";
 import { Mascot } from "@/components/Mascot";
 import { ProgressBar, SectionTitle, Tag } from "@/components/ui";
 
@@ -260,6 +261,13 @@ export default function PhasePage() {
           </div>
         </div>
       </motion.section>
+
+      {/* the next advancement gate — Phase 1 is where the gates live today */}
+      {phase.id === 1 && (
+        <motion.section variants={fadeUp}>
+          <CheckpointCard />
+        </motion.section>
+      )}
 
       {!executablePhase && (
         <motion.section variants={fadeUp} aria-labelledby="method-preview-title">

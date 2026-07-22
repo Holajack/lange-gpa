@@ -11,6 +11,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useApp } from "@/lib/store";
 import { FULL_CONTENT_LANGS } from "@/lib/languages";
+import { gate1bPassed } from "@/lib/gates";
+import { CheckpointCard } from "@/components/CheckpointCard";
 import { Mascot } from "@/components/Mascot";
 import type { LangCode, Profile } from "@/lib/types";
 
@@ -80,32 +82,33 @@ export function FallbackBanner({ show }: { show: boolean }) {
 }
 
 /**
- * Phase 1A is listening-only. Speaking and shadowing tools mount only after
- * roughly 40 comprehension-first hours (or after the grower has moved on).
+ * Phase 1A is listening-only. Speaking and shadowing tools mount only once
+ * the 1A → 1B advancement gate is earned (meetings + words + hours, or a
+ * persisted gatesPassed stamp — see src/lib/gates.ts), or after the grower
+ * has moved on to a later phase.
  */
 export function Phase1BGuard({ children }: { children: React.ReactNode }) {
   const { profile, t } = useApp();
-  const readyToSpeak = !profile || profile.phase > 1 || profile.hoursLogged >= 40;
+  const readyToSpeak = !profile || profile.phase > 1 || gate1bPassed(profile);
   if (readyToSpeak) return <>{children}</>;
 
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-xl items-center py-10">
+    <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col justify-center gap-4 py-10">
       <div className="card w-full p-7 text-center sm:p-10">
         <Mascot size={120} mood="think" />
-        <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-violet-soft">
-          {profile.hoursLogged.toFixed(1)}h / 40h
-        </p>
         <h1 className="headline mt-2 text-3xl">{t("ph_1_part_1a_title")}</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">{t("ph_1_part_1a_focus")}</p>
         <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <Link href="/schedule" className="pill bg-violet px-5 py-3 font-bold text-white">
+            📅 {t("bookSession")}
+          </Link>
           <Link href="/practice/listening" className="pill bg-lemon px-5 py-3 font-bold text-canvas">
             👂 {t("listening")}
           </Link>
-          <Link href="/practice/vocabulary" className="pill bg-lime px-5 py-3 font-bold text-canvas">
-            🃏 {t("vocabulary")}
-          </Link>
         </div>
       </div>
+      {/* the three-leg checkpoint — exactly what's left before talking begins */}
+      <CheckpointCard />
     </div>
   );
 }

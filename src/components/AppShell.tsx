@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
 import { CallProvider } from "@/components/CallProvider";
+import { GateCeremony } from "@/components/CheckpointCard";
 import { CONVEX_ON } from "@/lib/convexClient";
 import { FULL_CONTENT_LANGS } from "@/lib/languages";
 import { useApp } from "@/lib/store";
@@ -35,6 +36,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="orb right-[-100px] top-[30%] h-[300px] w-[300px] bg-orange/12" />
         <AppNav />
         <main className="relative mx-auto max-w-[1400px] px-4 pb-20 pt-6 lg:px-8">{children}</main>
+        {/* full-screen advancement-gate ceremonies — app-wide, fire once per gate */}
+        <GateCeremony />
       </div>
     </CallProvider>
   );
