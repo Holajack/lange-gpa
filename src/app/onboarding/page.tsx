@@ -24,12 +24,15 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Volume2 } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { Logo } from "@/components/Logo";
+import { PlacementCheck } from "@/components/PlacementCheck";
 import { CONVEX_ON } from "@/lib/convexClient";
 import { COMMUNITY_EXCHANGE_ON, NURTURER_STUDIO_ON } from "@/lib/featureFlags";
 import { blankProfile, switchLanguageJourney, useApp } from "@/lib/store";
 import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
+import { placementAvailable, placementSeed } from "@/lib/placement";
+import { POPULATED_MEETINGS } from "@/lib/sessionFlow";
 import { speak } from "@/lib/tts";
-import type { LangCode, Language, Profile, Role } from "@/lib/types";
+import type { LangCode, Language, PhaseId, Profile, Role } from "@/lib/types";
 import { INTERESTS, MOTIVATIONS, PACES } from "@/lib/onboardingOptions";
 
 const STEP_COUNT = 9;
@@ -524,6 +527,11 @@ function OnboardingFlow() {
   const [knownLangs, setKnownLangs] = useState<LangCode[]>(["en"]);
   const [targetLang, setTargetLang] = useState<LangCode | null>(null);
 
+  // optional placement check — an EARNED Phase 2/3 start held in local state
+  // (like every other onboarding answer) until finish() applies the seed
+  const [placedPhase, setPlacedPhase] = useState<PhaseId | null>(null);
+  const [placementOpen, setPlacementOpen] = useState(false);
+
   // Welcome the world in its own language: preselect the visitor's known
   // language from the browser so a non-English speaker starts at home.
   const browserDetected = useRef(false);
@@ -580,6 +588,19 @@ function OnboardingFlow() {
   const trimmed = name.trim();
   const target = targetLang ? langByCode(targetLang) : null;
 
+  // Placement is for FRESH journeys only — a test-out must never overwrite
+  // real logged progress on a language this account is already growing.
+  const placementOffered =
+    targetLang !== null &&
+    placementAvailable(targetLang) &&
+    !(
+      profile &&
+      (profile.journeys?.some(
+        (journey) => journey.lang === targetLang && (journey.hoursLogged > 0 || journey.phase > 1)
+      ) ||
+        (profile.targetLang === targetLang && (profile.hoursLogged > 0 || profile.phase > 1)))
+    );
+
   /** Current invitation step left blank — the CTA turns into an honest "Skip for now". */
   const inviteStepEmpty =
     (step === 3 && city.trim() === "" && country.trim() === "") ||
@@ -632,6 +653,8 @@ function OnboardingFlow() {
   };
 
   const pickTarget = (code: LangCode) => {
+    // a different world means any earned placement no longer applies
+    if (code !== targetLang) setPlacedPhase(null);
     setTargetLang(code);
   };
 
@@ -653,10 +676,23 @@ function OnboardingFlow() {
       ? (nurture[0] ?? knownLangs[0] ?? "en")
       : (targetLang ?? "es");
     const progressBase = profile ? switchLanguageJourney(profile, finalTarget) : blankProfile();
+    // An earned placement seeds phase/hours/words for this journey, and parks
+    // meetingProgress at the last populated Phase-1 meeting so the session
+    // room doesn't drag a placed-ahead grower back to meeting 1 — it serves
+    // them review sessions until new meetings are populated. Skipping or
+    // failing leaves everything exactly as today (Phase 1, meeting 1).
+    const seeded =
+      placedPhase !== null && !nurturerOnly
+        ? {
+            ...progressBase,
+            ...placementSeed(placedPhase),
+            meetingProgress: POPULATED_MEETINGS[POPULATED_MEETINGS.length - 1],
+          }
+        : progressBase;
     const out: Profile = {
       // Editing an existing account keeps all progress (hours, words,
       // completed, bookings, week, createdAt); a brand-new grower starts fresh.
-      ...progressBase,
+      ...seeded,
       name: trimmed,
       role,
       knownLangs: knownLangs.length > 0 ? knownLangs : ["en"],
@@ -875,6 +911,42 @@ function OnboardingFlow() {
                       />
                     ))}
                   </motion.div>
+                  {/* optional test-out branch — skipping (just Continue) is the default path */}
+                  {placementOffered && target && (
+                    <motion.div
+                      variants={item}
+                      className="card mt-4 flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+                    >
+                      {placedPhase ? (
+                        <p className="text-sm font-medium">
+                          ✅ {t("dshPlGate")} {placedPhase >= 3 ? 2 : 1} {t("dshPlPassed")} —{" "}
+                          {t("dshPlIcebergStartsAt")}{" "}
+                          <span className="font-semibold text-lime">
+                            {t("phaseWord")} {placedPhase}
+                          </span>
+                        </p>
+                      ) : (
+                        <>
+                          <div className="min-w-0">
+                            <p className="font-semibold">
+                              👂 {t("dshPlGrownInPre")}
+                              {target.nativeName}
+                              {t("dshPlGrownInPost")}
+                            </p>
+                            <p className="mt-1 text-sm text-muted">{t("dshPlRootsNuri")}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPlacementOpen(true)}
+                            className="pill bg-violet px-4 py-2 text-xs font-bold text-white"
+                            style={{ boxShadow: "var(--shadow-glow-violet)" }}
+                          >
+                            {t("dshPlReadyListen")} →
+                          </button>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
                 </>
               )}
 
@@ -1230,6 +1302,19 @@ function OnboardingFlow() {
           </motion.div>
         </main>
       </div>
+
+      {/* full-screen placement overlay — a branch off step 2, not a new step */}
+      <AnimatePresence>
+        {placementOpen && targetLang && (
+          <PlacementCheck
+            lang={targetLang}
+            onDone={(phase) => {
+              setPlacedPhase(phase);
+              setPlacementOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

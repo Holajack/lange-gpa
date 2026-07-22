@@ -44,7 +44,9 @@ import {
   JOKE_PROMPTS,
   answerReview,
   buildMeetingDeck,
+  buildReviewDeck,
   meetingForHours,
+  nextMeetingFor,
   canReveal,
   createFlow,
   currentCard,
@@ -156,15 +158,28 @@ function Wavebars({ active, color }: { active: boolean; color: string }) {
 }
 
 function SessionRoom() {
-  const { profile, t, completeActivity } = useApp();
+  const { profile, t, completeActivity, updateProfile } = useApp();
   const params = useSearchParams();
 
   const targetLang: LangCode = profile?.targetLang ?? "es";
   const lang = langByCode(targetLang);
   /** language of the picture-card deck — falls back to Spanish for demo langs without decks */
   const initialContentLang: LangCode = FULL_CONTENT_LANGS.includes(targetLang) ? targetLang : "es";
-  /** which authentic Rough-and-Ready-Dozen meeting the grower is on (≈2h each) */
-  const meeting = meetingForHours(profile?.hoursLogged ?? 0);
+  /** SEQUENTIAL PROGRESSION: the next authentic Rough-and-Ready-Dozen meeting
+   *  after the last one COMPLETED in a live session (never the hours proxy —
+   *  solo practice can't skip a grower ahead). Before the store's one-time
+   *  self-heal writes meetingProgress, fall back to the same hours-derived
+   *  value it will write, so legacy profiles see the right meeting at once.
+   *  null = every populated meeting is complete → review-only sessions. */
+  const meeting = nextMeetingFor(
+    profile?.meetingProgress ?? Math.max(0, meetingForHours(profile?.hoursLogged ?? 0) - 1)
+  );
+  /** deal the spine meeting due next — or, past the spine, a pure review deck */
+  const dealDeck = useCallback(
+    (code: LangCode) =>
+      meeting === null ? buildReviewDeck(code, DECK_SIZE) : buildMeetingDeck(code, meeting, DECK_SIZE),
+    [meeting]
+  );
 
   // ---- booking lookup (links from /schedule carry nurturer + activity) ----
   const nurturerParam = params.get("nurturer");
@@ -213,7 +228,7 @@ function SessionRoom() {
   const [switchStep, setSwitchStep] = useState<"closed" | "confirm" | "lang">("closed");
 
   // ---- the Dirty Dozen flow ----
-  const [flow, setFlow] = useState<FlowState>(() => createFlow(buildMeetingDeck(initialContentLang, meeting, DECK_SIZE)));
+  const [flow, setFlow] = useState<FlowState>(() => createFlow(dealDeck(initialContentLang)));
   const [feedback, setFeedback] = useState<CardFeedback | null>(null);
   const [iceberg, setIceberg] = useState(false);
   /** id of the card the grower just missed — the nurturer re-says it */
@@ -234,6 +249,14 @@ function SessionRoom() {
 
   const halfRef = useRef(false);
   const loggedRef = useRef(false);
+  /** the meeting the CURRENT deck was built for — null after a language-exchange
+   *  swap (those decks restart at Meeting 1 and never advance meetingProgress)
+   *  and for post-spine review decks (reviews never advance it either) */
+  const deckMeetingRef = useRef<number | null>(meeting);
+  /** card ids the grower met in THEIR OWN language before a mid-session swap —
+   *  banked so the end-of-session word log never drops the first half, and
+   *  ids from a partner's exchange deck are never credited to this journey */
+  const ownIntroducedRef = useRef<string[]>([]);
   /** latest countdown value, read (not depended on) by the keep-going loop below */
   const remainingRef = useRef(totalSeconds);
 
@@ -266,8 +289,9 @@ function SessionRoom() {
   useEffect(() => {
     if (stage !== "pre") return;
     setSessionLang(initialContentLang);
-    setFlow(createFlow(buildMeetingDeck(initialContentLang, meeting, DECK_SIZE)));
-  }, [stage, initialContentLang, meeting]);
+    deckMeetingRef.current = meeting;
+    setFlow(createFlow(dealDeck(initialContentLang)));
+  }, [stage, initialContentLang, meeting, dealDeck]);
 
   // countdown
   useEffect(() => {
@@ -456,8 +480,22 @@ function SessionRoom() {
     stopSpeaking();
     recStop();
     const mins = Math.max(1, Math.round((totalSeconds - remaining) / 60));
-    completeActivity(`live-${nurturer.id}-${profile.completed.length}`, mins, points);
-  }, [stage, profile, remaining, points, nurturer.id, completeActivity, recStop]);
+    // word log = cards met in the GROWER'S language only: ids banked before any
+    // exchange swap, plus the current deck when it speaks their language —
+    // a partner's exchange deck is never credited to this journey
+    const currentIds =
+      sessionLang === initialContentLang ? flow.deck.slice(0, flow.introduced).map((c) => c.id) : [];
+    const introducedIds = [...new Set([...ownIntroducedRef.current, ...currentIds])];
+    completeActivity(`live-${nurturer.id}-${profile.completed.length}`, mins, introducedIds);
+    // SEQUENTIAL PROGRESSION: only the natural end — the booked timer running
+    // out (remaining === 0) — completes the meeting this deck was built for;
+    // hanging up early abandons it. AI and human nurturers count the same
+    // during the beta. Forward-only, never backward.
+    const deckMeeting = deckMeetingRef.current;
+    if (remaining === 0 && flow.introduced > 0 && deckMeeting !== null) {
+      updateProfile({ meetingProgress: Math.max(profile.meetingProgress ?? 0, deckMeeting) });
+    }
+  }, [stage, profile, remaining, flow, sessionLang, initialContentLang, nurturer.id, completeActivity, recStop, updateProfile]);
 
   // stop any audio when leaving the page
   useEffect(() => () => stopSpeaking(), []);
@@ -538,9 +576,23 @@ function SessionRoom() {
   /** language exchange — the grower becomes the nurturer of THEIR strong language */
   const performSwitch = (code: LangCode) => {
     stopSpeaking();
+    // bank the cards already met in the grower's own language before the deck
+    // is replaced — the end-of-session word log unions them back in
+    if (sessionLang === initialContentLang) {
+      ownIntroducedRef.current.push(...flow.deck.slice(0, flow.introduced).map((c) => c.id));
+    }
     setSessionLang(code);
-    // a fresh language starts at the wall of noise — Meeting 1
-    setFlow(createFlow(buildMeetingDeck(code, 1, DECK_SIZE)));
+    if (code === initialContentLang) {
+      // switching BACK to the grower's own language restores their real spine
+      // meeting (or the post-spine review deck) — never a Meeting-1 restart
+      deckMeetingRef.current = meeting;
+      setFlow(createFlow(dealDeck(code)));
+    } else {
+      // a fresh language starts at the wall of noise — Meeting 1. Exchange decks
+      // never advance the grower's own meetingProgress (see deckMeetingRef).
+      deckMeetingRef.current = null;
+      setFlow(createFlow(buildMeetingDeck(code, 1, DECK_SIZE)));
+    }
     setFeedback(null);
     setIceberg(false);
     setMissId(null);
@@ -610,6 +662,15 @@ function SessionRoom() {
                 {isAI ? `✨ ${mascot.nativeHello}` : `📍 ${nurturer.city}`} · {lang.flag} {lang.nativeName}
               </p>
               <Tag className="mt-1 bg-violet/15 text-violet-soft">🌱 {activity}</Tag>
+              {/* sequential spine: which of the 40 meetings this session serves —
+                  or, past the last populated meeting, an honest review label */}
+              <Tag className="mt-1 bg-white/6 text-muted">
+                {meeting === null ? (
+                  <>🔁 {t("sesReviewAllMeetingsDone")}</>
+                ) : (
+                  <>🃏 {t("meetingWord")} {meeting}/40 · {meeting < 16 ? "1A" : "1B"}</>
+                )}
+              </Tag>
             </motion.div>
 
             <div className="mt-8 space-y-3 text-left">
@@ -686,7 +747,7 @@ function SessionRoom() {
             <div className="mt-8 grid grid-cols-3 gap-3">
               {[
                 ["⏱️", String(elapsedMin), t("minutes")],
-                ["🃏", String(points), t("words")],
+                ["🃏", String(flow.introduced), t("words")],
                 ["🌱", "1", t("phaseWord")],
               ].map(([emoji, num, label], i) => (
                 <motion.div

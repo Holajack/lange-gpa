@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useConvex } from "convex/react";
 import { blankProfile, useApp } from "@/lib/store";
+import { meetingForHours } from "@/lib/sessionFlow";
 import type { Profile } from "@/lib/types";
 
 const PROFILE_OWNER_KEY = "lange.profile.owner.v1";
@@ -101,6 +102,10 @@ function Bridge() {
               hoursLogged: row.hoursListened,
               minutesLogged: Math.round(row.hoursListened * 60),
               phase: row.phase,
+              // blankProfile() defines meetingProgress (0), which would bypass
+              // the store's self-heal and reset this account to Meeting 1 —
+              // derive it from the logged hours here instead (same formula)
+              meetingProgress: Math.max(0, meetingForHours(row.hoursListened) - 1),
             }
           : null;
         if (cloud) {

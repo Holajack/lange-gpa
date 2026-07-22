@@ -11,6 +11,7 @@ import { immersionShare } from "@/lib/i18n";
 import { langByCode } from "@/lib/languages";
 import { phaseById, phaseProgress, TOTAL_HOURS } from "@/lib/phases";
 import { NURTURERS } from "@/lib/nurturers";
+import { meetingForHours, nextMeetingFor } from "@/lib/sessionFlow";
 import { mascotForLang } from "@/lib/mascots";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { speak, stopSpeaking } from "@/lib/tts";
@@ -183,6 +184,15 @@ export default function DashboardPage() {
 
   /* Bottom row data */
   const iso = todayIso();
+  /* SEQUENTIAL PROGRESSION: the live-session meeting served next (Phase 1
+     only) — advanced solely by completing live /session meetings, with the
+     hours-proxy fallback for profiles the store hasn't self-healed yet. */
+  const nextMeeting =
+    profile.phase === 1
+      ? nextMeetingFor(
+          profile.meetingProgress ?? Math.max(0, meetingForHours(profile.hoursLogged) - 1)
+        )
+      : null;
   const todaysBookings = visibleBookings
     .filter((b) => b.date === iso && !b.done)
     .sort((a, b) => a.time.localeCompare(b.time));
@@ -569,8 +579,13 @@ export default function DashboardPage() {
         <motion.div variants={fadeUp} className="lg:col-span-5">
           {todaysBookings.length > 0 ? (
             <div className="card card-hover flex h-full flex-col gap-3 p-5">
-              <p className="text-sm font-semibold text-muted">
-                {t("today")} · {t("upcoming")}
+              <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
+                <span>{t("today")} · {t("upcoming")}</span>
+                {nextMeeting !== null && (
+                  <span className="ml-auto rounded-full bg-white/6 px-2.5 py-0.5 text-[11px] font-semibold">
+                    🃏 {t("meetingWord")} {nextMeeting}/40
+                  </span>
+                )}
               </p>
               {todaysBookings.map((b) => {
                 const n = NURTURERS.find((x) => x.id === b.nurturerId);
@@ -605,6 +620,11 @@ export default function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-display text-base font-bold">{t("bookSession")}</p>
                   <p className="truncate text-xs text-muted">{t("dshFreshBookFirst")}</p>
+                  {nextMeeting !== null && (
+                    <p className="mt-0.5 text-[11px] font-semibold text-muted">
+                      🃏 {t("meetingWord")} {nextMeeting}/40
+                    </p>
+                  )}
                 </div>
                 <span className="pill flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet text-white">
                   <ArrowRight size={17} strokeWidth={2.5} />

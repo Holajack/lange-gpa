@@ -12,6 +12,7 @@ import {
 } from "./achievements";
 import { CONVEX_ON } from "./convexClient";
 import { phaseForHours } from "./phases";
+import { meetingForHours } from "./sessionFlow";
 
 const KEY = "lange.profile.v1";
 const USER_CACHE_KEYS = [
@@ -55,6 +56,7 @@ function emptyJourney(lang: LangCode): LanguageJourney {
   return {
     lang,
     phase: 1,
+    meetingProgress: 0,
     hoursLogged: 0,
     minutesLogged: 0,
     wordsMet: 0,
@@ -72,6 +74,7 @@ function activeJourneySnapshot(profile: Profile): LanguageJourney {
   return {
     lang: profile.targetLang,
     phase: profile.phase,
+    meetingProgress: profile.meetingProgress,
     hoursLogged: profile.hoursLogged,
     minutesLogged: profile.minutesLogged ?? Math.round(profile.hoursLogged * 60),
     wordsMet: profile.wordsMet,
@@ -109,6 +112,10 @@ export function switchLanguageJourney(profile: Profile, lang: LangCode): Profile
     targetLang: lang,
     journeys,
     phase: found.phase,
+    // journeys saved before the meeting spine existed carry undefined here —
+    // the meetingProgress self-heal below then re-derives it from THIS
+    // journey's hours instead of leaking the previous language's progress
+    meetingProgress: found.meetingProgress,
     hoursLogged: found.hoursLogged,
     minutesLogged: found.minutesLogged,
     wordsMet: found.wordsMet,
@@ -131,6 +138,7 @@ export function blankProfile(): Profile {
     journeys: [],
     immersion: false,
     phase: 1,
+    meetingProgress: 0,
     hoursLogged: 0,
     minutesLogged: 0,
     wordsMet: 0,
@@ -381,6 +389,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!profile) return;
     const due = phaseForHours(profile.hoursLogged);
     if (due > profile.phase) updateProfile({ phase: due });
+  }, [profile, updateProfile]);
+
+  /* ---- meetingProgress self-heal: profiles saved before the sequential
+     live-session meeting spine existed carry no meetingProgress. Don't reset
+     them to Meeting 1 — treat the meeting the old hours-proxy said they were
+     ON as their NEXT meeting (i.e. one less than it is "completed"). Runs
+     once per legacy profile; from then on only finishing a live /session
+     meeting advances it (never solo /practice — see Profile.meetingProgress). */
+  useEffect(() => {
+    if (!profile || profile.meetingProgress !== undefined) return;
+    updateProfile({ meetingProgress: Math.max(0, meetingForHours(profile.hoursLogged) - 1) });
   }, [profile, updateProfile]);
 
   /* ---- self-report bridge: pages dispatch `lange:award` to grant manual

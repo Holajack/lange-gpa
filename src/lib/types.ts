@@ -74,6 +74,10 @@ export interface ActivityAttempt {
 export interface LanguageJourney {
   lang: LangCode;
   phase: PhaseId;
+  /** highest live-session meeting completed in THIS language — absent on
+   *  journeys saved before the sequential meeting spine existed (the store
+   *  self-heal derives it from hoursLogged on restore) */
+  meetingProgress?: number;
   hoursLogged: number;
   minutesLogged: number;
   wordsMet: number;
@@ -110,6 +114,16 @@ export interface Profile {
   /** show UI in target language for immersion */
   immersion: boolean;
   phase: PhaseId;
+  /**
+   * Highest Phase-1 meeting number COMPLETED via a live /session meeting.
+   * Product rule: ONLY finishing a live session's full timer advances this
+   * (AI-nurturer sessions count the same as human ones during the beta);
+   * solo /practice grinding NEVER moves it. Meetings are sequential and
+   * mandatory — the grower is always served the next meeting after this one.
+   * Saved and restored PER LANGUAGE with the active journey (see
+   * LanguageJourney.meetingProgress) so progress never leaks across languages.
+   */
+  meetingProgress?: number;
   hoursLogged: number;
   /** exact cumulative minutes; hoursLogged is the rounded display value */
   minutesLogged?: number;
