@@ -12,7 +12,7 @@ export default function SignUpPage() {
           <div className="inline-flex"><Logo size="lg" /></div>
           <h1 className="headline mt-5 text-3xl">Start growing into a language</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Create your Nurilang account, then choose every language you call home and one language to grow next.
+            Create your Nurilang account, then choose the language you want to grow — and tell us which one you already speak.
           </p>
         </div>
         <SignUp

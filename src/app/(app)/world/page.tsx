@@ -20,6 +20,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useConvex } from "convex/react";
 import { useApp } from "@/lib/store";
 import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { langByCode } from "@/lib/languages";
 import { MASCOTS, mascotForLang, type MascotDef } from "@/lib/mascots";
 import { speak } from "@/lib/tts";
@@ -168,6 +169,158 @@ const CULTURE: Partial<Record<LangCode, string[]>> = {
 
 const NURTURER_DOT = "#ff8a1e"; // orange
 const GROWER_DOT = "#7c5cff"; // violet
+
+/* ------------------------------------------------------------------ */
+/* First-visit place ask — the in-context home of the city/country and
+   exchange questions deferred out of onboarding (SPEC-onboarding §1).
+   Asked HERE because "kindred voices on the map" is self-evident on this
+   page; entirely optional and never asked again once answered or skipped. */
+/* ------------------------------------------------------------------ */
+
+const PLACE_ASK_DONE_KEY = "lange.worldPlaceAsk.v1";
+
+/** Best-effort browser prefills: city from the IANA timezone's city segment,
+ *  country from the locale region (both freely editable). */
+function browserPlaceGuess(uiLang: LangCode): { city: string; country: string } {
+  let city = "";
+  let country = "";
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+    const seg = zone.split("/").pop() ?? "";
+    if (seg && !/^(UTC|GMT)/i.test(seg)) city = seg.replace(/_/g, " ");
+  } catch {}
+  try {
+    const region = new Intl.Locale(navigator.language).maximize().region;
+    if (region) {
+      country = new Intl.DisplayNames([uiLang], { type: "region" }).of(region) ?? "";
+    }
+  } catch {}
+  return { city, country };
+}
+
+function PlaceAskCard() {
+  const { profile, t, uiLang, updateProfile } = useApp();
+  const [done, setDone] = useState(true); // assume answered until the browser says otherwise
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [exchange, setExchange] = useState(false);
+
+  useEffect(() => {
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(PLACE_ASK_DONE_KEY) === "1";
+    } catch {}
+    if (dismissed) return;
+    const guess = browserPlaceGuess(uiLang);
+    setCity((cur) => cur || guess.city);
+    setCountry((cur) => cur || guess.country);
+    setDone(false);
+    // prefill once on mount — uiLang only localizes the country guess
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (done || !profile || profile.city || profile.country) return null;
+
+  const markDone = () => {
+    try {
+      localStorage.setItem(PLACE_ASK_DONE_KEY, "1");
+    } catch {}
+    setDone(true);
+  };
+
+  const save = () => {
+    updateProfile({
+      city: city.trim() || undefined,
+      country: country.trim() || undefined,
+      ...(COMMUNITY_EXCHANGE_ON ? { exchange } : {}),
+    });
+    markDone();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+    >
+      <Card className="relative overflow-hidden p-5 sm:p-6">
+        <div className="orb -right-14 -top-16 h-44 w-44 bg-violet/15" />
+        <div className="relative">
+          <h2 className="headline text-xl sm:text-2xl">📍 {t("dshOnbPlaceHeadGrow")}</h2>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted">{t("dshOnbPlaceSubGrow")}</p>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted">
+              {t("dshOnbCityLabel")}
+              <input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder={t("dshOnbCityPlaceholder")}
+                maxLength={40}
+                className="mt-1.5 w-full rounded-xl border border-line bg-raised-2 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-ink outline-none placeholder:text-muted/50 focus:border-violet"
+              />
+            </label>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted">
+              {t("dshOnbCountryLabel")}
+              <input
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder={t("dshOnbCountryPlaceholder")}
+                maxLength={40}
+                className="mt-1.5 w-full rounded-xl border border-line bg-raised-2 px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-ink outline-none placeholder:text-muted/50 focus:border-violet"
+              />
+            </label>
+          </div>
+          <p className="mt-2 text-[11px] text-muted">🔒 {t("dshOnbCityLevelNote")}</p>
+
+          {COMMUNITY_EXCHANGE_ON && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={exchange}
+              onClick={() => setExchange((v) => !v)}
+              className="mt-4 flex w-full items-center justify-between gap-4 rounded-2xl bg-raised-2 p-3.5 text-left"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">⇄ {t("wldOpenToExchange")}</span>
+                <span className="mt-0.5 block text-xs text-muted">{t("dshOnbExchangeSub")}</span>
+              </span>
+              <span
+                className={`relative h-8 w-[52px] shrink-0 rounded-full transition-colors duration-300 ${
+                  exchange ? "bg-lime" : "bg-white/12"
+                }`}
+              >
+                <span
+                  className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-canvas transition-transform duration-300 ${
+                    exchange ? "translate-x-[20px]" : ""
+                  }`}
+                />
+              </span>
+            </button>
+          )}
+
+          <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={save}
+              className="pill justify-center bg-violet px-6 py-3 text-sm font-bold text-white"
+              style={{ boxShadow: "var(--shadow-glow-violet)" }}
+            >
+              ✓ {t("done")}
+            </button>
+            <button
+              type="button"
+              onClick={markDone}
+              className="pill justify-center bg-white/6 px-6 py-3 text-sm font-semibold text-muted hover:text-ink"
+            >
+              {t("dshOnbSkipForNow")}
+            </button>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
 
 /** One card-able human, whichever side of the session they sit on. */
 type PersonView = {
@@ -395,6 +548,9 @@ export default function WorldPage() {
           📅 {t("bookSession")}
         </Link>
       </motion.div>
+
+      {/* first-visit in-context ask: city/country for the map + exchange */}
+      <PlaceAskCard />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.08fr_0.92fr]">
         {/* LEFT: the planet + sibling rail */}

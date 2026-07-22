@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { LangCode, LanguageJourney, Profile, SessionBooking } from "./types";
+import type { LangCode, LanguageJourney, PhaseId, Profile, SessionBooking } from "./types";
 import { makeBlendedT, makeT } from "./i18n";
 import { LANGUAGES, langByCode } from "./languages";
 import {
@@ -13,6 +13,7 @@ import {
 import { CONVEX_ON } from "./convexClient";
 import { phaseForHours } from "./phases";
 import { meetingForHours } from "./sessionFlow";
+import { gateLegs1b, gateLegsPhase2, legacyGateStamps, phase1Complete } from "./gates";
 
 const KEY = "lange.profile.v1";
 const USER_CACHE_KEYS = [
@@ -57,6 +58,7 @@ function emptyJourney(lang: LangCode): LanguageJourney {
     lang,
     phase: 1,
     meetingProgress: 0,
+    gatesPassed: {},
     hoursLogged: 0,
     minutesLogged: 0,
     wordsMet: 0,
@@ -75,6 +77,7 @@ function activeJourneySnapshot(profile: Profile): LanguageJourney {
     lang: profile.targetLang,
     phase: profile.phase,
     meetingProgress: profile.meetingProgress,
+    gatesPassed: profile.gatesPassed && { ...profile.gatesPassed },
     hoursLogged: profile.hoursLogged,
     minutesLogged: profile.minutesLogged ?? Math.round(profile.hoursLogged * 60),
     wordsMet: profile.wordsMet,
@@ -116,6 +119,10 @@ export function switchLanguageJourney(profile: Profile, lang: LangCode): Profile
     // the meetingProgress self-heal below then re-derives it from THIS
     // journey's hours instead of leaking the previous language's progress
     meetingProgress: found.meetingProgress,
+    // same rule for the gate stamps: always take THIS journey's record
+    // (undefined on pre-gate journeys → the stamp self-heal re-derives the
+    // migration grandfathers) so a passed gate never leaks across languages
+    gatesPassed: found.gatesPassed && { ...found.gatesPassed },
     hoursLogged: found.hoursLogged,
     minutesLogged: found.minutesLogged,
     wordsMet: found.wordsMet,
@@ -139,6 +146,9 @@ export function blankProfile(): Profile {
     immersion: false,
     phase: 1,
     meetingProgress: 0,
+    gatesPassed: {},
+    // born after the advancement gates — the legacy 40 h grandfather never applies
+    gatesMigratedAt: new Date().toISOString(),
     hoursLogged: 0,
     minutesLogged: 0,
     wordsMet: 0,
@@ -384,11 +394,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
      carries a stale phase) would otherwise be stuck at their placement
      phase forever — freezing graduated immersion and the /courses "current"
      marker. Self-heal after every profile change rather than only inside
-     completeActivity, so this covers every path that can move hoursLogged. */
+     completeActivity, so this covers every path that can move hoursLogged.
+
+     GATE-AWARE since the advancement gates shipped: hours alone can no
+     longer escape Phase 1 — crossing 100 h promotes only once Phase 1 is
+     complete (full meeting spine + word bar, or a persisted gate stamp;
+     see gates.ts). Hours still carry Phase 2 → 3 → … unchanged until those
+     boundaries grow their own gates. Math.max IS the grandfather mechanism:
+     the phase field is only ever raised, never lowered. */
   useEffect(() => {
     if (!profile) return;
     const due = phaseForHours(profile.hoursLogged);
-    if (due > profile.phase) updateProfile({ phase: due });
+    const ceiling = phase1Complete(profile) ? due : (1 as PhaseId);
+    const next = Math.max(profile.phase, Math.min(due, ceiling)) as PhaseId;
+    if (next > profile.phase) updateProfile({ phase: next });
   }, [profile, updateProfile]);
 
   /* ---- meetingProgress self-heal: profiles saved before the sequential
@@ -400,6 +419,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!profile || profile.meetingProgress !== undefined) return;
     updateProfile({ meetingProgress: Math.max(0, meetingForHours(profile.hoursLogged) - 1) });
+  }, [profile, updateProfile]);
+
+  /* ---- gatesPassed self-heal: record the FIRST time each advancement
+     gate's predicate is true (gates.ts derives its targets from authored
+     content, so they rise as meetings are added — the stamp, not the live
+     predicate, is what keeps a passed gate passed). Also applies the
+     migration grandfathers for profiles that predate the gates: phase >= 2
+     was earned under the old hours-only promotion (stamp both), and
+     hoursLogged >= 40 is the old Phase1BGuard proxy that already opened the
+     speaking tools (stamp "1b") — nobody regresses, nothing re-locks.
+
+     The 40 h grandfather is ONE-SHOT: it runs only while gatesMigratedAt is
+     absent (profiles saved before the gates shipped — new profiles carry the
+     marker from blankProfile()), stamps every pre-gates journey in the same
+     write, and then marks the account migrated. Without the marker this
+     clause would run forever and any post-gates grower could stamp 1B by
+     grinding 40 practice hours with zero meetings and zero words. ---- */
+  useEffect(() => {
+    if (!profile) return;
+    const have = profile.gatesPassed ?? {};
+    const migrated = profile.gatesMigratedAt !== undefined;
+    const now = new Date().toISOString();
+    const legacy = legacyGateStamps(profile, now, !migrated);
+    const stamp1b = !have["1b"] && (Boolean(legacy["1b"]) || gateLegs1b(profile).passed);
+    const stampP2 = !have.phase2 && (Boolean(legacy.phase2) || gateLegsPhase2(profile).passed);
+    if (!stamp1b && !stampP2 && migrated) return;
+    updateProfile({
+      gatesPassed: {
+        ...have,
+        ...(stamp1b ? { "1b": now } : {}),
+        ...(stampP2 ? { phase2: now } : {}),
+      },
+      ...(migrated
+        ? {}
+        : {
+            gatesMigratedAt: now,
+            // grandfather every OTHER pre-gates journey in the same write, so
+            // a 40 h+ language that isn't active right now never re-locks when
+            // it's switched back to later (the active journey is re-synced
+            // from the profile fields above by syncActiveJourney)
+            journeys: profile.journeys?.map((journey) =>
+              journey.lang === profile.targetLang
+                ? journey
+                : {
+                    ...journey,
+                    gatesPassed: { ...legacyGateStamps(journey, now), ...journey.gatesPassed },
+                  }
+            ),
+          }),
+    });
   }, [profile, updateProfile]);
 
   /* ---- self-report bridge: pages dispatch `lange:award` to grant manual

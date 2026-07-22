@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "@/lib/store";
+import { gate1bPassed } from "@/lib/gates";
 import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
 import { localizedNurturer } from "@/lib/nurturerI18n";
 import { phaseById } from "@/lib/phases";
@@ -189,8 +190,10 @@ export default function SchedulePage() {
   // The closed beta executes Phase 1 only; later phases remain method previews.
   const phase = phaseById(1);
   const phase1aIds = new Set(phase.parts?.find((part) => part.id === "1a")?.activityIds ?? []);
+  /* 1A-only until the real 1A → 1B gate is earned (stamp-or-predicate,
+     src/lib/gates.ts) — same check as the session room and practice hub */
   const availableActivities =
-    (profile?.hoursLogged ?? 0) < 40
+    !profile || (profile.phase === 1 && !gate1bPassed(profile))
       ? phase.activities.filter((activity) => phase1aIds.has(activity.id))
       : phase.activities;
   const defaultActivity = availableActivities[0]?.name ?? t("schGrowingSession");

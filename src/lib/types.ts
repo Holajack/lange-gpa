@@ -78,6 +78,10 @@ export interface LanguageJourney {
    *  journeys saved before the sequential meeting spine existed (the store
    *  self-heal derives it from hoursLogged on restore) */
   meetingProgress?: number;
+  /** advancement-gate stamps for THIS language (see Profile.gatesPassed) —
+   *  absent on journeys saved before the gates existed (the store self-heal
+   *  re-derives the migration grandfathers on restore) */
+  gatesPassed?: { "1b"?: string; phase2?: string };
   hoursLogged: number;
   minutesLogged: number;
   wordsMet: number;
@@ -124,6 +128,28 @@ export interface Profile {
    * LanguageJourney.meetingProgress) so progress never leaks across languages.
    */
   meetingProgress?: number;
+  /**
+   * ISO date each advancement gate was FIRST passed ("1b" = 1A → 1B,
+   * "phase2" = Phase 1 → 2). Gate targets are DERIVED from authored content
+   * (src/lib/gates.ts) and rise as meetings are added, so the stamp — not
+   * the live predicate — is the durable record: once earned, never
+   * un-earned. Stamped by the store self-heal (which also grandfathers
+   * pre-gate cohorts: phase >= 2 or the old 40 h speaking-tools proxy).
+   * Saved and restored PER LANGUAGE with the active journey (see
+   * LanguageJourney.gatesPassed) so a passed gate never leaks across
+   * languages.
+   */
+  gatesPassed?: { "1b"?: string; phase2?: string };
+  /**
+   * ISO date the ONE-SHOT gate migration ran for this account. Absent =
+   * the profile predates the advancement gates (or was saved before this
+   * field shipped): the store self-heal applies the legacy grandfathers
+   * (including the old 40 h speaking-tools proxy) exactly once, then
+   * stamps this marker. Present = migrated; from then on gates are earned
+   * only through their real legs — 40 practice hours alone never stamps
+   * 1B again. Set at creation by blankProfile() for post-gates accounts.
+   */
+  gatesMigratedAt?: string;
   hoursLogged: number;
   /** exact cumulative minutes; hoursLogged is the rounded display value */
   minutesLogged?: number;

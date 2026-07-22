@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useConvex } from "convex/react";
 import { blankProfile, useApp } from "@/lib/store";
 import { meetingForHours } from "@/lib/sessionFlow";
+import { legacyGateStamps } from "@/lib/gates";
 import type { Profile } from "@/lib/types";
 
 const PROFILE_OWNER_KEY = "lange.profile.owner.v1";
@@ -106,6 +107,14 @@ function Bridge() {
               // the store's self-heal and reset this account to Meeting 1 —
               // derive it from the logged hours here instead (same formula)
               meetingProgress: Math.max(0, meetingForHours(row.hoursListened) - 1),
+              // same story for the gate stamps: reconstruct what the pre-gate
+              // proxies had granted (phase >= 2, or 40 h opened the speaking
+              // tools) atomically with hydration instead of racing the store's
+              // stamp self-heal (same formula it uses)
+              gatesPassed: legacyGateStamps({
+                phase: row.phase,
+                hoursLogged: row.hoursListened,
+              }),
             }
           : null;
         if (cloud) {

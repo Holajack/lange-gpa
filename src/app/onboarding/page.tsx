@@ -3,25 +3,38 @@
 /**
  * Onboarding — a warm conversation with Nuri.
  *
- * 0  Welcome + role choice (grower / nurturer / both, ?role= preselects)
- * 1  Known languages (multi-select, English preselected)
- * 2  Target world (grower/both) — or nurture languages (nurturer-only)
- * 3  Where you're growing from (city + country, optional, city-level privacy)
- * 4  Why this language (multi-select motivation, optional)
- * 5  What you love (multi-select interests, optional)
- * 6  Daily watering rhythm + language-exchange toggle (optional, pledge CTA)
- * 7  Name + live preview
- * 8  Immersion moment (growers) / nurturer toolkit — then plant the profile
+ * Six screens, target language first (it is the question the user arrived
+ * with — asking known languages first made the flag grid absorb "what do I
+ * want to learn?" and mis-filled knownLangs):
  *
- * Steps 3–6 are invitations, never gates: they can be skipped without
- * blocking completion (GPA is invitation, not interrogation).
+ * 0  Welcome — role auto-selected as grower unless the nurturer studio flag
+ *    is on (?role= preselects), "takes about 2 minutes" promise
+ * 1  Target language (single-select, unfiltered) + optional placement branch
+ *    — or nurture-language pick for nurturer-only accounts
+ * 2  Why this language (multi-select motivation, optional)
+ * 3  UI-language confirm — "Nuri will speak to you in {X} — correct?"
+ *    prefilled from the browser locale; [Change] opens a single-select that
+ *    EXCLUDES the target; "I also speak…" is a collapsed multi-select
+ *    expander. The confirmed language is always knownLangs[0] (it IS the UI
+ *    language — store.tsx), never an accident of tap order.
+ * 4  Daily watering rhythm (20 min preselected — confirm, not choose)
+ * 5  Name confirm (prefilled from Clerk) + first-word audio + immersion
+ *    toggle (growers) / nurturer toolkit — then plant the profile
+ *
+ * City/country, interests and the exchange toggle are deferred to in-context
+ * asks outside onboarding; their profile fields stay optional in finish().
+ * Steps 2 and 4 are invitations, never gates (GPA is invitation, not
+ * interrogation). The progress bar is endowed HONESTLY: "account created"
+ * and "language detected" are pre-checked only because both really happened
+ * before step 0 rendered.
  */
 
-import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, MapPin, Sparkles, Volume2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Sparkles, Volume2 } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { Logo } from "@/components/Logo";
 import { PlacementCheck } from "@/components/PlacementCheck";
@@ -30,12 +43,15 @@ import { COMMUNITY_EXCHANGE_ON, NURTURER_STUDIO_ON } from "@/lib/featureFlags";
 import { blankProfile, switchLanguageJourney, useApp } from "@/lib/store";
 import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
 import { placementAvailable, placementSeed } from "@/lib/placement";
+import { legacyGateStamps } from "@/lib/gates";
 import { POPULATED_MEETINGS } from "@/lib/sessionFlow";
 import { speak } from "@/lib/tts";
 import type { LangCode, Language, PhaseId, Profile, Role } from "@/lib/types";
-import { INTERESTS, MOTIVATIONS, PACES } from "@/lib/onboardingOptions";
+import { MOTIVATIONS, PACES } from "@/lib/onboardingOptions";
 
-const STEP_COUNT = 9;
+const CLERK_ON = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
+type ScreenId = "welcome" | "target" | "nurture" | "why" | "known" | "pace" | "name";
 
 /** First word a grower meets — pure target language, meaning carried by voice. */
 const HELLO: Record<LangCode, string> = {
@@ -132,28 +148,62 @@ function CheckBadge({ on, color = "var(--color-violet)" }: { on: boolean; color?
   );
 }
 
-function Dots({ step, onJump }: { step: number; onJump: (i: number) => void }) {
+/** One honest segment of the endowed progress bar. */
+type Segment = {
+  id: string;
+  done: boolean;
+  current: boolean;
+  /** wizard step index this segment maps to — completed ones are tappable to go back */
+  jumpTo?: number;
+};
+
+function SegmentBar({ segments, onJump }: { segments: Segment[]; onJump: (i: number) => void }) {
   const { t } = useApp();
   return (
-    <div className="flex min-w-0 items-center gap-1.5">
-      {Array.from({ length: STEP_COUNT }, (_, i) => (
-        <button
-          key={i}
-          type="button"
-          aria-label={t("onb2StepN").replace("{n}", String(i + 1))}
-          disabled={i >= step}
-          onClick={() => onJump(i)}
-          className={`h-2.5 rounded-full transition-all duration-300 ${
-            i === step
-              ? "w-6 bg-violet sm:w-8"
-              : i < step
-                ? "w-2.5 bg-lime hover:scale-125"
-                : "w-2.5 bg-white/15"
-          }`}
-        />
-      ))}
+    <div
+      className="flex min-w-0 flex-1 items-center gap-1"
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={segments.length}
+      aria-valuenow={segments.filter((s) => s.done).length}
+    >
+      {segments.map((s, i) =>
+        s.jumpTo !== undefined && s.done ? (
+          <button
+            key={s.id}
+            type="button"
+            aria-label={t("onb2StepN").replace("{n}", String(i + 1))}
+            onClick={() => onJump(s.jumpTo!)}
+            className="h-1.5 flex-1 rounded-full bg-lime transition-all duration-300 hover:bg-lime/70"
+          />
+        ) : (
+          <span
+            key={s.id}
+            className={`flex-1 rounded-full transition-all duration-300 ${
+              s.current ? "h-2 bg-violet" : s.done ? "h-1.5 bg-lime" : "h-1.5 bg-white/15"
+            }`}
+          />
+        )
+      )}
     </div>
   );
+}
+
+/**
+ * Reads the signed-up user's first name once Clerk has it. Mounted only when
+ * CLERK_ON, so the ClerkProvider is guaranteed to be in the tree (same
+ * pattern as the profile page's AccountPanel).
+ */
+function ClerkNamePrefill({ onName }: { onName: (firstName: string) => void }) {
+  const { isLoaded, user } = useUser();
+  const sent = useRef(false);
+  useEffect(() => {
+    if (sent.current || !isLoaded) return;
+    sent.current = true;
+    const first = user?.firstName?.trim();
+    if (first) onName(first.slice(0, 24));
+  }, [isLoaded, user, onName]);
+  return null;
 }
 
 function RoleCard({
@@ -335,38 +385,6 @@ function MotivationCard({
   );
 }
 
-function InterestChip({
-  emoji,
-  label,
-  selected,
-  onClick,
-}: {
-  emoji: string;
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      type="button"
-      variants={item}
-      whileTap={{ scale: 0.93 }}
-      onClick={onClick}
-      aria-pressed={selected}
-      className={`pill border px-4 py-2.5 text-sm font-semibold ${
-        selected
-          ? "border-transparent bg-lime text-canvas"
-          : "border-line bg-white/5 text-ink hover:bg-white/10"
-      }`}
-      style={selected ? { boxShadow: "0 0 28px -8px rgba(184,240,60,0.6)" } : undefined}
-    >
-      <span className="text-lg leading-none">{emoji}</span>
-      {label}
-      {selected && <Check size={14} strokeWidth={3} />}
-    </motion.button>
-  );
-}
-
 function PaceRow({
   mainLabel,
   emoji,
@@ -413,31 +431,6 @@ function PaceRow({
       </span>
       <span className="headline text-xl text-lime">{identity}</span>
     </motion.button>
-  );
-}
-
-function PlaceInput({
-  label,
-  value,
-  placeholder,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  placeholder: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="block">
-      <span className="text-xs font-bold uppercase tracking-widest text-muted">{label}</span>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        maxLength={40}
-        className="mt-2 w-full rounded-xl border border-line bg-white/5 px-4 py-3 text-ink caret-violet outline-none transition-colors placeholder:text-white/20 focus:border-violet"
-      />
-    </label>
   );
 }
 
@@ -516,46 +509,82 @@ function OnboardingFlow() {
   const { profile, ready, cloudState, t, saveProfile } = useApp();
   const accountReady = ready && (!CONVEX_ON || cloudState === "ready");
 
-  const [step, setStep] = useState(() => (addingLanguage ? 2 : 0));
+  // ?lang= deep link (marketing "Learn Spanish" pages): a valid full-content
+  // code arrives with the target already chosen and skips straight to "why".
+  const deepLang: LangCode | null = (() => {
+    const l = params.get("lang") as LangCode | null;
+    return l && FULL_CONTENT_LANGS.includes(l) ? l : null;
+  })();
+
+  const [role, setRole] = useState<Role>(() => {
+    // grower is the default identity; ?role= can deep-link the studio roles
+    const r = params.get("role");
+    return NURTURER_STUDIO_ON && (r === "nurturer" || r === "both") ? r : "grower";
+  });
+  const nurturerDeepLink = NURTURER_STUDIO_ON && params.get("role") === "nurturer";
+
+  const [step, setStep] = useState(() =>
+    addingLanguage ? 1 : deepLang && !nurturerDeepLink ? 2 : 0
+  );
   const [dir, setDir] = useState(1);
 
-  const [role, setRole] = useState<Role | null>(() => {
-    const r = params.get("role");
-    if (r === "grower") return r;
-    return NURTURER_STUDIO_ON && (r === "nurturer" || r === "both") ? r : null;
-  });
-  const [knownLangs, setKnownLangs] = useState<LangCode[]>(["en"]);
-  const [targetLang, setTargetLang] = useState<LangCode | null>(null);
+  const [targetLang, setTargetLang] = useState<LangCode | null>(deepLang);
 
   // optional placement check — an EARNED Phase 2/3 start held in local state
   // (like every other onboarding answer) until finish() applies the seed
   const [placedPhase, setPlacedPhase] = useState<PhaseId | null>(null);
   const [placementOpen, setPlacementOpen] = useState(false);
 
-  // Welcome the world in its own language: preselect the visitor's known
-  // language from the browser so a non-English speaker starts at home.
+  // The UI language is a CONFIRM, not an open question: uiPick is always
+  // knownLangs[0] (the app speaks it — store.tsx), alsoSpeak trails behind.
+  const [uiPick, setUiPick] = useState<LangCode>("en");
+  const [alsoSpeak, setAlsoSpeak] = useState<LangCode[]>([]);
+  const [changingUi, setChangingUi] = useState(false);
+  const [alsoOpen, setAlsoOpen] = useState(false);
+  const [langDetected, setLangDetected] = useState(false);
+  const detectedCodes = useRef<LangCode[]>([]);
+
+  // Welcome the world in its own language: prefill the visitor's best
+  // language from the browser so the confirm screen is one honest tap.
   const browserDetected = useRef(false);
   useEffect(() => {
     if (browserDetected.current) return;
     browserDetected.current = true;
     const codes = (typeof navigator !== "undefined" ? navigator.languages ?? [navigator.language] : []) as string[];
     const known = new Set(LANGUAGES.map((l) => l.code));
-    const hit = codes
-      .map((c) => c.slice(0, 2).toLowerCase() as LangCode)
-      .find((c) => known.has(c) && c !== "en");
-    if (hit) setKnownLangs([hit]);
+    const hits = codes.map((c) => c.slice(0, 2).toLowerCase() as LangCode).filter((c) => known.has(c));
+    detectedCodes.current = hits;
+    if (hits.length > 0) setLangDetected(true);
+    // keep the long-standing rule: replace the "en" default only on a non-English hit
+    const hit = hits.find((c) => c !== "en");
+    if (hit) setUiPick(hit);
   }, []);
+
   const [nurtureLangs, setNurtureLangs] = useState<LangCode[]>([]);
   const [name, setName] = useState("");
   const [immersion, setImmersion] = useState(false);
 
-  // the invitation steps — every one of these may stay empty
+  // the invitation steps — every one of these may stay empty. City/country,
+  // interests and exchange no longer have onboarding screens (they moved to
+  // in-context asks), but the state survives so a profile edit re-entry
+  // never wipes previously given answers.
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [motivation, setMotivation] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
-  const [dailyMinutes, setDailyMinutes] = useState<number | null>(null);
+  const [dailyMinutes, setDailyMinutes] = useState<number | null>(20);
   const [exchange, setExchange] = useState(false);
+
+  // honest labor-illusion beat before the finale — first run only
+  const [building, setBuilding] = useState(false);
+  const builtOnce = useRef(false);
+  const buildTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (buildTimer.current) clearTimeout(buildTimer.current);
+    },
+    []
+  );
 
   // Editing an existing account? Pre-fill the wizard from the profile so the
   // avatar → onboarding is a real edit, not a blank restart. Fires once when
@@ -565,7 +594,10 @@ function OnboardingFlow() {
     if (prefilled.current || !accountReady || !profile) return;
     prefilled.current = true;
     setRole(profile.role);
-    if (profile.knownLangs?.length) setKnownLangs(profile.knownLangs);
+    if (profile.knownLangs?.length) {
+      setUiPick(profile.knownLangs[0]);
+      setAlsoSpeak(profile.knownLangs.slice(1));
+    }
     // Adding a language must be an explicit new enrollment, never an
     // accidental re-save of the currently active journey.
     setTargetLang(addingLanguage ? null : profile.targetLang ?? null);
@@ -580,13 +612,48 @@ function OnboardingFlow() {
       Array.isArray(savedMot) ? (savedMot as string[]) : typeof savedMot === "string" && savedMot ? [savedMot] : []
     );
     setInterests(profile.interests ?? []);
-    setDailyMinutes(profile.dailyMinutes ?? null);
+    setDailyMinutes(profile.dailyMinutes ?? 20);
     setExchange(profile.exchange ?? false);
   }, [accountReady, addingLanguage, profile]);
+
+  // Clerk already knows the user's first name from sign-up — confirm, don't
+  // retype. Only fills an empty field, so a profile edit keeps its name.
+  const onClerkName = useCallback((first: string) => {
+    setName((current) => (current.trim() ? current : first));
+  }, []);
 
   const nurturerOnly = role === "nurturer";
   const trimmed = name.trim();
   const target = targetLang ? langByCode(targetLang) : null;
+
+  const screens: ScreenId[] = nurturerOnly
+    ? ["welcome", "known", "nurture", "why", "pace", "name"]
+    : ["welcome", "target", "why", "known", "pace", "name"];
+  const screen = screens[Math.min(step, screens.length - 1)];
+
+  const knownList = useMemo(
+    () => [uiPick, ...alsoSpeak.filter((c) => c !== uiPick)],
+    [uiPick, alsoSpeak]
+  );
+  const nurturePicked = useMemo(
+    () => nurtureLangs.filter((c) => knownList.includes(c)),
+    [nurtureLangs, knownList]
+  );
+
+  // The confirmed UI language can never be the language being learned — if
+  // the target lands on it (deep link, or an es-browser user picking Español)
+  // fall back to another detected language, then to the grid default.
+  useEffect(() => {
+    if (!targetLang) return;
+    setAlsoSpeak((prev) => (prev.includes(targetLang) ? prev.filter((c) => c !== targetLang) : prev));
+    setUiPick((current) => {
+      if (current !== targetLang) return current;
+      return (
+        detectedCodes.current.find((c) => c !== targetLang) ??
+        LANGUAGES.find((l) => l.code !== targetLang)!.code
+      );
+    });
+  }, [targetLang]);
 
   // Placement is for FRESH journeys only — a test-out must never overwrite
   // real logged progress on a language this account is already growing.
@@ -603,31 +670,49 @@ function OnboardingFlow() {
 
   /** Current invitation step left blank — the CTA turns into an honest "Skip for now". */
   const inviteStepEmpty =
-    (step === 3 && city.trim() === "" && country.trim() === "") ||
-    (step === 4 && motivation.length === 0) ||
-    (step === 5 && interests.length === 0) ||
-    (step === 6 && dailyMinutes === null);
+    (screen === "why" && motivation.length === 0) ||
+    (screen === "pace" && dailyMinutes === null);
 
   const valid = useMemo(() => {
-    switch (step) {
-      case 0:
-        return role !== null;
-      case 1:
-        return knownLangs.length > 0;
-      case 2:
-        return nurturerOnly ? nurtureLangs.length > 0 : targetLang !== null;
-      case 7:
+    switch (screen) {
+      case "target":
+        return targetLang !== null;
+      case "nurture":
+        return nurturePicked.length > 0;
+      case "name":
         return trimmed.length > 0;
       default:
-        // steps 3–6 are invitations — always passable, never blocking
+        // welcome has a default role; why + pace are invitations — never blocking
         return true;
     }
-  }, [step, role, knownLangs, nurturerOnly, nurtureLangs, targetLang, trimmed]);
+  }, [screen, targetLang, nurturePicked, trimmed]);
+
+  const advance = useCallback(() => {
+    setDir(1);
+    setStep((s) => Math.min(s + 1, screens.length - 1));
+  }, [screens.length]);
 
   const next = () => {
-    if (!valid || step >= STEP_COUNT - 1) return;
-    setDir(1);
-    setStep((s) => s + 1);
+    if (!valid || building || step >= screens.length - 1) return;
+    // Brief, TRUE "building your plan" beat before the finale: the next
+    // screen really does hold the first word, and finish() really does plant
+    // the Phase 1A journey from these answers. First run only — a profile
+    // edit or add-language re-entry skips straight through.
+    if (screen === "pace" && !nurturerOnly && !profile && !addingLanguage && !builtOnce.current) {
+      builtOnce.current = true;
+      setBuilding(true);
+      buildTimer.current = setTimeout(() => {
+        setBuilding(false);
+        advance();
+      }, 2600);
+      return;
+    }
+    advance();
+  };
+  const skipBuilding = () => {
+    if (buildTimer.current) clearTimeout(buildTimer.current);
+    setBuilding(false);
+    advance();
   };
   const back = () => {
     if (step === 0) return;
@@ -640,44 +725,45 @@ function OnboardingFlow() {
     setStep(i);
   };
 
-  const toggleKnown = (code: LangCode) => {
-    const nextKnown = knownLangs.includes(code)
-      ? knownLangs.filter((c) => c !== code)
-      : [...knownLangs, code];
-    setKnownLangs(nextKnown);
-    // keep dependent picks consistent
-    setNurtureLangs((nl) => nl.filter((c) => nextKnown.includes(c)));
-    if (targetLang !== null && nextKnown.includes(targetLang)) {
-      setTargetLang(null);
-    }
-  };
-
   const pickTarget = (code: LangCode) => {
     // a different world means any earned placement no longer applies
     if (code !== targetLang) setPlacedPhase(null);
     setTargetLang(code);
   };
 
+  const chooseUiLang = (code: LangCode) => {
+    setUiPick(code);
+    setAlsoSpeak((prev) => prev.filter((c) => c !== code));
+    setChangingUi(false);
+  };
+
+  const toggleAlsoSpeak = (code: LangCode) =>
+    setAlsoSpeak((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+
   const toggleNurture = (code: LangCode) =>
     setNurtureLangs((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
-
-  const toggleInterest = (id: string) =>
-    setInterests((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const toggleMotivation = (id: string) =>
     setMotivation((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const finish = () => {
     if (!role || trimmed.length === 0) return;
-    const nurture = nurturerOnly ? nurtureLangs : role === "both" ? knownLangs : [];
-    const finalTarget: LangCode = nurturerOnly
-      ? (nurture[0] ?? knownLangs[0] ?? "en")
-      : (targetLang ?? "es");
+    const nurture = nurturerOnly ? nurturePicked : role === "both" ? knownList : [];
+    const finalTarget: LangCode | null = nurturerOnly
+      ? (nurture[0] ?? knownList[0] ?? "en")
+      : targetLang;
+    if (finalTarget === null) {
+      // Target is the FIRST required question — reaching finish() without
+      // one is a wiring bug, never a reason to silently enroll in Spanish.
+      throw new Error("onboarding: finish() reached without a target language");
+    }
     const progressBase = profile ? switchLanguageJourney(profile, finalTarget) : blankProfile();
     // An earned placement seeds phase/hours/words for this journey, and parks
-    // meetingProgress at the last populated Phase-1 meeting so the session
+    // meetingProgress at the last populated meeting so the session
     // room doesn't drag a placed-ahead grower back to meeting 1 — it serves
     // them review sessions until new meetings are populated. Skipping or
     // failing leaves everything exactly as today (Phase 1, meeting 1).
@@ -687,6 +773,10 @@ function OnboardingFlow() {
             ...progressBase,
             ...placementSeed(placedPhase),
             meetingProgress: POPULATED_MEETINGS[POPULATED_MEETINGS.length - 1],
+            // a placement lands at Phase 2+ — stamp both advancement gates in
+            // the SAME write as the seed (never a later self-heal race) so a
+            // placed grower is a gate-passer by construction, not an anomaly
+            gatesPassed: legacyGateStamps(placementSeed(placedPhase)),
           }
         : progressBase;
     const out: Profile = {
@@ -695,11 +785,14 @@ function OnboardingFlow() {
       ...seeded,
       name: trimmed,
       role,
-      knownLangs: knownLangs.length > 0 ? knownLangs : ["en"],
+      // the confirmed UI language is always index 0 — it IS the app language
+      knownLangs: knownList,
       targetLang: finalTarget,
       nurtureLangs: nurture,
       immersion: nurturerOnly ? false : immersion,
-      // invitation answers — saved only when given
+      // invitation answers — saved only when given (city, interests and
+      // exchange are now asked in-context after onboarding; re-entries keep
+      // whatever was answered before)
       city: city.trim() || undefined,
       country: country.trim() || undefined,
       motivation: motivation.length ? motivation : undefined,
@@ -711,13 +804,44 @@ function OnboardingFlow() {
     router.replace("/dashboard");
   };
 
+  /* ---------- endowed progress bar (honest segments only) ---------- */
+  const segments: Segment[] = [
+    // TRUE: middleware forces sign-up before /onboarding renders, and the
+    // wizard waits for the cloud profile — the account really exists. In a
+    // keyless build no account was created, so the segment is omitted (a
+    // pre-checked segment must always have a real completed referent).
+    ...(CLERK_ON ? [{ id: "account", done: true, current: false }] : []),
+    // TRUE only when the browser locale matched a supported language.
+    { id: "detect", done: langDetected, current: false },
+  ];
+  screens.forEach((scr, i) => {
+    if (i === 0) return; // welcome is covered by the endowed segments
+    segments.push({ id: scr, done: step > i, current: step === i, jumpTo: i });
+    if (scr === "target" && placedPhase !== null && !nurturerOnly) {
+      segments.push({ id: "placement", done: true, current: false });
+    }
+  });
+
+  const labelParts: string[] = [];
+  if (step === 0) {
+    if (CLERK_ON) labelParts.push(`✓ ${t("obAccountDone")}`);
+    if (langDetected) labelParts.push(`✓ ${t("obLangDetected")}`);
+  }
+  if (placedPhase !== null && !nurturerOnly) {
+    labelParts.push(`✓ ${t("phaseWord")} ${placedPhase}`);
+  }
+  if (step >= 3) {
+    labelParts.push(t("obStepsLeft").replace("{n}", String(screens.length - step)));
+  }
+  const labelLine = labelParts.join(" · ");
+
   /* ---------- name preview line ---------- */
   const preview: ReactNode =
     trimmed.length === 0 ? null : nurturerOnly ? (
       <>
         <span className="font-semibold text-ink">{trimmed}</span> — {t("dshOnbPreviewNurturing")}{" "}
         <span className="font-semibold text-orange">
-          {nurtureLangs.map((c) => langByCode(c).nativeName).join(" · ") || "…"}
+          {nurturePicked.map((c) => langByCode(c).nativeName).join(" · ") || "…"}
         </span>{" "}
         🤝
       </>
@@ -730,6 +854,9 @@ function OnboardingFlow() {
       </>
     );
 
+  const confirmH1 = t("obUiConfirmH1").split("{lang}");
+  const uiLangObj = langByCode(uiPick);
+
   if (!accountReady) {
     return (
       <div className="flex min-h-screen items-center justify-center" role="status" aria-label="Loading your profile">
@@ -740,28 +867,31 @@ function OnboardingFlow() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      {CLERK_ON && <ClerkNamePrefill onName={onClerkName} />}
+
       {/* ambient orbs */}
       <div className="orb h-[420px] w-[420px] bg-violet/20" style={{ top: -140, left: -140 }} />
       <div className="orb h-[360px] w-[360px] bg-orange/12" style={{ bottom: -110, right: -90 }} />
       <div className="orb h-[260px] w-[260px] bg-lime/8" style={{ top: "42%", right: -100 }} />
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-7 sm:px-6">
-        {/* header: logo · dots · counter */}
+        {/* header: logo · endowed progress bar */}
         <motion.header
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center justify-between gap-4"
         >
-          <Logo size="sm" />
-          {addingLanguage ? (
-            <span className="headline text-sm">{t("prfAddLanguage")}</span>
-          ) : (
-            <Dots step={step} onJump={jump} />
+          <div className="flex items-center gap-4">
+            <Logo size="sm" />
+            {addingLanguage ? (
+              <span className="headline ml-auto text-sm">{t("prfAddLanguage")}</span>
+            ) : (
+              <SegmentBar segments={segments} onJump={jump} />
+            )}
+          </div>
+          {!addingLanguage && labelLine && (
+            <p className="mt-2 text-right text-xs font-medium text-muted">{labelLine}</p>
           )}
-          <span className="hidden w-[72px] text-right text-xs font-medium text-muted sm:block">
-            {addingLanguage ? "" : `${step + 1} / ${STEP_COUNT}`}
-          </span>
         </motion.header>
 
         {/* returning-user banner */}
@@ -793,8 +923,8 @@ function OnboardingFlow() {
               animate="center"
               exit="exit"
             >
-              {/* ============ 0 · welcome + role ============ */}
-              {step === 0 && (
+              {/* ============ welcome (+ role when the studio is on) ============ */}
+              {screen === "welcome" && (
                 <>
                   <motion.div variants={item} className="flex justify-center">
                     <Mascot size={148} mood="wave" />
@@ -812,47 +942,49 @@ function OnboardingFlow() {
                     {t("dshOnbTaglinePre")}{" "}
                     <span className="font-semibold text-lime">{t("dshOnbZeroTranslation")}</span>{t("dshOnbTaglinePost")}
                   </motion.p>
-
-                  <div className={`mt-9 grid gap-3 ${NURTURER_STUDIO_ON ? "sm:grid-cols-2" : "mx-auto max-w-md"}`}>
-                    <RoleCard
-                      emoji="🌱"
-                      title={t("dshOnbRoleGrowerTitle")}
-                      desc={t("dshOnbRoleGrowerDesc")}
-                      selected={role === "grower"}
-                      accent="var(--color-violet)"
-                      glow="var(--shadow-glow-violet)"
-                      onClick={() => setRole("grower")}
-                    />
-                    {NURTURER_STUDIO_ON && (
-                      <RoleCard
-                        emoji="🤝"
-                        title={t("dshOnbRoleNurturerTitle")}
-                        desc={t("dshOnbRoleNurturerDesc")}
-                        selected={role === "nurturer"}
-                        accent="var(--color-orange)"
-                        glow="var(--shadow-glow-orange)"
-                        onClick={() => setRole("nurturer")}
-                      />
-                    )}
-                  </div>
+                  <motion.p variants={item} className="mt-3 text-center text-sm text-muted">
+                    {t("obTimePromise")}
+                  </motion.p>
 
                   {NURTURER_STUDIO_ON ? (
-                    <motion.div variants={item} className="mt-3 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => setRole("both")}
-                        className={`pill border px-5 py-2.5 text-sm font-semibold transition-colors ${
-                          role === "both"
-                            ? "border-lime bg-lime/15 text-lime"
-                            : "border-line bg-white/4 text-muted hover:text-ink"
-                        }`}
-                      >
-                        🌱🤝 {t("dshOnbBothPlease")}
-                        {role === "both" && <Check size={14} strokeWidth={3} />}
-                      </button>
-                    </motion.div>
+                    <>
+                      <div className="mt-9 grid gap-3 sm:grid-cols-2">
+                        <RoleCard
+                          emoji="🌱"
+                          title={t("dshOnbRoleGrowerTitle")}
+                          desc={t("dshOnbRoleGrowerDesc")}
+                          selected={role === "grower"}
+                          accent="var(--color-violet)"
+                          glow="var(--shadow-glow-violet)"
+                          onClick={() => setRole("grower")}
+                        />
+                        <RoleCard
+                          emoji="🤝"
+                          title={t("dshOnbRoleNurturerTitle")}
+                          desc={t("dshOnbRoleNurturerDesc")}
+                          selected={role === "nurturer"}
+                          accent="var(--color-orange)"
+                          glow="var(--shadow-glow-orange)"
+                          onClick={() => setRole("nurturer")}
+                        />
+                      </div>
+                      <motion.div variants={item} className="mt-3 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setRole("both")}
+                          className={`pill border px-5 py-2.5 text-sm font-semibold transition-colors ${
+                            role === "both"
+                              ? "border-lime bg-lime/15 text-lime"
+                              : "border-line bg-white/4 text-muted hover:text-ink"
+                          }`}
+                        >
+                          🌱🤝 {t("dshOnbBothPlease")}
+                          {role === "both" && <Check size={14} strokeWidth={3} />}
+                        </button>
+                      </motion.div>
+                    </>
                   ) : (
-                    <motion.div variants={item} className="mt-4 text-center">
+                    <motion.div variants={item} className="mt-6 text-center">
                       <Link href="/early" className="text-sm font-semibold text-orange hover:text-orange-soft">
                         🤝 {t("dshOnbRoleNurturerTitle")} →
                       </Link>
@@ -861,35 +993,12 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {/* ============ 1 · known languages ============ */}
-              {step === 1 && (
-                <>
-                  <NuriSays mood="happy">{t("dshOnbRootsFeed")}</NuriSays>
-                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    {t("dshOnbKnownHead")}
-                  </motion.h1>
-                  <motion.p variants={item} className="mt-3 text-muted">
-                    {t("dshOnbKnownSub")}
-                  </motion.p>
-                  <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
-                    {LANGUAGES.map((l) => (
-                      <LangChip
-                        key={l.code}
-                        lang={l}
-                        selected={knownLangs.includes(l.code)}
-                        onClick={() => toggleKnown(l.code)}
-                      />
-                    ))}
-                  </motion.div>
-                </>
-              )}
-
-              {/* ============ 2 · target world / nurture langs ============ */}
-              {step === 2 && !nurturerOnly && (
+              {/* ============ target world — the question the user came with ============ */}
+              {screen === "target" && (
                 <>
                   <NuriSays mood="think">{t("dshOnbPickWorldNuri")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    {t("dshOnbTargetHead")}
+                    {t("obTargetFirstH1")}
                   </motion.h1>
                   <motion.p variants={item} className="mt-3 text-muted">
                     {t("dshOnbTargetSub")}
@@ -897,9 +1006,15 @@ function OnboardingFlow() {
                   <motion.div variants={grid} className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {LANGUAGES.filter(
                       (l) =>
-                        !knownLangs.includes(l.code) &&
                         FULL_CONTENT_LANGS.includes(l.code) &&
-                        (!addingLanguage || !profile?.journeys?.some((journey) => journey.lang === l.code))
+                        // Adding a language finishes straight from this grid (no
+                        // UI-language confirm screen), so a language the user
+                        // already lives in must not be offered: picking their
+                        // own knownLangs[0] would silently reassign uiPick and
+                        // drop their primary language from knownLangs.
+                        (!addingLanguage ||
+                          (!profile?.journeys?.some((journey) => journey.lang === l.code) &&
+                            !profile?.knownLangs?.includes(l.code)))
                     ).map((l) => (
                       <TargetCard
                         key={l.code}
@@ -950,7 +1065,8 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {step === 2 && nurturerOnly && (
+              {/* ============ nurture languages (nurturer-only) ============ */}
+              {screen === "nurture" && (
                 <>
                   <NuriSays mood="happy">{t("dshOnbNurtureTreasure")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
@@ -960,14 +1076,14 @@ function OnboardingFlow() {
                     {t("dshOnbNurtureSub")}
                   </motion.p>
                   <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
-                    {knownLangs.map((code) => {
+                    {knownList.map((code) => {
                       const l = langByCode(code);
                       return (
                         <LangChip
                           key={l.code}
                           lang={l}
                           accent="orange"
-                          selected={nurtureLangs.includes(l.code)}
+                          selected={nurturePicked.includes(l.code)}
                           onClick={() => toggleNurture(l.code)}
                         />
                       );
@@ -976,37 +1092,8 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {/* ============ 3 · place (optional) ============ */}
-              {step === 3 && (
-                <>
-                  <NuriSays mood="happy">{t("dshOnbGardenSomewhere")}</NuriSays>
-                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    {nurturerOnly ? t("dshOnbPlaceHeadNurture") : t("dshOnbPlaceHeadGrow")}
-                  </motion.h1>
-                  <motion.p variants={item} className="mt-3 text-muted">
-                    {nurturerOnly ? t("dshOnbPlaceSubNurture") : t("dshOnbPlaceSubGrow")}
-                  </motion.p>
-                  <motion.div variants={item} className="card mt-8 grid gap-5 p-4 sm:grid-cols-2 sm:p-6">
-                    <PlaceInput label={t("dshOnbCityLabel")} value={city} placeholder={t("dshOnbCityPlaceholder")} onChange={setCity} />
-                    <PlaceInput
-                      label={t("dshOnbCountryLabel")}
-                      value={country}
-                      placeholder={t("dshOnbCountryPlaceholder")}
-                      onChange={setCountry}
-                    />
-                  </motion.div>
-                  <motion.p
-                    variants={item}
-                    className="mt-4 flex items-center gap-2 text-xs text-muted"
-                  >
-                    <MapPin size={14} className="shrink-0 text-lime" />
-                    {t("dshOnbCityLevelNote")}
-                  </motion.p>
-                </>
-              )}
-
-              {/* ============ 4 · why this language (optional) ============ */}
-              {step === 4 && (
+              {/* ============ why this language (optional) ============ */}
+              {screen === "why" && (
                 <>
                   <NuriSays mood="think">{t("dshOnbNoWrongReason")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
@@ -1035,32 +1122,91 @@ function OnboardingFlow() {
                 </>
               )}
 
-              {/* ============ 5 · what you love (optional) ============ */}
-              {step === 5 && (
+              {/* ============ UI-language confirm — one tap, not a quiz ============ */}
+              {screen === "known" && (
                 <>
-                  <NuriSays mood="happy">{t("dshOnbLoveLives")}</NuriSays>
-                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    {t("dshOnbWhatLoveHead")}
-                  </motion.h1>
-                  <motion.p variants={item} className="mt-3 text-muted">
-                    {t("dshOnbWhatLoveSub")}
-                  </motion.p>
-                  <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
-                    {INTERESTS.map((i) => (
-                      <InterestChip
-                        key={i.id}
-                        emoji={i.emoji}
-                        label={t(i.labelKey)}
-                        selected={interests.includes(i.id)}
-                        onClick={() => toggleInterest(i.id)}
-                      />
-                    ))}
-                  </motion.div>
+                  <NuriSays mood="happy">{t("dshOnbRootsFeed")}</NuriSays>
+                  {changingUi ? (
+                    <>
+                      <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
+                        {t("obSpeakBestH1")}
+                      </motion.h1>
+                      {/* single-select — the just-picked target is excluded, so
+                          "the language I came to learn" can't be chosen here */}
+                      <motion.div variants={grid} className="mt-8 flex flex-wrap gap-2.5">
+                        {LANGUAGES.filter((l) => l.code !== targetLang).map((l) => (
+                          <LangChip
+                            key={l.code}
+                            lang={l}
+                            selected={uiPick === l.code}
+                            onClick={() => chooseUiLang(l.code)}
+                          />
+                        ))}
+                      </motion.div>
+                    </>
+                  ) : (
+                    <>
+                      <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
+                        {confirmH1[0]}
+                        <span className="text-violet-soft">
+                          {uiLangObj.flag} {uiLangObj.nativeName}
+                        </span>
+                        {confirmH1[1]}
+                      </motion.h1>
+                      <motion.div variants={item} className="mt-8 grid gap-3">
+                        <button
+                          type="button"
+                          onClick={next}
+                          className="pill w-full justify-center bg-violet px-8 py-4 font-semibold text-white"
+                          style={{ boxShadow: "var(--shadow-glow-violet)" }}
+                        >
+                          {t("obUiConfirmYes")} <Check size={16} strokeWidth={3} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setChangingUi(true)}
+                          className="mx-auto pill bg-white/6 px-6 py-2.5 text-sm font-semibold text-muted hover:text-ink"
+                        >
+                          {t("obUiConfirmChange")}
+                        </button>
+                      </motion.div>
+                      {/* optional expander for genuinely multilingual users */}
+                      <motion.div variants={item} className="mt-9">
+                        <button
+                          type="button"
+                          onClick={() => setAlsoOpen((v) => !v)}
+                          aria-expanded={alsoOpen}
+                          className="flex items-center gap-2 text-sm font-semibold text-muted hover:text-ink"
+                        >
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${alsoOpen ? "rotate-180" : ""}`}
+                          />
+                          {t("obAlsoSpeak")}
+                          {alsoSpeak.length > 0 && (
+                            <span className="font-bold text-lime">· {alsoSpeak.length}</span>
+                          )}
+                        </button>
+                        {alsoOpen && (
+                          <div className="mt-4 flex flex-wrap gap-2.5">
+                            {LANGUAGES.filter((l) => l.code !== targetLang && l.code !== uiPick).map((l) => (
+                              <LangChip
+                                key={l.code}
+                                lang={l}
+                                selected={alsoSpeak.includes(l.code)}
+                                onClick={() => toggleAlsoSpeak(l.code)}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    </>
+                  )}
                 </>
               )}
 
-              {/* ============ 6 · watering rhythm + exchange (optional) ============ */}
-              {step === 6 && (
+              {/* ============ watering rhythm (20 min preselected) ============ */}
+              {screen === "pace" && (
                 <>
                   <NuriSays mood="cheer">{t("dshOnbLittleOften")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
@@ -1097,41 +1243,22 @@ function OnboardingFlow() {
                   >
                     🍂 {t("dshOnbWaterSplit")}
                   </motion.p>
-                  {COMMUNITY_EXCHANGE_ON && (
-                    <motion.div
-                      variants={item}
-                      className="card mt-6 flex items-center justify-between gap-4 p-5"
-                    >
-                      <div>
-                        <p className="font-semibold">🤝 {t("wldOpenToExchange")}</p>
-                        <p className="mt-1 text-sm text-muted">
-                          {t("dshOnbExchangeSub")}
-                        </p>
-                      </div>
-                      <Toggle
-                        on={exchange}
-                        onClick={() => setExchange((v) => !v)}
-                        label={t("wldOpenToExchange")}
-                        knob="🤝"
-                      />
-                    </motion.div>
-                  )}
                 </>
               )}
 
-              {/* ============ 7 · name ============ */}
-              {step === 7 && (
+              {/* ============ finale — name confirm + first word / toolkit ============ */}
+              {screen === "name" && (
                 <>
                   <NuriSays mood="happy">{t("dshOnbAlmostThere")}</NuriSays>
                   <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
                     {t("dshOnbNameHead")}
                   </motion.h1>
-                  <motion.div variants={item} className="card mt-8 px-4 py-8 sm:px-6 sm:py-10">
+                  <motion.div variants={item} className="card mt-8 px-4 py-6 sm:px-6 sm:py-8">
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") next();
+                        if (e.key === "Enter" && valid) finish();
                       }}
                       placeholder={t("dshOnbNamePlaceholder")}
                       maxLength={24}
@@ -1139,7 +1266,7 @@ function OnboardingFlow() {
                       className="headline w-full bg-transparent text-center text-4xl text-ink caret-violet outline-none placeholder:text-white/15 sm:text-5xl"
                     />
                   </motion.div>
-                  <div className="mt-5 min-h-[28px] text-center">
+                  <div className="mt-4 min-h-[28px] text-center">
                     <AnimatePresence>
                       {preview && (
                         <motion.p
@@ -1153,98 +1280,77 @@ function OnboardingFlow() {
                       )}
                     </AnimatePresence>
                   </div>
-                </>
-              )}
 
-              {/* ============ 8 · immersion moment (growers) ============ */}
-              {step === 8 && !nurturerOnly && target && (
-                <>
-                  <NuriSays mood="cheer">{t("dshOnbPicturesExplain")}</NuriSays>
-                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    <span className="text-violet-soft">{target.nativeName}</span>
-                    <span aria-hidden="true"> · </span>
-                    {t("dshOnbImmersionMode")}
-                  </motion.h1>
-                  <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                    {t("dshOnbImmersionBody").replace("{flag}", target.flag)}
-                  </motion.p>
+                  {!nurturerOnly && target && (
+                    <>
+                      {/* first word — audio only, no translation */}
+                      <motion.div
+                        variants={item}
+                        className="card mt-4 flex items-center justify-between gap-4 p-4 sm:p-6"
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="text-5xl">{target.flag}</span>
+                          <div>
+                            <p className="headline text-3xl sm:text-4xl">{HELLO[target.code]}</p>
+                            <p className="mt-1 text-xs text-muted">{t("dshOnbFirstWordTap")}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={t("onb2Listen")}
+                          onClick={() => void speak(HELLO[target.code], target.code, 0.9)}
+                          className="pill h-12 w-12 bg-violet text-white"
+                          style={{ boxShadow: "var(--shadow-glow-violet)" }}
+                        >
+                          <Volume2 size={20} />
+                        </button>
+                      </motion.div>
 
-                  {/* first word — audio only, no translation */}
-                  <motion.div
-                    variants={item}
-                    className="card mt-8 flex items-center justify-between gap-4 p-4 sm:p-6"
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="text-5xl">{target.flag}</span>
-                      <div>
-                        <p className="headline text-3xl sm:text-4xl">{HELLO[target.code]}</p>
-                        <p className="mt-1 text-xs text-muted">{t("dshOnbFirstWordTap")}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={t("onb2Listen")}
-                      onClick={() => void speak(HELLO[target.code], target.code, 0.9)}
-                      className="pill h-12 w-12 bg-violet text-white"
-                      style={{ boxShadow: "var(--shadow-glow-violet)" }}
-                    >
-                      <Volume2 size={20} />
-                    </button>
-                  </motion.div>
+                      {/* immersion toggle */}
+                      <motion.div
+                        variants={item}
+                        className="card mt-3 flex items-center justify-between gap-4 p-4 sm:p-6"
+                      >
+                        <div>
+                          <p className="flex items-center gap-2 font-semibold">
+                            <Sparkles size={16} className="text-lime" /> {t("dshOnbImmersionMode")}
+                          </p>
+                          <p className="mt-1 text-sm text-muted">
+                            {immersion
+                              ? t("dshOnbImmersionOnLine").replace("{language}", target.nativeName)
+                              : t("dshOnbImmersionOffLine")}
+                          </p>
+                        </div>
+                        <Toggle on={immersion} onClick={() => setImmersion((v) => !v)} />
+                      </motion.div>
 
-                  {/* immersion toggle */}
-                  <motion.div
-                    variants={item}
-                    className="card mt-3 flex items-center justify-between gap-4 p-4 sm:p-6"
-                  >
-                    <div>
-                      <p className="flex items-center gap-2 font-semibold">
-                        <Sparkles size={16} className="text-lime" /> {t("dshOnbImmersionMode")}
-                      </p>
-                      <p className="mt-1 text-sm text-muted">
-                        {immersion
-                          ? t("dshOnbImmersionOnLine").replace("{language}", target.nativeName)
-                          : t("dshOnbImmersionOffLine")}
-                      </p>
-                    </div>
-                    <Toggle on={immersion} onClick={() => setImmersion((v) => !v)} />
-                  </motion.div>
-
-                  {role === "both" && (
-                    <motion.p variants={item} className="mt-4 text-center text-xs text-muted">
-                      {t("dshOnbToolkitWaiting")} 🤝
-                    </motion.p>
+                      {role === "both" && (
+                        <motion.p variants={item} className="mt-4 text-center text-xs text-muted">
+                          {t("dshOnbToolkitWaiting")} 🤝
+                        </motion.p>
+                      )}
+                    </>
                   )}
-                </>
-              )}
 
-              {/* ============ 8 · nurturer toolkit ============ */}
-              {step === 8 && nurturerOnly && (
-                <>
-                  <NuriSays mood="cheer">{t("dshOnbInYourPocket")}</NuriSays>
-                  <motion.h1 variants={item} className="headline text-3xl sm:text-4xl lg:text-[44px]">
-                    {t("dshOnbToolkitHead")}
-                  </motion.h1>
-                  <motion.p variants={item} className="mt-3 max-w-xl leading-relaxed text-muted">
-                    {t("dshOnbToolkitBody")}
-                  </motion.p>
-                  <div className="mt-8 grid gap-3">
-                    <ToolkitCard
-                      visual={<DeckVisual />}
-                      title={t("dshOnbToolDecksTitle")}
-                      desc={t("dshOnbToolDecksDesc")}
-                    />
-                    <ToolkitCard
-                      visual={<PlanVisual />}
-                      title={t("dshOnbToolPlansTitle")}
-                      desc={t("dshOnbToolPlansDesc")}
-                    />
-                    <ToolkitCard
-                      visual={<TimerVisual />}
-                      title={t("dshOnbToolTimerTitle")}
-                      desc={t("dshOnbToolTimerDesc")}
-                    />
-                  </div>
+                  {nurturerOnly && (
+                    <div className="mt-4 grid gap-3">
+                      <ToolkitCard
+                        visual={<DeckVisual />}
+                        title={t("dshOnbToolDecksTitle")}
+                        desc={t("dshOnbToolDecksDesc")}
+                      />
+                      <ToolkitCard
+                        visual={<PlanVisual />}
+                        title={t("dshOnbToolPlansTitle")}
+                        desc={t("dshOnbToolPlansDesc")}
+                      />
+                      <ToolkitCard
+                        visual={<TimerVisual />}
+                        title={t("dshOnbToolTimerTitle")}
+                        desc={t("dshOnbToolTimerDesc")}
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </motion.section>
@@ -1267,16 +1373,16 @@ function OnboardingFlow() {
               <ArrowLeft size={16} /> {t("back")}
             </button>
 
-            {step < STEP_COUNT - 1 && !(addingLanguage && step === 2) ? (
+            {screen !== "name" && !(addingLanguage && screen === "target") ? (
               <button
                 type="button"
-                disabled={!valid || (addingLanguage && (!profile || !role || !trimmed))}
+                disabled={!valid}
                 onClick={next}
                 className="pill bg-violet px-8 py-3 font-semibold text-white disabled:pointer-events-none disabled:opacity-35"
                 style={valid ? { boxShadow: "var(--shadow-glow-violet)" } : undefined}
               >
-                {step === 6 && dailyMinutes !== null ? (
-                  <>{nurturerOnly ? `${t("dshOnbImNurturing")} 🤝` : `${t("dshOnbImGrowing")} 🌱`}</>
+                {screen === "welcome" ? (
+                  <>{t("start")}</>
                 ) : inviteStepEmpty ? (
                   <>{t("dshOnbSkipForNow")}</>
                 ) : (
@@ -1287,7 +1393,7 @@ function OnboardingFlow() {
             ) : (
               <button
                 type="button"
-                disabled={!valid}
+                disabled={!valid || (addingLanguage && (!profile || trimmed.length === 0))}
                 onClick={finish}
                 className="pill bg-lime px-8 py-3 font-bold text-canvas disabled:pointer-events-none disabled:opacity-35"
                 style={{ boxShadow: "0 0 50px -12px rgba(184,240,60,0.55)" }}
@@ -1303,7 +1409,37 @@ function OnboardingFlow() {
         </main>
       </div>
 
-      {/* full-screen placement overlay — a branch off step 2, not a new step */}
+      {/* honest labor-illusion beat: every line names work finish() really
+          does with the answers just given — max ~2.6 s, tap to skip */}
+      <AnimatePresence>
+        {building && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={skipBuilding}
+            role="status"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-7 bg-canvas/95 px-6 backdrop-blur-sm"
+          >
+            <Mascot size={110} mood="think" />
+            <div className="space-y-3 text-center">
+              {[t("obBuildingPlan1"), t("obBuildingPlan2"), t("obBuildingPlan3")].map((line, i) => (
+                <motion.p
+                  key={line}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 + i * 0.65 }}
+                  className="text-sm font-medium text-muted"
+                >
+                  {line}
+                </motion.p>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* full-screen placement overlay — a branch off the target step, not a new step */}
       <AnimatePresence>
         {placementOpen && targetLang && (
           <PlacementCheck

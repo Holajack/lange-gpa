@@ -16,7 +16,9 @@ import { mascotForLang } from "@/lib/mascots";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { speak, stopSpeaking } from "@/lib/tts";
 import type { LangCode, PhaseActivity, Profile } from "@/lib/types";
+import { gate1bPassed, gateLegs1b } from "@/lib/gates";
 import { Avatar } from "@/components/Avatar";
+import { CheckpointCard, weakestLegChip } from "@/components/CheckpointCard";
 import { Mascot } from "@/components/Mascot";
 import { MascotImage } from "@/components/MascotImage";
 import { ProgressBar, SectionTitle } from "@/components/ui";
@@ -97,6 +99,72 @@ function todayIso(): string {
 const todayIndex = () => (new Date().getDay() + 6) % 7;
 
 /* ---------------------------------------------------------------- *
+ *  Notification primer — the in-context home of the permission ask
+ *  deferred out of onboarding (SPEC-onboarding §1): primed on the
+ *  dashboard only after the first session is booked, and the OS
+ *  dialog fires only on an explicit Yes. Never a cold ask.
+ * ---------------------------------------------------------------- */
+
+const NUDGE_ASK_DONE_KEY = "lange.nudgeAsk.v1";
+
+function NudgePrimer({ profile, t }: { profile: Profile; t: (key: string) => string }) {
+  const [done, setDone] = useState(true); // assume answered until the browser says otherwise
+  useEffect(() => {
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(NUDGE_ASK_DONE_KEY) === "1";
+    } catch {}
+    const askable =
+      typeof Notification !== "undefined" && Notification.permission === "default";
+    if (!dismissed && askable) setDone(false);
+  }, []);
+
+  if (done || profile.role === "nurturer" || profile.bookings.length === 0) return null;
+
+  const markDone = () => {
+    try {
+      localStorage.setItem(NUDGE_ASK_DONE_KEY, "1");
+    } catch {}
+    setDone(true);
+  };
+
+  const yes = () => {
+    // the OS dialog fires ONLY here, on an explicit yes
+    void Notification.requestPermission().finally(markDone);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+      className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p className="text-sm leading-relaxed">
+        🔔 {t("dshNudgeAsk").replace("{n}", String(profile.dailyMinutes ?? 20))}
+      </p>
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          onClick={yes}
+          className="pill justify-center bg-violet px-5 py-2.5 text-sm font-bold text-white"
+          style={{ boxShadow: "var(--shadow-glow-violet)" }}
+        >
+          {t("dshNudgeYes")}
+        </button>
+        <button
+          type="button"
+          onClick={markDone}
+          className="pill justify-center bg-white/6 px-5 py-2.5 text-sm font-semibold text-muted hover:text-ink"
+        >
+          {t("sesConsentNotNow")}
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ---------------------------------------------------------------- *
  *  Page
  * ---------------------------------------------------------------- */
 
@@ -125,7 +193,8 @@ export default function DashboardPage() {
   useEffect(() => {
     const onAchievement = (e: Event) => {
       const id = (e as CustomEvent<{ id?: string }>).detail?.id;
-      if (id) setToastId(id);
+      // gate badges get the full-screen ceremony (GateCeremony), not a toast
+      if (id && !id.startsWith("gate-")) setToastId(id);
     };
     window.addEventListener(ACHIEVEMENT_EVENT, onAchievement);
     return () => window.removeEventListener(ACHIEVEMENT_EVENT, onAchievement);
@@ -158,7 +227,10 @@ export default function DashboardPage() {
   const buddy = mascotForLang(profile.targetLang);
   const phase = phaseById(profile.phase);
   const progress = phaseProgress(phase, profile.hoursLogged);
-  const phase1ListeningOnly = profile.phase === 1 && profile.hoursLogged < 40;
+  /* 1B status comes from the real advancement gate (stamp-or-predicate,
+     src/lib/gates.ts) — never the old 40 h proxy */
+  const phase1ListeningOnly = profile.phase === 1 && !gate1bPassed(profile);
+  const gate1bChip = phase1ListeningOnly ? weakestLegChip(gateLegs1b(profile), t) : "";
 
   /* Week panel data */
   const today = todayIndex();
@@ -238,6 +310,18 @@ export default function DashboardPage() {
           </p>
         </div>
       </motion.header>
+
+      {/* ============ Next advancement gate (SPEC-advancement-gates §6) ============ */}
+      {/* grower-only, and only while Phase 2 is still ahead — mirrors the
+          guard inside CheckpointCard so no empty spacer renders */}
+      {profile.role !== "nurturer" && profile.phase <= 2 && (
+        <motion.div variants={fadeUp}>
+          <CheckpointCard />
+        </motion.div>
+      )}
+
+      {/* ============ Notification primer — only after a session is booked ============ */}
+      <NudgePrimer profile={profile} t={t} />
 
       {/* ============ ROW 1 ============ */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
@@ -427,7 +511,7 @@ export default function DashboardPage() {
               <div className="flex h-full flex-col gap-2 rounded-[24px] border border-dashed border-line bg-raised-2/55 p-5 text-muted">
                 <span className="text-3xl">🔒</span>
                 <h3 className="headline text-lg leading-tight">{t("speaking")}</h3>
-                <p className="text-xs font-semibold">{profile.hoursLogged.toFixed(1)}h / 40h</p>
+                <p className="text-xs font-semibold">{gate1bChip}</p>
               </div>
             ) : (
               <Link href="/practice/speaking" className="block">
@@ -469,7 +553,7 @@ export default function DashboardPage() {
               <div className="orb -right-16 -top-16 h-48 w-48 bg-lemon/15" />
               <Mascot size={112} mood="think" />
               <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-violet-soft">
-                {profile.hoursLogged.toFixed(1)}h / 40h
+                🔒 {gate1bChip}
               </p>
               <h3 className="headline mt-2 text-3xl">{t("ph_1_part_1a_title")}</h3>
               <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted">

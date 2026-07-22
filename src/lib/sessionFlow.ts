@@ -79,7 +79,7 @@ const DOMAIN_DEFAULT_MEETING: Record<string, number> = {
   nature: 14, health: 18, work: 32, traveling: 37, sport: 33,
 };
 
-function effMeeting(domainId: string, item: { meeting?: number }, domainMeeting?: number): number {
+export function effMeeting(domainId: string, item: { meeting?: number }, domainMeeting?: number): number {
   return item.meeting ?? domainMeeting ?? DOMAIN_DEFAULT_MEETING[domainId] ?? 1;
 }
 
