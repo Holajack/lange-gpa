@@ -3,18 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
-import { ArrowRight, ArrowUpRight, Check, Clock, Mic, RefreshCw } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Clock, LockKeyhole, Mic, RefreshCw } from "lucide-react";
 
 import { useApp, getImmersionStage } from "@/lib/store";
-import { ACHIEVEMENTS, ACHIEVEMENT_EVENT, achievementById, useAchievements } from "@/lib/achievements";
+import { ACHIEVEMENTS, ACHIEVEMENT_EVENT, achievementById } from "@/lib/achievements";
 import { immersionShare } from "@/lib/i18n";
 import { langByCode } from "@/lib/languages";
 import { phaseById, phaseProgress, TOTAL_HOURS } from "@/lib/phases";
-import { NURTURERS, nurturersForLang } from "@/lib/nurturers";
+import { NURTURERS } from "@/lib/nurturers";
+import { meetingForHours, nextMeetingFor } from "@/lib/sessionFlow";
 import { mascotForLang } from "@/lib/mascots";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { speak, stopSpeaking } from "@/lib/tts";
-import type { LangCode, Nurturer, PhaseActivity, Profile } from "@/lib/types";
+import type { LangCode, PhaseActivity, Profile } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { Mascot } from "@/components/Mascot";
 import { MascotImage } from "@/components/MascotImage";
@@ -58,6 +59,9 @@ const KIND_EMOJI: Record<PhaseActivity["kind"], string> = {
 
 /** Waveform bar heights (px) — varied for an organic feel. */
 const WAVE_HEIGHTS = [10, 22, 14, 30, 38, 26, 34, 18, 28, 40, 24, 16, 32, 20, 12];
+const SEEDED_NURTURERS =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_SEEDED_NURTURERS === "true";
 
 /* ---------------------------------------------------------------- *
  *  Motion choreography
@@ -97,9 +101,9 @@ const todayIndex = () => (new Date().getDay() + 6) % 7;
  * ---------------------------------------------------------------- */
 
 export default function DashboardPage() {
-  const { profile, uiLang, t } = useApp();
+  const { profile, uiLang, t, awardAchievement } = useApp();
   const [speaking, setSpeaking] = useState(false);
-  const { earned, award } = useAchievements();
+  const earned = profile?.achievements ?? {};
   const [toastId, setToastId] = useState<string | null>(null);
 
   /** Localized 2-letter day names Mon→Sun (2024-01-01 was a Monday). */
@@ -137,26 +141,24 @@ export default function DashboardPage() {
 
   if (!profile) return null;
 
+  const visibleBookings = profile.bookings.filter(
+    (booking) => booking.nurturerId === "ai" || SEEDED_NURTURERS
+  );
+
   /* A brand-new grower stands at the wall of noise: nothing logged, nothing
      booked, nothing done. Greet them with a welcome garden instead of bleak
      zeros — every other grower keeps the dashboard below, unchanged. */
   const isFresh =
     profile.hoursLogged === 0 &&
     (profile.completed?.length ?? 0) === 0 &&
-    (profile.bookings?.length ?? 0) === 0;
+    visibleBookings.length === 0;
   if (isFresh) return <FreshDashboard profile={profile} t={t} />;
 
   const lang = langByCode(profile.targetLang);
+  const buddy = mascotForLang(profile.targetLang);
   const phase = phaseById(profile.phase);
   const progress = phaseProgress(phase, profile.hoursLogged);
-
-  /* Top two nurturers for the target language (pad from the full roster). */
-  const forLang = nurturersForLang(profile.targetLang);
-  const nurturers: Nurturer[] = [
-    ...forLang,
-    ...NURTURERS.filter((n) => !forLang.includes(n)),
-  ].slice(0, 2);
-  const mainNurturer = nurturers[0];
+  const phase1ListeningOnly = profile.phase === 1 && profile.hoursLogged < 40;
 
   /* Week panel data */
   const today = todayIndex();
@@ -182,12 +184,22 @@ export default function DashboardPage() {
 
   /* Bottom row data */
   const iso = todayIso();
-  const todaysBookings = profile.bookings
+  /* SEQUENTIAL PROGRESSION: the live-session meeting served next (Phase 1
+     only) — advanced solely by completing live /session meetings, with the
+     hours-proxy fallback for profiles the store hasn't self-healed yet. */
+  const nextMeeting =
+    profile.phase === 1
+      ? nextMeetingFor(
+          profile.meetingProgress ?? Math.max(0, meetingForHours(profile.hoursLogged) - 1)
+        )
+      : null;
+  const todaysBookings = visibleBookings
     .filter((b) => b.date === iso && !b.done)
     .sort((a, b) => a.time.localeCompare(b.time));
-  const nextActivities = phase.activities
-    .filter((a) => !profile.completed.includes(a.id))
-    .slice(0, 2);
+  const nextActivities =
+    profile.phase === 1
+      ? phase.activities.filter((a) => !profile.completed.includes(a.id)).slice(0, 2)
+      : [];
 
   /* Growth shelf data */
   const shelf = ACHIEVEMENTS.filter((a) => earned[a.id]).sort((a, b) =>
@@ -225,78 +237,30 @@ export default function DashboardPage() {
             </span>
           </p>
         </div>
-        <div className="hidden items-center gap-2 rounded-full bg-raised-2 px-4 py-2 text-sm font-semibold sm:flex">
-          🔥 {profile.streak} <span className="font-normal text-muted">{t("dayStreak")}</span>
-        </div>
       </motion.header>
 
       {/* ============ ROW 1 ============ */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
-        {/* ---- Nurturer video card ---- */}
+        {/* ---- Real-person pathway (never simulated presence) ---- */}
         <motion.div variants={fadeUp} className="lg:col-span-6">
-          <div className="card card-hover h-full p-4">
-            <div
-              className="relative aspect-[16/10] overflow-hidden rounded-[20px]"
-              style={{
-                background:
-                  "radial-gradient(120% 90% at 15% 10%, rgba(124,92,255,0.55), transparent 55%), radial-gradient(110% 90% at 90% 90%, rgba(255,138,30,0.45), transparent 55%), linear-gradient(150deg, #221c3a 0%, #17131f 55%, #2a1a14 100%)",
-              }}
-            >
-              {/* subtle dot pattern */}
-              <div
-                className="pointer-events-none absolute inset-0 opacity-[0.13]"
-                style={{
-                  backgroundImage: "radial-gradient(rgba(255,255,255,0.55) 1px, transparent 1px)",
-                  backgroundSize: "22px 22px",
-                }}
-              />
-
-              {/* participant tiles */}
-              <div className="absolute inset-0 grid grid-cols-2 gap-3 p-3 pb-14 sm:gap-4 sm:p-4 sm:pb-16">
-                {nurturers.map((n, i) => (
-                  <div
-                    key={n.id}
-                    className="relative flex items-center justify-center overflow-hidden rounded-2xl border border-white/10"
-                    style={{
-                      background:
-                        i === 0
-                          ? "linear-gradient(160deg, rgba(124,92,255,0.28), rgba(14,14,18,0.55))"
-                          : "linear-gradient(160deg, rgba(255,138,30,0.24), rgba(14,14,18,0.55))",
-                    }}
-                  >
-                    <Avatar name={n.name} color={n.color} size={64} ring />
-                    <span className="absolute left-2.5 top-2.5 rounded-full bg-canvas/75 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm">
-                      {n.name.split(" ")[0]}
-                    </span>
-                  </div>
-                ))}
+          <div className="card card-hover relative flex h-full min-h-[19rem] overflow-hidden p-6 sm:p-8">
+            <div className="orb -right-14 -top-20 h-56 w-56 bg-violet/25" />
+            <div className="orb -bottom-20 left-10 h-48 w-48 bg-orange/15" />
+            <div className="relative flex w-full flex-col justify-between gap-7 sm:flex-row sm:items-center">
+              <div className="max-w-md">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-lime">{t("schRealPeople")}</p>
+                <h2 className="headline mt-2 text-3xl">{t("mktFindNurturer")}</h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{t("schRealPeopleSub")}</p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link href="/world" className="pill bg-violet px-5 py-3 font-semibold text-white">
+                    🌍 {t("community")}
+                  </Link>
+                  <Link href="/session?nurturer=ai" className="pill bg-white/7 px-5 py-3 font-semibold text-ink">
+                    {t("dshFreshStartSolo").replace("{buddy}", buddy.name)}
+                  </Link>
+                </div>
               </div>
-
-              {/* online badge */}
-              <span className="absolute right-3 top-3 z-10 flex items-center gap-2 rounded-full bg-canvas/75 px-3 py-1.5 text-xs font-semibold text-mint backdrop-blur-sm sm:right-4 sm:top-4">
-                <span className="pulsedot h-2 w-2 rounded-full bg-mint" />
-                {t("online")}
-              </span>
-
-              {/* join pill */}
-              <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center pb-4">
-                <Link
-                  href={`/session?nurturer=${mainNurturer.id}`}
-                  className="pill bg-violet px-6 py-3 text-sm text-white sm:text-base"
-                  style={{ boxShadow: "var(--shadow-glow-violet)" }}
-                >
-                  📹 {t("joinSpeakingClub")}
-                </Link>
-              </div>
-            </div>
-
-            {/* caption */}
-            <div className="mt-3 flex items-center gap-2 px-1 text-xs text-muted">
-              <Avatar name={mainNurturer.name} color={mainNurturer.color} size={20} />
-              <span>
-                {t("yourNurturer")} · <span className="font-semibold text-ink">{mainNurturer.name}</span>{" "}
-                — {mainNurturer.city}
-              </span>
+              <MascotImage mascot={buddy} size={150} glow />
             </div>
           </div>
         </motion.div>
@@ -415,7 +379,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-auto self-start rounded-full bg-orange/15 px-4 py-1.5 text-sm font-bold text-orange">
-              🔥 {profile.streak} {t("dayStreak")}
+              🌱 {profile.week.reduce((total, minutes) => total + minutes, 0)} {t("minutes")} · {t("weeklyActivity")}
             </div>
           </div>
         </motion.div>
@@ -458,17 +422,25 @@ export default function DashboardPage() {
               </div>
             </Link>
 
-            {/* Speaking */}
-            <Link href="/practice/speaking" className="block">
-              <div className="card-hover flex h-full flex-col gap-2 rounded-[24px] bg-orange p-5 text-canvas">
-                <span className="text-3xl">🗣️</span>
+            {/* Speaking opens only after Phase 1A's comprehension-first hours. */}
+            {phase1ListeningOnly ? (
+              <div className="flex h-full flex-col gap-2 rounded-[24px] border border-dashed border-line bg-raised-2/55 p-5 text-muted">
+                <span className="text-3xl">🔒</span>
                 <h3 className="headline text-lg leading-tight">{t("speaking")}</h3>
-                <p className="text-xs font-semibold opacity-75">{t("prcSpeakName")}</p>
-                <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-bold">
-                  {t("play")} <ArrowRight size={13} strokeWidth={3} />
-                </span>
+                <p className="text-xs font-semibold">{profile.hoursLogged.toFixed(1)}h / 40h</p>
               </div>
-            </Link>
+            ) : (
+              <Link href="/practice/speaking" className="block">
+                <div className="card-hover flex h-full flex-col gap-2 rounded-[24px] bg-orange p-5 text-canvas">
+                  <span className="text-3xl">🗣️</span>
+                  <h3 className="headline text-lg leading-tight">{t("speaking")}</h3>
+                  <p className="text-xs font-semibold opacity-75">{t("prcSpeakName")}</p>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-1 text-xs font-bold">
+                    {t("play")} <ArrowRight size={13} strokeWidth={3} />
+                  </span>
+                </div>
+              </Link>
+            )}
           </div>
 
           {/* category chips */}
@@ -492,6 +464,28 @@ export default function DashboardPage() {
 
         {/* ---- Practice speaking + Fast repeat ---- */}
         <motion.div variants={fadeUp} className="flex flex-col gap-4 lg:col-span-5">
+          {phase1ListeningOnly ? (
+            <div className="card relative flex h-full min-h-[24rem] flex-col justify-center overflow-hidden p-7 text-center">
+              <div className="orb -right-16 -top-16 h-48 w-48 bg-lemon/15" />
+              <Mascot size={112} mood="think" />
+              <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-violet-soft">
+                {profile.hoursLogged.toFixed(1)}h / 40h
+              </p>
+              <h3 className="headline mt-2 text-3xl">{t("ph_1_part_1a_title")}</h3>
+              <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted">
+                {t("ph_1_part_1a_focus")}
+              </p>
+              <div className="mt-7 flex flex-wrap justify-center gap-3">
+                <Link href="/practice/listening" className="pill bg-lemon px-5 py-3 font-bold text-canvas">
+                  👂 {t("listening")}
+                </Link>
+                <Link href="/practice/vocabulary" className="pill bg-lime px-5 py-3 font-bold text-canvas">
+                  🃏 {t("vocabulary")}
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Practice speaking */}
           <div className="card card-hover relative overflow-hidden p-6">
             <div className="orb -right-16 -top-16 h-44 w-44 bg-violet/25" />
@@ -574,6 +568,8 @@ export default function DashboardPage() {
             {/* spacer so absolute elements never collide on short screens */}
             <div className="h-16" />
           </div>
+            </>
+          )}
         </motion.div>
       </div>
 
@@ -583,8 +579,13 @@ export default function DashboardPage() {
         <motion.div variants={fadeUp} className="lg:col-span-5">
           {todaysBookings.length > 0 ? (
             <div className="card card-hover flex h-full flex-col gap-3 p-5">
-              <p className="text-sm font-semibold text-muted">
-                {t("today")} · {t("upcoming")}
+              <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-muted">
+                <span>{t("today")} · {t("upcoming")}</span>
+                {nextMeeting !== null && (
+                  <span className="ml-auto rounded-full bg-white/6 px-2.5 py-0.5 text-[11px] font-semibold">
+                    🃏 {t("meetingWord")} {nextMeeting}/40
+                  </span>
+                )}
               </p>
               {todaysBookings.map((b) => {
                 const n = NURTURERS.find((x) => x.id === b.nurturerId);
@@ -601,7 +602,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <Link
-                      href={`/session?nurturer=${b.nurturerId}`}
+                      href={`/session?nurturer=${b.nurturerId}&duration=${b.minutes}`}
                       className="pill bg-mint px-4 py-2 text-sm font-bold text-canvas"
                     >
                       📹 {t("start")}
@@ -618,7 +619,12 @@ export default function DashboardPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-display text-base font-bold">{t("bookSession")}</p>
-                  <p className="truncate text-xs text-muted">{t("noSessions")}</p>
+                  <p className="truncate text-xs text-muted">{t("dshFreshBookFirst")}</p>
+                  {nextMeeting !== null && (
+                    <p className="mt-0.5 text-[11px] font-semibold text-muted">
+                      🃏 {t("meetingWord")} {nextMeeting}/40
+                    </p>
+                  )}
                 </div>
                 <span className="pill flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet text-white">
                   <ArrowRight size={17} strokeWidth={2.5} />
@@ -635,7 +641,23 @@ export default function DashboardPage() {
               {phase.emoji} {t("phaseWord")} {profile.phase} · {phase.name}
             </p>
 
-            {nextActivities.length > 0 ? (
+            {profile.phase > 1 ? (
+              <div className="flex items-start gap-3 rounded-2xl bg-raised-2 p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/6 text-muted">
+                  <LockKeyhole size={18} strokeWidth={2.25} aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">{t("crsMethodPreview")}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">{t("crsMethodPreviewBody")}</p>
+                </div>
+                <Link
+                  href={`/courses/${phase.slug}`}
+                  className="pill shrink-0 bg-violet px-4 py-2 text-sm font-bold text-white"
+                >
+                  {t("crsMethodPreview")}
+                </Link>
+              </div>
+            ) : nextActivities.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {nextActivities.map((a) => (
                   <div key={a.id} className="flex items-center gap-3 rounded-2xl bg-raised-2 p-3">
@@ -686,7 +708,7 @@ export default function DashboardPage() {
             {!earned["first-joke"] && (
               <button
                 type="button"
-                onClick={() => award("first-joke")}
+                onClick={() => awardAchievement("first-joke")}
                 className="pill bg-white/6 px-3.5 py-1.5 text-xs font-semibold text-muted hover:text-ink"
               >
                 😂 {t("firstJoke")}
@@ -921,10 +943,6 @@ function FreshDashboard({ profile, t }: { profile: Profile; t: (key: string) => 
                 ))}
               </div>
 
-              {/* streak pill — potential, not loss */}
-              <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-lime/12 px-4 py-1.5 text-sm font-semibold text-lime">
-                🌱 {t("dshFreshStreak")}
-              </span>
             </div>
           </div>
         </div>

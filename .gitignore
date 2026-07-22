@@ -10,6 +10,9 @@ out
 .DS_Store
 .playwright-mcp/
 .vercel
+.handoffs/
+graphify-out/
+clerk-*.zone
 research/phase*.txt
 landing-hero.jpeg
 phase6-ever-growing.jpeg

@@ -1,6 +1,6 @@
 # Ti Boujon — Haitian Creole Recording Script
 
-**~210 short phrases · about 15 minutes per voice.** This is the complete Kreyòl audio for LANGE.
+**~210 short phrases · about 15 minutes per voice.** This is the complete Kreyòl audio for Nurilang.
 
 ## How to record
 1. Find the quietest room you can. Phone voice-memo app is perfect.

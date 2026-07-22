@@ -1,5 +1,5 @@
 /**
- * Turn a continuous native Haitian-Creole recording into LANGE's per-clip
+ * Turn a continuous native Haitian-Creole recording into Nurilang's per-clip
  * audio set. Reads the phrase order straight from src/lib/vocab.ts (same
  * order as docs/HT-RECORDING-SCRIPT.md / public/ht-recording.html), splits
  * the recording on the ~1s pauses with ffmpeg, loudness-normalizes each

@@ -7,6 +7,8 @@
  * and sign-out. Nothing here re-asks you anything — onboarding answers are
  * already saved (localStorage + Convex via CloudProfileBridge); "Edit
  * profile" reopens the wizard pre-filled if you want to change something.
+ * Commerce controls stay hidden until verified payments and session credits
+ * are enabled for a later beta stage.
  */
 
 import { useState } from "react";
@@ -14,7 +16,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Globe2, LogOut, MapPin, Pencil, Sparkles } from "lucide-react";
+import { Globe2, LogOut, MapPin, Pencil, Plus, Sparkles } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { langByCode } from "@/lib/languages";
 import { interestById, motivationById, paceByMinutes } from "@/lib/onboardingOptions";
@@ -22,6 +24,7 @@ import { Avatar } from "@/components/Avatar";
 import { Card, Tag } from "@/components/ui";
 
 const CLERK_ON = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const COMMERCE_ON = process.env.NEXT_PUBLIC_ENABLE_COMMERCE === "true";
 
 /** Clerk's full account UI (password / email / security), loaded client-only. */
 const ClerkUserProfile = dynamic(
@@ -130,7 +133,7 @@ function AboutYouCard() {
 }
 
 export default function ProfilePage() {
-  const { profile, t, toggleImmersion } = useApp();
+  const { profile, t, toggleImmersion, switchJourney } = useApp();
   const router = useRouter();
 
   if (!profile) return null;
@@ -167,13 +170,15 @@ export default function ProfilePage() {
       >
         <h1 className="headline text-4xl lg:text-5xl">{t("prfTitle")}</h1>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => router.push("/wallet")}
-            className="pill flex items-center gap-2 bg-raised-2 px-5 py-3 font-semibold text-ink hover:bg-white/10"
-          >
-            👛 {t("wallet")}
-          </button>
+          {COMMERCE_ON && (
+            <button
+              type="button"
+              onClick={() => router.push("/wallet")}
+              className="pill flex items-center gap-2 bg-raised-2 px-5 py-3 font-semibold text-ink hover:bg-white/10"
+            >
+              👛 {t("wallet")}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => router.push("/onboarding")}
@@ -234,11 +239,35 @@ export default function ProfilePage() {
           </h2>
           <div className="space-y-3 text-sm">
             {profile.role !== "nurturer" && (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="space-y-2">
                 <span className="text-muted">🌱 {t("wldGrowing")}</span>
-                <Tag className="px-3 py-1">
-                  {target.flag} {target.nativeName}
-                </Tag>
+                <div className="flex flex-wrap gap-2">
+                  {(profile.journeys ?? []).map((journey) => {
+                    const language = langByCode(journey.lang);
+                    const active = journey.lang === profile.targetLang;
+                    return (
+                      <button
+                        key={journey.lang}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => switchJourney(journey.lang)}
+                        className={`pill border px-3 py-2 text-sm ${
+                          active ? "border-violet bg-violet text-white" : "border-line bg-white/5 text-ink"
+                        }`}
+                      >
+                        {language.flag} {language.nativeName}
+                        <span className={active ? "text-white/70" : "text-muted"}>{journey.hoursLogged}h</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => router.push("/onboarding?addLanguage=1")}
+                    className="pill border border-dashed border-line px-3 py-2 text-sm text-muted hover:text-ink"
+                  >
+                    <Plus size={14} /> {t("prfAddLanguage")}
+                  </button>
+                </div>
               </div>
             )}
             <div className="flex flex-wrap items-center gap-2">

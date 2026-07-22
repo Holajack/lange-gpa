@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import type { Profile } from "./types";
 import { PHASES } from "./phases";
 
@@ -14,15 +13,13 @@ import { PHASES } from "./phases";
  * costs nothing; the only way to "earn" is to genuinely grow.
  */
 
-const KEY = "lange.achievements.v1";
-
 /** Fired on `window` whenever a new badge lands — any page can toast it. */
 export const ACHIEVEMENT_EVENT = "lange:achievement";
 /**
  * Self-report bridge: any page may dispatch
  * `new CustomEvent("lange:award", { detail: { id } })` to award a manual
  * badge (e.g. saving a first recording) without importing this module.
- * The store listens and forwards to {@link awardAchievement}.
+ * The store listens and records it in the signed-in profile.
  */
 export const AWARD_REQUEST_EVENT = "lange:award";
 
@@ -56,7 +53,7 @@ const HOUR_MILESTONES: { hours: number; emoji: string; title: string; sub: strin
   { hours: 5, emoji: "🌱", title: "Sprout", sub: "Five hours in. Something broke the surface." },
   { hours: 10, emoji: "🌿", title: "First leaves", sub: "Ten hours of meaning without translation." },
   { hours: 25, emoji: "🪴", title: "Taking root", sub: "Twenty-five hours — words are starting to stick." },
-  { hours: 50, emoji: "☀️", title: "Reaching for light", sub: "Fifty hours of real comprehension." },
+  { hours: 50, emoji: "☀️", title: "Reaching for light", sub: "Fifty hours logged inside the language." },
   { hours: 100, emoji: "🌳", title: "Deep roots", sub: "One hundred hours — a whole season of growth." },
   { hours: 250, emoji: "🌸", title: "First blossom", sub: "Two hundred fifty hours inside the host world." },
   { hours: 500, emoji: "🍎", title: "Bearing fruit", sub: "Five hundred hours — conversations carry themselves." },
@@ -82,8 +79,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: "first-session",
     emoji: "👋",
-    title: "First hello",
-    sub: "You finished your first growing session.",
+    title: "First practice",
+    sub: "You finished your first guided activity.",
     kind: "first",
     check: (_profile, stats) => stats.activitiesDone > 0,
   },
@@ -132,7 +129,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
 
   // ---- phase completions: the six doors of the GPA journey ----
-  ...PHASES.map(
+  ...PHASES.filter((phase) => !phase.ongoing).map(
     (p): Achievement => ({
       id: `phase-${p.id}`,
       emoji: p.emoji,
@@ -149,87 +146,23 @@ export const achievementById = (id: string): Achievement | undefined =>
   ACHIEVEMENTS.find((a) => a.id === id);
 
 /* ---------------------------------------------------------------- *
- *  Persistence + awarding
+ *  Evaluation (persistence belongs to the account profile in store.tsx)
  * ---------------------------------------------------------------- */
-
-export function loadEarned(): EarnedMap {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as EarnedMap) : {};
-  } catch {
-    return {};
-  }
-}
-
-function persistEarned(earned: EarnedMap) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(earned));
-  } catch {
-    // private mode etc. — in-memory only
-  }
-}
-
-/**
- * Award a badge once. Returns true only on a NEW award, in which case a
- * `lange:achievement` CustomEvent fires on window so any page can toast.
- */
-export function awardAchievement(id: string): boolean {
-  if (typeof window === "undefined") return false;
-  if (!achievementById(id)) return false;
-  const earned = loadEarned();
-  if (earned[id]) return false;
-  earned[id] = new Date().toISOString();
-  persistEarned(earned);
-  window.dispatchEvent(new CustomEvent(ACHIEVEMENT_EVENT, { detail: { id } }));
-  return true;
-}
 
 export function statsFor(profile: Profile): GrowthStats {
   return {
     hoursLogged: profile.hoursLogged,
-    activitiesDone: profile.completed.length,
+    activitiesDone: profile.activityLog?.length ?? profile.completed.length,
     bookingsMade: profile.bookings.length,
     completed: profile.completed,
   };
 }
 
-/** Run every check against the current profile; returns newly earned ids. */
-export function evaluateAchievements(profile: Profile): string[] {
-  if (typeof window === "undefined") return [];
+/** Return every currently deserved achievement that is not already recorded. */
+export function eligibleAchievementIds(profile: Profile): string[] {
   const stats = statsFor(profile);
-  const fresh: string[] = [];
-  for (const a of ACHIEVEMENTS) {
-    if (a.check(profile, stats) && awardAchievement(a.id)) fresh.push(a.id);
-  }
-  return fresh;
-}
-
-/* ---------------------------------------------------------------- *
- *  Hook
- * ---------------------------------------------------------------- */
-
-export function useAchievements(): {
-  earned: EarnedMap;
-  award: (id: string) => void;
-  evaluate: (profile: Profile) => void;
-} {
-  const [earned, setEarned] = useState<EarnedMap>({});
-
-  useEffect(() => {
-    setEarned(loadEarned());
-    const refresh = () => setEarned(loadEarned());
-    window.addEventListener(ACHIEVEMENT_EVENT, refresh);
-    return () => window.removeEventListener(ACHIEVEMENT_EVENT, refresh);
-  }, []);
-
-  const award = useCallback((id: string) => {
-    awardAchievement(id);
-  }, []);
-
-  const evaluate = useCallback((profile: Profile) => {
-    evaluateAchievements(profile);
-  }, []);
-
-  return { earned, award, evaluate };
+  const earned = profile.achievements ?? {};
+  return ACHIEVEMENTS.filter((achievement) => !earned[achievement.id] && achievement.check(profile, stats)).map(
+    (achievement) => achievement.id
+  );
 }

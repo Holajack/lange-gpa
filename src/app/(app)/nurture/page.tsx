@@ -30,11 +30,17 @@ import {
 import { useApp } from "@/lib/store";
 import { PHASES, phaseById } from "@/lib/phases";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
+import { getCardImage, whenCardsReady } from "@/lib/cards";
+import { nextMeetingFor } from "@/lib/sessionFlow";
 import { FULL_CONTENT_LANGS, langByCode } from "@/lib/languages";
 import { speak, stopSpeaking } from "@/lib/tts";
 import { Mascot } from "@/components/Mascot";
 import { Card, Pill, Tag } from "@/components/ui";
 import type { LangCode, Phase, PhaseActivity, VocabItem } from "@/lib/types";
+
+const DEMO_FAST_FORWARD =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_SPEED === "true";
 
 /* ---------------------------------------------------------------- *
  *  Motion choreography (matches the rest of the app)
@@ -118,10 +124,18 @@ function seededShuffle<T>(arr: T[], rng: () => number): T[] {
 }
 
 /** Compose an ordered meeting plan whose minutes add up exactly to `length`. */
-function buildPlan(phase: Phase, length: MeetingLength, roll: number): PlanBlock[] {
+function buildPlan(phase: Phase, length: MeetingLength, roll: number, part1a: boolean): PlanBlock[] {
   const rng = mulberry32(phase.id * 99991 + length * 271 + roll * 7919 + 13);
+  // Phase 1 splits into 1A (listening only) and 1B (constrained talking):
+  // same part-gating the session room applies via phase.parts (see
+  // session/page.tsx), so a planner set to 1A never deals 1B-only games.
+  const phase1aIds =
+    phase.id === 1 && part1a
+      ? new Set(phase.parts?.find((part) => part.id === "1a")?.activityIds ?? [])
+      : null;
+  const pool = phase1aIds ? phase.activities.filter((a) => phase1aIds.has(a.id)) : phase.activities;
   const wish = length === 30 ? 2 : length === 45 ? 3 : 4;
-  const picks = seededShuffle(phase.activities, rng).slice(0, Math.min(wish, phase.activities.length));
+  const picks = seededShuffle(pool, rng).slice(0, Math.min(wish, pool.length));
 
   // Distribute the middle budget proportionally to each activity's own minutes.
   const budget = length - WARMUP_MIN - CLOSING_MIN;
@@ -173,9 +187,12 @@ function SessionPlanner() {
   const [phaseId, setPhaseId] = useState<number>(1);
   const [length, setLength] = useState<MeetingLength>(30);
   const [roll, setRoll] = useState(0);
+  // safe default: 1A (listening only) — a nurturer planning for an unknown
+  // grower should get the pre-40h set, never a premature talking game
+  const [part1a, setPart1a] = useState(true);
 
   const phase = phaseById(phaseId);
-  const plan = useMemo(() => buildPlan(phase, length, roll), [phase, length, roll]);
+  const plan = useMemo(() => buildPlan(phase, length, roll, part1a), [phase, length, roll, part1a]);
   const total = plan.reduce((s, b) => s + b.minutes, 0);
 
   return (
@@ -236,6 +253,27 @@ function SessionPlanner() {
             </button>
           ))}
         </div>
+
+        {/* Phase-1 part picker — 1A games only until the grower is 1B-ready */}
+        {phase.id === 1 && (
+          <div className="flex items-center gap-1.5">
+            {([true, false] as const).map((is1a) => (
+              <button
+                key={is1a ? "1a" : "1b"}
+                type="button"
+                onClick={() => {
+                  setPart1a(is1a);
+                  setRoll(0);
+                }}
+                className={`pill px-4 py-2 text-sm font-bold ${
+                  part1a === is1a ? "bg-white/14 text-ink" : "bg-white/5 text-muted hover:text-ink"
+                }`}
+              >
+                {is1a ? `1A · ${t("nurPart1a")}` : `1B · ${t("nurPart1b")}`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <p className="mt-4 text-sm font-semibold" style={{ color: phase.color }}>
@@ -328,14 +366,48 @@ const WHERE_IS: Partial<Record<LangCode, string>> = {
 };
 
 function CardTable({ contentLang }: { contentLang: LangCode }) {
-  const { t } = useApp();
+  const { t, profile } = useApp();
   const [domainId, setDomainId] = useState(VOCAB_DOMAINS[0].id);
   const [index, setIndex] = useState(0);
   const [showWord, setShowWord] = useState(false);
   const [dir, setDir] = useState(1);
   const [deckRoll, setDeckRoll] = useState(0);
 
+  // pre-generated card illustrations load async — tick once the manifest
+  // lands so getCardImage() swaps emoji placeholders for real pictures
+  const [, setCardsReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void whenCardsReady().then(() => {
+      if (active) setCardsReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const domain = VOCAB_DOMAINS.find((d) => d.id === domainId) ?? VOCAB_DOMAINS[0];
+
+  /** itemId → vocab item, across every domain (for the word-history join) */
+  const itemById = useMemo(() => {
+    const map = new Map<string, VocabItem>();
+    for (const d of VOCAB_DOMAINS) for (const it of d.items) map.set(it.id, it);
+    return map;
+  }, []);
+
+  /**
+   * Words so far — the grower's numbered Talking Picture Dictionary.
+   * profile.wordIds preserves first-met order, so index + 1 IS the
+   * guide's sequential dictionary number. Read-only join at render time.
+   */
+  const metWords = useMemo(() => {
+    const out: { id: string; n: number; item: VocabItem }[] = [];
+    (profile?.wordIds ?? []).forEach((id, i) => {
+      const item = itemById.get(id);
+      if (item && item.words[contentLang]) out.push({ id, n: i + 1, item });
+    });
+    return out;
+  }, [profile, itemById, contentLang]);
 
   const deck: VocabItem[] = useMemo(() => {
     const items = domain.items.filter((it) => it.words[contentLang]);
@@ -473,6 +545,57 @@ function CardTable({ contentLang }: { contentLang: LangCode }) {
         {t("nurCardTableTipBefore")} <span className="font-bold text-ink">&ldquo;{whereIs}&rdquo;</span>.{" "}
         {t("nurCardTableTipAfter")}
       </p>
+
+      {/* words so far — the numbered Talking Picture Dictionary, read-only */}
+      {metWords.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-line bg-white/4 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <h3 className="font-display text-sm font-extrabold">📖 {t("nurWordsSoFar")}</h3>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+              {typeof profile?.meetingProgress === "number" &&
+                nextMeetingFor(profile.meetingProgress) !== null && (
+                  <span className="pill bg-white/6 px-2.5 py-1 text-muted tabular-nums">
+                    {t("meetingWord")} {nextMeetingFor(profile.meetingProgress)} / 40
+                  </span>
+                )}
+              <span className="pill bg-orange/15 px-2.5 py-1 text-orange tabular-nums">
+                {metWords.length} {t("wordsMet")}
+              </span>
+            </div>
+          </div>
+          <ul className="mt-3 max-h-52 space-y-1 overflow-y-auto pr-1">
+            {metWords.map(({ id, n, item }) => {
+              const cardImage = getCardImage(id);
+              return (
+                <li key={id} className="flex items-center gap-2.5 rounded-xl bg-white/4 px-3 py-1.5">
+                  <span className="w-7 shrink-0 text-right font-display text-xs font-bold tabular-nums text-muted">
+                    {n}.
+                  </span>
+                  {cardImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- static public/ asset, no optimization needed
+                    <img
+                      src={cardImage}
+                      alt=""
+                      width={28}
+                      height={28}
+                      draggable={false}
+                      className="h-7 w-7 shrink-0 select-none rounded-lg object-contain"
+                    />
+                  ) : (
+                    <span className="w-7 shrink-0 text-center text-lg" aria-hidden>
+                      {item.emoji}
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{item.words[contentLang]}</span>
+                  <span className="shrink-0 rounded-full bg-lime/15 px-2 py-0.5 text-[10px] font-bold text-lime">
+                    ✓ {t("nurMet")}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </Card>
   );
 }
@@ -571,14 +694,16 @@ function MeetingTimer({ contentLang }: { contentLang: LangCode }) {
           <h2 className="headline text-2xl lg:text-3xl">⏱️ {t("nurMeetingTimer")}</h2>
           <p className="mt-1 text-sm text-muted">{t("nurMeetingTimerSub")}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setFast((f) => !f)}
-          title={t("nur2DemoSpeed")}
-          className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-white/6 text-muted"}`}
-        >
-          ⚡ ×60
-        </button>
+        {DEMO_FAST_FORWARD && (
+          <button
+            type="button"
+            onClick={() => setFast((f) => !f)}
+            title={t("nur2DemoSpeed")}
+            className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-white/6 text-muted"}`}
+          >
+            ⚡ ×60
+          </button>
+        )}
       </div>
 
       {/* big clock */}

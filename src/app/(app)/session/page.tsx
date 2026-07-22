@@ -35,7 +35,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { useApp } from "@/lib/store";
-import { NURTURERS, nurturerById, nurturersForLang } from "@/lib/nurturers";
+import { nurturerById } from "@/lib/nurturers";
 import { phaseById } from "@/lib/phases";
 import { FULL_CONTENT_LANGS, LANGUAGES, langByCode } from "@/lib/languages";
 import { speak, stopSpeaking } from "@/lib/tts";
@@ -44,7 +44,9 @@ import {
   JOKE_PROMPTS,
   answerReview,
   buildMeetingDeck,
+  buildReviewDeck,
   meetingForHours,
+  nextMeetingFor,
   canReveal,
   createFlow,
   currentCard,
@@ -67,6 +69,13 @@ import { ConsentDialog } from "./ConsentDialog";
 import { CardFace } from "./CardFace";
 import type { LangCode, Nurturer } from "@/lib/types";
 
+const DEMO_FAST_FORWARD =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_SPEED === "true";
+const SEEDED_SESSION_NURTURERS =
+  process.env.NEXT_PUBLIC_DEMO_MODE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_SEEDED_NURTURERS === "true";
+
 /** MascotImage is built by the mascot agent (registry contract). The cast
  *  keeps this page strict-clean against its exact prop surface; we pass
  *  both the def and its id so either prop style resolves the portrait. */
@@ -77,7 +86,8 @@ const Portrait = MascotImage as unknown as ComponentType<{
   className?: string;
 }>;
 
-const TOTAL_SECONDS = 30 * 60;
+/** fallback length for open/solo joins that carry no explicit ?duration= */
+const DEFAULT_DURATION_MIN = 30;
 const DECK_SIZE = 12;
 const BARS = [14, 26, 18, 32, 22, 28, 16];
 
@@ -148,43 +158,67 @@ function Wavebars({ active, color }: { active: boolean; color: string }) {
 }
 
 function SessionRoom() {
-  const { profile, t, completeActivity } = useApp();
+  const { profile, t, completeActivity, updateProfile } = useApp();
   const params = useSearchParams();
 
   const targetLang: LangCode = profile?.targetLang ?? "es";
   const lang = langByCode(targetLang);
   /** language of the picture-card deck — falls back to Spanish for demo langs without decks */
   const initialContentLang: LangCode = FULL_CONTENT_LANGS.includes(targetLang) ? targetLang : "es";
-  /** which authentic Rough-and-Ready-Dozen meeting the grower is on (≈2h each) */
-  const meeting = meetingForHours(profile?.hoursLogged ?? 0);
+  /** SEQUENTIAL PROGRESSION: the next authentic Rough-and-Ready-Dozen meeting
+   *  after the last one COMPLETED in a live session (never the hours proxy —
+   *  solo practice can't skip a grower ahead). Before the store's one-time
+   *  self-heal writes meetingProgress, fall back to the same hours-derived
+   *  value it will write, so legacy profiles see the right meeting at once.
+   *  null = every populated meeting is complete → review-only sessions. */
+  const meeting = nextMeetingFor(
+    profile?.meetingProgress ?? Math.max(0, meetingForHours(profile?.hoursLogged ?? 0) - 1)
+  );
+  /** deal the spine meeting due next — or, past the spine, a pure review deck */
+  const dealDeck = useCallback(
+    (code: LangCode) =>
+      meeting === null ? buildReviewDeck(code, DECK_SIZE) : buildMeetingDeck(code, meeting, DECK_SIZE),
+    [meeting]
+  );
 
   // ---- booking lookup (links from /schedule carry nurturer + activity) ----
   const nurturerParam = params.get("nurturer");
   const activityParam = params.get("activity");
 
   const nurturer = useMemo(() => {
-    if (nurturerParam === "ai") return NURI;
-    const fromParam = nurturerParam ? nurturerById(nurturerParam) : undefined;
-    return (
-      fromParam ??
-      nurturersForLang(targetLang).find((n) => n.online) ??
-      nurturersForLang(targetLang)[0] ??
-      NURTURERS[0]
-    );
-  }, [nurturerParam, targetLang]);
+    // Beta builds never turn a guessed/static ID into an apparent live human.
+    // Seeded characters are available only in an explicitly flagged demo build.
+    if (!SEEDED_SESSION_NURTURERS || nurturerParam === "ai") return NURI;
+    return (nurturerParam ? nurturerById(nurturerParam) : undefined) ?? NURI;
+  }, [nurturerParam]);
 
   const isAI = nurturer.id === "ai";
   /** the language sibling who hosts AI sessions */
   const mascot = useMemo(() => mascotForLang(targetLang), [targetLang]);
 
+  /** booked/selected session length (?duration=<minutes>) — the timer is the
+   *  single source of truth for when a session ends, never the deck size. */
+  const totalSeconds = useMemo(() => {
+    const raw = Number(params.get("duration"));
+    const minutes = Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_DURATION_MIN;
+    return minutes * 60;
+  }, [params]);
+
+  const phase1 = phaseById(1);
+  const phase1aIds = new Set(phase1.parts?.find((part) => part.id === "1a")?.activityIds ?? []);
+  const phase1Activities =
+    (profile?.hoursLogged ?? 0) < 40
+      ? phase1.activities.filter((candidate) => phase1aIds.has(candidate.id))
+      : phase1.activities;
+  const requestedActivity = activityParam?.trim();
   const activity =
-    activityParam && activityParam.trim().length > 0
-      ? activityParam
-      : phaseById(profile?.phase ?? 1).activities[0]?.name ?? t("ses2GrowingSession");
+    requestedActivity && phase1Activities.some((candidate) => candidate.name === requestedActivity)
+      ? requestedActivity
+      : phase1Activities[0]?.name ?? t("ses2GrowingSession");
 
   // ---- room state ----
   const [stage, setStage] = useState<Stage>("pre");
-  const [remaining, setRemaining] = useState(TOTAL_SECONDS);
+  const [remaining, setRemaining] = useState(totalSeconds);
   const [fast, setFast] = useState(false);
   const [halfBanner, setHalfBanner] = useState(false);
 
@@ -194,7 +228,7 @@ function SessionRoom() {
   const [switchStep, setSwitchStep] = useState<"closed" | "confirm" | "lang">("closed");
 
   // ---- the Dirty Dozen flow ----
-  const [flow, setFlow] = useState<FlowState>(() => createFlow(buildMeetingDeck(initialContentLang, meeting, DECK_SIZE)));
+  const [flow, setFlow] = useState<FlowState>(() => createFlow(dealDeck(initialContentLang)));
   const [feedback, setFeedback] = useState<CardFeedback | null>(null);
   const [iceberg, setIceberg] = useState(false);
   /** id of the card the grower just missed — the nurturer re-says it */
@@ -215,6 +249,16 @@ function SessionRoom() {
 
   const halfRef = useRef(false);
   const loggedRef = useRef(false);
+  /** the meeting the CURRENT deck was built for — null after a language-exchange
+   *  swap (those decks restart at Meeting 1 and never advance meetingProgress)
+   *  and for post-spine review decks (reviews never advance it either) */
+  const deckMeetingRef = useRef<number | null>(meeting);
+  /** card ids the grower met in THEIR OWN language before a mid-session swap —
+   *  banked so the end-of-session word log never drops the first half, and
+   *  ids from a partner's exchange deck are never credited to this journey */
+  const ownIntroducedRef = useRef<string[]>([]);
+  /** latest countdown value, read (not depended on) by the keep-going loop below */
+  const remainingRef = useRef(totalSeconds);
 
   // ---- recording: the talking picture dictionary ----
   const rec = useRecorder();
@@ -245,8 +289,9 @@ function SessionRoom() {
   useEffect(() => {
     if (stage !== "pre") return;
     setSessionLang(initialContentLang);
-    setFlow(createFlow(buildMeetingDeck(initialContentLang, meeting, DECK_SIZE)));
-  }, [stage, initialContentLang, meeting]);
+    deckMeetingRef.current = meeting;
+    setFlow(createFlow(dealDeck(initialContentLang)));
+  }, [stage, initialContentLang, meeting, dealDeck]);
 
   // countdown
   useEffect(() => {
@@ -262,9 +307,31 @@ function SessionRoom() {
     if (stage === "live" && remaining === 0) setStage("end");
   }, [stage, remaining]);
 
+  useEffect(() => {
+    remainingRef.current = remaining;
+  }, [remaining]);
+
+  /**
+   * Keep the room productive for the WHOLE booked duration: the deck (12
+   * cards, the authentic "never a dump" Dirty Dozen) can finish long before
+   * a 60/90/120-minute booking runs out. When it does, loop into another
+   * full review sweep of every introduced card rather than sitting idle —
+   * this drives both the AI runner (which reacts to phase "review") and the
+   * human nurturer tray (same UI) identically. Only the countdown — never
+   * the deck — decides when a session actually ends.
+   */
+  useEffect(() => {
+    if (stage !== "live" || flow.phase !== "complete") return;
+    const id = window.setTimeout(() => {
+      if (remainingRef.current <= 0) return;
+      setFlow((f) => (f.phase === "complete" ? startReview(f) : f));
+    }, 2500);
+    return () => window.clearTimeout(id);
+  }, [stage, flow.phase]);
+
   // half-time banner — nudge toward the role switch
   useEffect(() => {
-    if (stage === "live" && !halfRef.current && remaining <= TOTAL_SECONDS / 2) {
+    if (stage === "live" && !halfRef.current && remaining <= totalSeconds / 2) {
       halfRef.current = true;
       setHalfBanner(true);
       const id = window.setTimeout(() => setHalfBanner(false), 6000);
@@ -412,9 +479,23 @@ function SessionRoom() {
     loggedRef.current = true;
     stopSpeaking();
     recStop();
-    const mins = Math.max(1, Math.round((TOTAL_SECONDS - remaining) / 60));
-    completeActivity(`live-${nurturer.id}-${profile.completed.length}`, mins, points);
-  }, [stage, profile, remaining, points, nurturer.id, completeActivity, recStop]);
+    const mins = Math.max(1, Math.round((totalSeconds - remaining) / 60));
+    // word log = cards met in the GROWER'S language only: ids banked before any
+    // exchange swap, plus the current deck when it speaks their language —
+    // a partner's exchange deck is never credited to this journey
+    const currentIds =
+      sessionLang === initialContentLang ? flow.deck.slice(0, flow.introduced).map((c) => c.id) : [];
+    const introducedIds = [...new Set([...ownIntroducedRef.current, ...currentIds])];
+    completeActivity(`live-${nurturer.id}-${profile.completed.length}`, mins, introducedIds);
+    // SEQUENTIAL PROGRESSION: only the natural end — the booked timer running
+    // out (remaining === 0) — completes the meeting this deck was built for;
+    // hanging up early abandons it. AI and human nurturers count the same
+    // during the beta. Forward-only, never backward.
+    const deckMeeting = deckMeetingRef.current;
+    if (remaining === 0 && flow.introduced > 0 && deckMeeting !== null) {
+      updateProfile({ meetingProgress: Math.max(profile.meetingProgress ?? 0, deckMeeting) });
+    }
+  }, [stage, profile, remaining, flow, sessionLang, initialContentLang, nurturer.id, completeActivity, recStop, updateProfile]);
 
   // stop any audio when leaving the page
   useEffect(() => () => stopSpeaking(), []);
@@ -495,9 +576,23 @@ function SessionRoom() {
   /** language exchange — the grower becomes the nurturer of THEIR strong language */
   const performSwitch = (code: LangCode) => {
     stopSpeaking();
+    // bank the cards already met in the grower's own language before the deck
+    // is replaced — the end-of-session word log unions them back in
+    if (sessionLang === initialContentLang) {
+      ownIntroducedRef.current.push(...flow.deck.slice(0, flow.introduced).map((c) => c.id));
+    }
     setSessionLang(code);
-    // a fresh language starts at the wall of noise — Meeting 1
-    setFlow(createFlow(buildMeetingDeck(code, 1, DECK_SIZE)));
+    if (code === initialContentLang) {
+      // switching BACK to the grower's own language restores their real spine
+      // meeting (or the post-spine review deck) — never a Meeting-1 restart
+      deckMeetingRef.current = meeting;
+      setFlow(createFlow(dealDeck(code)));
+    } else {
+      // a fresh language starts at the wall of noise — Meeting 1. Exchange decks
+      // never advance the grower's own meetingProgress (see deckMeetingRef).
+      deckMeetingRef.current = null;
+      setFlow(createFlow(buildMeetingDeck(code, 1, DECK_SIZE)));
+    }
     setFeedback(null);
     setIceberg(false);
     setMissId(null);
@@ -524,7 +619,7 @@ function SessionRoom() {
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
-  const elapsedMin = Math.max(1, Math.round((TOTAL_SECONDS - remaining) / 60));
+  const elapsedMin = Math.max(1, Math.round((totalSeconds - remaining) / 60));
   const speaking = isAI ? aiSpeaking : humanSpeaking;
 
   /* ============================== PRE-JOIN ============================== */
@@ -567,6 +662,15 @@ function SessionRoom() {
                 {isAI ? `✨ ${mascot.nativeHello}` : `📍 ${nurturer.city}`} · {lang.flag} {lang.nativeName}
               </p>
               <Tag className="mt-1 bg-violet/15 text-violet-soft">🌱 {activity}</Tag>
+              {/* sequential spine: which of the 40 meetings this session serves —
+                  or, past the last populated meeting, an honest review label */}
+              <Tag className="mt-1 bg-white/6 text-muted">
+                {meeting === null ? (
+                  <>🔁 {t("sesReviewAllMeetingsDone")}</>
+                ) : (
+                  <>🃏 {t("meetingWord")} {meeting}/40 · {meeting < 16 ? "1A" : "1B"}</>
+                )}
+              </Tag>
             </motion.div>
 
             <div className="mt-8 space-y-3 text-left">
@@ -602,9 +706,11 @@ function SessionRoom() {
               className="mt-8 flex flex-col items-center gap-3"
             >
               <Pill onClick={() => setStage("live")} className="bg-violet px-6 py-3.5 sm:px-10 sm:py-4 text-lg font-semibold text-white">
-                <span style={{ textShadow: "none" }}>▶ {t("start")} · 30:00</span>
+                <span style={{ textShadow: "none" }}>▶ {t("start")} · {fmtClock(totalSeconds)}</span>
               </Pill>
-              <p className="text-xs text-muted">{t("ses2DemoFastForward")}</p>
+              {DEMO_FAST_FORWARD && (
+                <p className="text-xs text-muted">{t("ses2DemoFastForward")}</p>
+              )}
             </motion.div>
           </Card>
         </motion.div>
@@ -641,8 +747,8 @@ function SessionRoom() {
             <div className="mt-8 grid grid-cols-3 gap-3">
               {[
                 ["⏱️", String(elapsedMin), t("minutes")],
-                ["🃏", String(points), t("words")],
-                ["🔥", String(profile.streak), t("dayStreak")],
+                ["🃏", String(flow.introduced), t("words")],
+                ["🌱", "1", t("phaseWord")],
               ].map(([emoji, num, label], i) => (
                 <motion.div
                   key={label}
@@ -757,14 +863,16 @@ function SessionRoom() {
           </div>
           <Tag className="hidden bg-black/45 text-ink backdrop-blur sm:inline-flex">🌱 {activity}</Tag>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFast((f) => !f)}
-              title={t("ses2DemoSpeed")}
-              className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-black/45 text-muted backdrop-blur"}`}
-            >
-              ⚡ ×60
-            </button>
+            {DEMO_FAST_FORWARD && (
+              <button
+                type="button"
+                onClick={() => setFast((f) => !f)}
+                title={t("ses2DemoSpeed")}
+                className={`pill px-3 py-1.5 text-xs font-bold ${fast ? "bg-lemon text-canvas" : "bg-black/45 text-muted backdrop-blur"}`}
+              >
+                ⚡ ×60
+              </button>
+            )}
             <div className="pill bg-black/45 px-4 py-1.5 backdrop-blur">
               <span className="font-display text-sm font-bold tabular-nums">
                 {mm}:{ss}

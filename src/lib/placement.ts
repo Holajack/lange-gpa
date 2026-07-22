@@ -221,12 +221,18 @@ const WORDS_AT_START: Partial<Record<PhaseId, number>> = { 2: 1000, 3: 2200 };
 export function placementSeed(phase: PhaseId): {
   phase: PhaseId;
   hoursLogged: number;
+  minutesLogged: number;
   wordsMet: number;
 } {
   const capped = Math.min(phase, PLACEMENT_CAP) as PhaseId;
+  const startHour = phaseById(capped).startHour;
   return {
     phase: capped,
-    hoursLogged: phaseById(capped).startHour,
+    hoursLogged: startHour,
+    // keep the minute ledger in step: completeActivity recomputes hoursLogged
+    // FROM minutesLogged, so seeding hours alone would collapse to ~0 on the
+    // placed grower's very first activity
+    minutesLogged: startHour * 60,
     wordsMet: WORDS_AT_START[capped] ?? 0,
   };
 }

@@ -18,6 +18,7 @@ import type { VocabDomain, VocabItem } from "@/lib/types";
 import {
   FallbackBanner,
   FinishScreen,
+  Phase1BGuard,
   PracticeHeader,
   ProgressDots,
   pickN,
@@ -73,9 +74,9 @@ function resumeSynth() {
 
 /* ---------------------------------- page ---------------------------------- */
 
-export default function RepeatPage() {
+function RepeatExperience() {
   const { lang, fellBack, t } = useContentLang();
-  const { completeActivity } = useApp();
+  const { completeActivity, profile } = useApp();
 
   // sampled on the client only → no hydration mismatch from Math.random
   const [slides, setSlides] = useState<Slide[] | null>(null);
@@ -163,9 +164,9 @@ export default function RepeatPage() {
   useEffect(() => {
     if (finished && !loggedRef.current) {
       loggedRef.current = true;
-      completeActivity("fast-repeat", 5);
+      completeActivity(profile?.phase === 1 ? "p1-dictionary" : "maintenance-repeat", 5);
     }
-  }, [finished, completeActivity]);
+  }, [finished, completeActivity, profile?.phase]);
 
   /* -------------------------------- controls -------------------------------- */
 
@@ -396,5 +397,13 @@ export default function RepeatPage() {
         <ProgressDots total={TOTAL} current={ix} results={results} accent={VIOLET} />
       </div>
     </div>
+  );
+}
+
+export default function RepeatPage() {
+  return (
+    <Phase1BGuard>
+      <RepeatExperience />
+    </Phase1BGuard>
   );
 }

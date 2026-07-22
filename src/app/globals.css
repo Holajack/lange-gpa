@@ -50,6 +50,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+:where(a, button, input, select, textarea, [role="button"]):focus-visible {
+  outline: 3px solid var(--color-lime);
+  outline-offset: 3px;
+}
+
+:where(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+}
+
 ::selection {
   background: var(--color-violet);
   color: #fff;
@@ -234,4 +243,37 @@ body {
 }
 .shake {
   animation: shake 0.3s ease-in-out 2;
+}
+
+/* Keep the visual language spacious without letting desktop-sized curves and
+   glow fields crowd a phone viewport. Component grids continue to use their
+   Tailwind breakpoints; these are the shared small-screen design primitives. */
+@media (max-width: 640px) {
+  :root {
+    --radius-card: 22px;
+    --radius-blob: 28px;
+  }
+
+  .headline {
+    letter-spacing: -0.02em;
+  }
+
+  .orb {
+    filter: blur(72px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

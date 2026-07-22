@@ -15,6 +15,7 @@
  */
 
 import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 import { geocodeCity } from "./geocode";
@@ -64,4 +65,5 @@ function useRealPeopleLive(): RealPerson[] {
 const EMPTY: RealPerson[] = [];
 
 /** Real signed-up people for the world map (no-op when Convex is unconfigured). */
-export const useRealPeople: () => RealPerson[] = CONVEX_ON ? useRealPeopleLive : () => EMPTY;
+export const useRealPeople: () => RealPerson[] =
+  CONVEX_ON && COMMUNITY_EXCHANGE_ON ? useRealPeopleLive : () => EMPTY;

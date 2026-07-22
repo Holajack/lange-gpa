@@ -1,6 +1,6 @@
-# LANGE — Builder Brief (read fully before writing any code)
+# Nurilang — Builder Brief (read fully before writing any code)
 
-You are building one page of **LANGE**, a web app that digitizes the **Growing Participator Approach (GPA)** — language growth through real people ("nurturers"), picture cards, and zero translation. The vibe: a dark, joyful "neon playroom" — near-black canvas, huge soft-radius cards, electric violet / hot orange / lime pops, playful display type.
+You are building one page of **Nurilang**, a web app that digitizes the **Growing Participator Approach (GPA)** — language growth through real people ("nurturers"), picture cards, and zero translation. The vibe: a dark, joyful "neon playroom" — near-black canvas, huge soft-radius cards, electric violet / hot orange / lime pops, playful display type.
 
 ## Hard rules
 1. **Do NOT modify any shared file** (`src/lib/*`, `src/components/*`, `src/app/layout.tsx`, `src/app/(app)/layout.tsx`, `src/app/globals.css`, configs). Only create the files assigned to you.

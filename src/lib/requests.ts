@@ -10,6 +10,7 @@
 
 import { useCallback } from "react";
 import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 
@@ -83,4 +84,5 @@ const STUB: RequestsApi = {
 };
 
 /** Session-request API (no-op when Convex is unconfigured). */
-export const useRequests: () => RequestsApi = CONVEX_ON ? useRequestsLive : () => STUB;
+export const useRequests: () => RequestsApi =
+  CONVEX_ON && COMMUNITY_EXCHANGE_ON ? useRequestsLive : () => STUB;

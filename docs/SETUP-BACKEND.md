@@ -1,4 +1,4 @@
-# LANGE backend setup — Convex + Clerk
+# Nurilang backend setup — Convex + Clerk
 
 The app ships **keyless-safe**: with no env vars it builds and runs exactly as
 the current demo (localStorage state, no auth). The scaffolding below activates
@@ -30,7 +30,7 @@ npx convex dev
 
 ## 2. Create the Clerk app and link it to Convex
 
-1. At [clerk.com](https://clerk.com) create an application (name: `LANGE`,
+1. At [clerk.com](https://clerk.com) create an application (name: `Nurilang`,
    enable Email + Google or whatever sign-in you want).
 2. In the Clerk dashboard go to **Configure → JWT templates → New template →
    Convex**. Keep the template name exactly **`convex`** (Convex looks it up by

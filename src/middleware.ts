@@ -17,6 +17,30 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
  * the publishable key exists.
  */
 const hasClerkKeys = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+const hasConvexUrl = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
+const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+const commerceEnabled =
+  process.env.ENABLE_COMMERCE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_COMMERCE === "true";
+const partiesEnabled =
+  process.env.ENABLE_PARTIES === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_PARTIES === "true";
+const forumEnabled =
+  process.env.ENABLE_FORUM === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_FORUM === "true";
+const communityExchangeEnabled =
+  process.env.ENABLE_COMMUNITY_EXCHANGE === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_COMMUNITY_EXCHANGE === "true";
+const nurturerStudioEnabled =
+  process.env.ENABLE_NURTURER_STUDIO === "true" &&
+  process.env.NEXT_PUBLIC_ENABLE_NURTURER_STUDIO === "true";
+
+if (process.env.NODE_ENV === "production" && !demoMode && (!hasClerkKeys || !hasConvexUrl)) {
+  throw new Error(
+    "Nurilang production requires Clerk and Convex configuration. " +
+      "Use NEXT_PUBLIC_DEMO_MODE=true only for an intentional public demo."
+  );
+}
 
 /** Everything behind the account: the app shell routes + onboarding. */
 const isProtected = createRouteMatcher([
@@ -34,21 +58,44 @@ const isProtected = createRouteMatcher([
   "/profile(.*)",
   "/messages(.*)",
   "/onboarding(.*)",
+  "/admin(.*)",
 ]);
+const isOnboarding = createRouteMatcher(["/onboarding(.*)"]);
+const isCommerce = createRouteMatcher(["/marketplace(.*)", "/wallet(.*)"]);
+const isParties = createRouteMatcher(["/events(.*)"]);
+const isForum = createRouteMatcher(["/forum(.*)"]);
+const isCommunityExchange = createRouteMatcher(["/messages(.*)"]);
+const isNurturerStudio = createRouteMatcher(["/nurture(.*)"]);
 
-function passthrough(_req: NextRequest) {
+function gatedFeatureRedirect(req: NextRequest) {
+  if (isCommerce(req) && !commerceEnabled) return "/schedule";
+  if ((isParties(req) && !partiesEnabled) || (isForum(req) && !forumEnabled)) return "/world";
+  if (isCommunityExchange(req) && !communityExchangeEnabled) return "/world";
+  if (isNurturerStudio(req) && !nurturerStudioEnabled) return "/schedule";
+  return null;
+}
+
+function demoMiddleware(req: NextRequest) {
+  // A keyless demo must not expose prototype flows by guessing a URL.
+  const redirectTo = gatedFeatureRedirect(req);
+  if (redirectTo) return NextResponse.redirect(new URL(redirectTo, req.url));
   return NextResponse.next();
 }
 
 export default hasClerkKeys
   ? clerkMiddleware(async (auth, req) => {
+      const redirectTo = gatedFeatureRedirect(req);
+      if (redirectTo) return NextResponse.redirect(new URL(redirectTo, req.url));
       if (isProtected(req)) {
+        const returnTo = `${req.nextUrl.pathname}${req.nextUrl.search}`;
+        const authUrl = new URL(isOnboarding(req) ? "/sign-up" : "/sign-in", req.url);
+        authUrl.searchParams.set("redirect_url", returnTo);
         await auth.protect({
-          unauthenticatedUrl: new URL("/sign-in", req.url).toString(),
+          unauthenticatedUrl: authUrl.toString(),
         });
       }
     })
-  : passthrough;
+  : demoMiddleware;
 
 export const config = {
   matcher: [
@@ -56,5 +103,7 @@ export const config = {
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes.
     "/(api|trpc)(.*)",
+    // Clerk's internal handshake endpoints.
+    "/__clerk/(.*)",
   ],
 };

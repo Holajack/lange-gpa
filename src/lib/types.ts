@@ -33,6 +33,8 @@ export interface Phase {
   name: string;
   tagline: string;
   hours: number;          // length of the phase
+  /** Phase 6 is a lifelong way of living, not a timed course to complete. */
+  ongoing?: boolean;
   startHour: number;      // cumulative start
   color: string;          // accent token
   emoji: string;
@@ -61,6 +63,33 @@ export interface SessionBooking {
   done?: boolean;
 }
 
+export interface ActivityAttempt {
+  id: string;
+  activityId: string;
+  completedAt: string;
+  minutes: number;
+  wordsAdded: number;
+}
+
+export interface LanguageJourney {
+  lang: LangCode;
+  phase: PhaseId;
+  /** highest live-session meeting completed in THIS language — absent on
+   *  journeys saved before the sequential meeting spine existed (the store
+   *  self-heal derives it from hoursLogged on restore) */
+  meetingProgress?: number;
+  hoursLogged: number;
+  minutesLogged: number;
+  wordsMet: number;
+  wordIds: string[];
+  completed: string[];
+  activityLog: ActivityAttempt[];
+  achievements: Record<string, string>;
+  week: number[];
+  weekStartedAt: string;
+  startedAt: string;
+}
+
 export interface Profile {
   name: string;
   role: Role;
@@ -68,6 +97,8 @@ export interface Profile {
   knownLangs: LangCode[];
   /** the language being grown into (grower) */
   targetLang: LangCode;
+  /** independent learning records; targetLang identifies the active one */
+  journeys?: LanguageJourney[];
   /** languages a nurturer can nurture in — absent on accounts saved before this field existed */
   nurtureLangs?: LangCode[];
   /** nurturer training/certification status — gates the Nurturer Studio beyond role selection */
@@ -83,14 +114,34 @@ export interface Profile {
   /** show UI in target language for immersion */
   immersion: boolean;
   phase: PhaseId;
+  /**
+   * Highest Phase-1 meeting number COMPLETED via a live /session meeting.
+   * Product rule: ONLY finishing a live session's full timer advances this
+   * (AI-nurturer sessions count the same as human ones during the beta);
+   * solo /practice grinding NEVER moves it. Meetings are sequential and
+   * mandatory — the grower is always served the next meeting after this one.
+   * Saved and restored PER LANGUAGE with the active journey (see
+   * LanguageJourney.meetingProgress) so progress never leaks across languages.
+   */
+  meetingProgress?: number;
   hoursLogged: number;
+  /** exact cumulative minutes; hoursLogged is the rounded display value */
+  minutesLogged?: number;
   wordsMet: number;
+  /** known card ids, used to avoid counting the same pictured word twice */
+  wordIds?: string[];
   streak: number;
   /** ids of completed activities */
   completed: string[];
+  /** repeatable attempts; completed remains the unique curriculum checklist */
+  activityLog?: ActivityAttempt[];
+  /** achievement id → first-earned ISO date; synced with the account */
+  achievements?: Record<string, string>;
   bookings: SessionBooking[];
   /** day-of-week activity minutes for the chart, Mon..Sun */
   week: number[];
+  /** ISO date of the Monday represented by `week` */
+  weekStartedAt?: string;
   createdAt: string;
   /** home city — shown on the map at city level only, never an exact location */
   city?: string;
@@ -151,7 +202,7 @@ export interface ForumPost {
   category: "find-nurturer" | "phase-help" | "wins" | "culture" | "tools";
   title: string;
   body: string;
-  replies: { author: string; body: string; ago: string }[];
+  replies: { author: string; body: string; ago: string; isNurturer?: boolean }[];
   likes: number;
   ago: string;
 }

@@ -83,9 +83,45 @@ function effMeeting(domainId: string, item: { meeting?: number }, domainMeeting?
   return item.meeting ?? domainMeeting ?? DOMAIN_DEFAULT_MEETING[domainId] ?? 1;
 }
 
+/**
+ * Every meeting number (of 1–40) with at least one fresh vocab item, sorted
+ * ascending. Derived from vocab.ts at module load — via the same effMeeting
+ * rules the dealer uses — so it can never drift as content is added. Today
+ * only 17 of the 40 numbers are populated; meetingForHours snaps down to
+ * this list so a grower is never dealt a "meeting" with zero fresh cards.
+ */
+export const POPULATED_MEETINGS: number[] = [
+  ...new Set(VOCAB_DOMAINS.flatMap((d) => d.items.map((it) => effMeeting(d.id, it, d.meeting)))),
+].sort((a, b) => a - b);
+
 /** ~2 hours of growing per meeting → which Rough-and-Ready-Dozen meeting are we on. */
 export function meetingForHours(hoursLogged: number): number {
-  return Math.max(1, Math.min(40, Math.floor((hoursLogged || 0) / 2) + 1));
+  const raw = Math.max(1, Math.min(40, Math.floor((hoursLogged || 0) / 2) + 1));
+  // Snap DOWN to the nearest populated meeting: the grower simply spends
+  // longer on the last real meeting until the next populated one is due.
+  let snapped = POPULATED_MEETINGS[0];
+  for (const m of POPULATED_MEETINGS) {
+    if (m <= raw) snapped = m;
+    else break;
+  }
+  return snapped;
+}
+
+/**
+ * SEQUENTIAL LIVE-SESSION PROGRESSION — which meeting the grower is served
+ * next. Meetings are mandatory and stack on each other: given the highest
+ * meeting COMPLETED via a live session (profile.meetingProgress), return the
+ * lowest populated meeting strictly after it — never skipping ahead. Returns
+ * null once every populated meeting is complete: a finished meeting is never
+ * re-served as "next", so the session room runs review-only decks instead
+ * (see buildReviewDeck). Solo /practice hours never move this; only
+ * finishing a live /session meeting does.
+ */
+export function nextMeetingFor(meetingProgress: number): number | null {
+  for (const m of POPULATED_MEETINGS) {
+    if (m > meetingProgress) return m;
+  }
+  return null;
 }
 
 /**
@@ -126,6 +162,16 @@ export function buildMeetingDeck(lang: LangCode, meeting: number, count = 12): D
     deck.push(c);
   }
   return deck.slice(0, count);
+}
+
+/**
+ * Review-only deck for a grower who has completed every populated meeting
+ * (nextMeetingFor returned null): dealt from a "meeting" just past the spine,
+ * so every card counts as review and nothing already finished is ever
+ * re-presented as fresh.
+ */
+export function buildReviewDeck(lang: LangCode, count = 12): DeckCard[] {
+  return buildMeetingDeck(lang, POPULATED_MEETINGS[POPULATED_MEETINGS.length - 1] + 1, count);
 }
 
 /* --------------------------- audio cues --------------------------- */

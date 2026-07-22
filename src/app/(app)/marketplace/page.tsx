@@ -43,7 +43,7 @@ import type { LangCode, Nurturer } from "@/lib/types";
 const PLATFORM_FEE_RATE = 0.1; // 10% — shown line-itemed at confirm
 const CONFETTI = ["🎉", "✨", "🌱", "💜", "⭐", "🎊", "🧡", "💚", "🌍", "🪄"];
 
-type Duration = 30 | 60;
+type Duration = 30 | 60 | 90 | 120;
 
 const PHASE_FILTERS: { value: string; labelKey: string }[] = [
   { value: "all", labelKey: "mktPhaseAny" },
@@ -317,7 +317,7 @@ function ProfileDrawer({
     setDone(true);
     window.setTimeout(() => {
       onBooked();
-      router.push(`/session?nurturer=${n.id}`);
+      router.push(`/session?nurturer=${n.id}&duration=${draft.duration}`);
     }, 1600);
   };
 
@@ -539,8 +539,10 @@ function ProfileDrawer({
                       <div className="space-y-3">
                         <p className="text-xs font-semibold uppercase tracking-widest text-muted">{t("mktDuration")}</p>
                         <div className="grid grid-cols-2 gap-3">
-                          {([30, 60] as Duration[]).map((d) => {
+                          {([30, 60, 90, 120] as Duration[]).map((d) => {
                             const sel = draft.duration === d;
+                            const subtitleKey =
+                              d === 30 ? "mktWarmUp" : d === 60 ? "mktFullSession" : d === 90 ? "mktExtended" : "mktDeepDive";
                             return (
                               <button
                                 key={d}
@@ -551,7 +553,7 @@ function ProfileDrawer({
                                 }`}
                               >
                                 <p className="font-display text-lg font-extrabold">{d} min</p>
-                                <p className="text-xs text-muted">{d === 30 ? t("mktWarmUp") : t("mktFullSession")}</p>
+                                <p className="text-xs text-muted">{t(subtitleKey)}</p>
                               </button>
                             );
                           })}
@@ -693,7 +695,9 @@ export default function MarketplacePage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (profile?.targetLang) setLangFilter(profile.targetLang);
+    if (!profile?.targetLang) return;
+    setLangFilter(profile.targetLang);
+    setRegion(""); // a stale dialect filter from the previous language would silently empty the roster
   }, [profile?.targetLang]);
 
   // languages actually represented in the roster, for the dropdown
