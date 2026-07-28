@@ -8,6 +8,7 @@ import {
   resolveTarget,
 } from "./util";
 import { blockedClerkIdsFor, isBlockedEitherWay } from "./safety";
+import { isAdultClerkId, isAdultProfile, requireAdult } from "./age";
 
 /**
  * Session requests between two real people (Tandem-style). The client sends the
@@ -25,6 +26,7 @@ export const sendRequest = mutation({
   handler: async (ctx, args) => {
     requireCommunityExchangeEnabled();
     const fromClerkId = await requireIdentity(ctx);
+    await requireAdult(ctx, fromClerkId);
     if (!/^[a-z]{2}$/.test(args.lang)) throw new Error("Invalid language");
     if ((args.message?.length ?? 0) > 500) throw new Error("Message is too long");
     const sent = await ctx.db
@@ -37,6 +39,12 @@ export const sendRequest = mutation({
     const toProfile = await resolveTarget(ctx, args.toProfileId, fromClerkId, "request");
     const toClerkId = toProfile.clerkId;
     if (await isBlockedEitherWay(ctx, fromClerkId, toClerkId)) {
+      throw new Error("This request is unavailable");
+    }
+    // The recipient must be an adult too — a profile id kept from before the
+    // gate would otherwise still reach them. Same wording as a block, so the
+    // sender learns nothing about why.
+    if (!isAdultProfile(toProfile, Date.now())) {
       throw new Error("This request is unavailable");
     }
     const fromName = await displayName(ctx, fromClerkId);
@@ -78,6 +86,19 @@ export const respondRequest = mutation({
       if (req.status === "pending") await ctx.db.patch(args.requestId, { status: "declined" });
       return false;
     }
+    // Accepting is the moment a connection exists, and a connection is what
+    // unlocks messaging and calling — so that is what the age gate guards.
+    // Declining stays open to everyone: nobody should need to be eighteen to
+    // turn down contact they didn't ask for.
+    if (args.accept) {
+      await requireAdult(ctx, me);
+      // Decline on the sender's behalf rather than erroring, exactly as a block
+      // does, so an accept never reveals the other person's age.
+      if (!(await isAdultClerkId(ctx, req.fromClerkId))) {
+        if (req.status === "pending") await ctx.db.patch(args.requestId, { status: "declined" });
+        return false;
+      }
+    }
     await ctx.db.patch(args.requestId, { status: args.accept ? "accepted" : "declined" });
     return args.accept;
   },
@@ -90,22 +111,28 @@ export const myIncoming = query({
     if (!communityExchangeEnabled()) return [];
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+    // Same fail-closed shape as connections:myConnections — a non-adult sees no
+    // one, and no adult's name reaches them through a pre-gate request either.
+    if (!(await isAdultClerkId(ctx, identity.subject))) return [];
     const blockedIds = await blockedClerkIdsFor(ctx, identity.subject);
     const rows = await ctx.db
       .query("requests")
       .withIndex("by_to", (q) => q.eq("toClerkId", identity.subject))
       .collect();
-    return rows
-      .filter((r) => !blockedIds.has(r.fromClerkId))
-      .map((r) => ({
+    const visible = [];
+    for (const r of rows) {
+      if (blockedIds.has(r.fromClerkId)) continue;
+      if (!(await isAdultClerkId(ctx, r.fromClerkId))) continue;
+      visible.push({
         id: r._id,
         fromName: r.fromName,
         lang: r.lang,
         message: r.message,
         status: r.status,
         ts: r.ts,
-      }))
-      .sort((a, b) => b.ts - a.ts);
+      });
+    }
+    return visible.sort((a, b) => b.ts - a.ts);
   },
 });
 
@@ -116,19 +143,24 @@ export const myOutgoing = query({
     if (!communityExchangeEnabled()) return [];
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+    if (!(await isAdultClerkId(ctx, identity.subject))) return [];
     const blockedIds = await blockedClerkIdsFor(ctx, identity.subject);
     const rows = await ctx.db
       .query("requests")
       .withIndex("by_from", (q) => q.eq("fromClerkId", identity.subject))
       .collect();
-    return rows
-      .filter((r) => !blockedIds.has(r.toClerkId))
-      .map((r) => ({
+    const visible = [];
+    for (const r of rows) {
+      if (blockedIds.has(r.toClerkId)) continue;
+      if (!(await isAdultClerkId(ctx, r.toClerkId))) continue;
+      visible.push({
         id: r._id,
         toName: r.toName,
         lang: r.lang,
         status: r.status,
         ts: r.ts,
-      }));
+      });
+    }
+    return visible;
   },
 });

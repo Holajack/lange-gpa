@@ -31,6 +31,19 @@ export default defineSchema({
      * any device. Optional so existing rows stay valid.
      */
     data: v.optional(v.any()),
+    /**
+     * Self-attested date of birth (ISO "YYYY-MM-DD") and when it was given.
+     * Server-owned: only `age:attestAge` writes these, and `upsertProfile`
+     * cannot — the sync payload above is client-controlled all the way down,
+     * including the `data` blob, so nothing in it can be a safety boundary.
+     *
+     * Adulthood itself is never stored. It is re-derived from `birthDate` on
+     * every guarded call, which is what lets an account cross into community
+     * features on its eighteenth birthday with no write at all. Optional so
+     * existing rows stay valid — they simply read as "not yet attested".
+     */
+    birthDate: v.optional(v.string()),
+    ageAttestedAt: v.optional(v.number()),
   }).index("by_clerkId", ["clerkId"]),
 
   /**

@@ -31,6 +31,8 @@ import { NuriGlobe } from "@/components/NuriGlobe";
 import type { NuriGlobeHandle, GlobeCapital, GlobePerson } from "@/components/NuriGlobe";
 import { useRealPeople } from "@/lib/useRealPeople";
 import { useConnections, useRequests } from "@/lib/requests";
+import { AGE_GATE_ON, useAgeStatus } from "@/lib/age";
+import { AgeGateCard } from "@/components/AgeGateCard";
 import { useCallActions } from "@/components/CallProvider";
 import type { LangCode } from "@/lib/types";
 
@@ -200,10 +202,14 @@ function browserPlaceGuess(uiLang: LangCode): { city: string; country: string } 
 
 function PlaceAskCard() {
   const { profile, t, uiLang, updateProfile } = useApp();
+  const { adult } = useAgeStatus();
   const [done, setDone] = useState(true); // assume answered until the browser says otherwise
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [exchange, setExchange] = useState(false);
+
+  /** the exchange opt-in is a community feature: 18+ only, derived server-side */
+  const exchangeAllowed = !AGE_GATE_ON || adult;
 
   useEffect(() => {
     let dismissed = false;
@@ -232,7 +238,7 @@ function PlaceAskCard() {
     updateProfile({
       city: city.trim() || undefined,
       country: country.trim() || undefined,
-      ...(COMMUNITY_EXCHANGE_ON ? { exchange } : {}),
+      ...(COMMUNITY_EXCHANGE_ON && exchangeAllowed ? { exchange } : {}),
     });
     markDone();
   };
@@ -273,7 +279,12 @@ function PlaceAskCard() {
           </div>
           <p className="mt-2 text-[11px] text-muted">🔒 {t("dshOnbCityLevelNote")}</p>
 
-          {COMMUNITY_EXCHANGE_ON && (
+          {/* Community exchange is adults-only. Until we know someone is 18+,
+              the opt-in is replaced by the date-of-birth ask (or, for an
+              under-18 answer, by the kind note that this part stays closed). */}
+          {COMMUNITY_EXCHANGE_ON && !exchangeAllowed && <AgeGateCard className="mt-4" />}
+
+          {COMMUNITY_EXCHANGE_ON && exchangeAllowed && (
             <button
               type="button"
               role="switch"
@@ -367,6 +378,11 @@ export default function WorldPage() {
   const realPeople = useRealPeople();
   const { send: sendRequest, outgoing: outgoingRequests } = useRequests();
   const connectedIds = useConnections();
+  const { adult } = useAgeStatus();
+  /** 18+ is required alongside the connection before anyone can talk. The
+   *  server derives this from the stored date of birth on every call; this
+   *  only keeps us from showing a door that would not open. */
+  const adultOk = !AGE_GATE_ON || adult;
   const { startCall: startVideoCall } = useCallActions();
   const { block: blockPerson, report: reportPerson } = useSafetyActions();
   const [requested, setRequested] = useState<Set<string>>(new Set());
@@ -943,9 +959,15 @@ export default function WorldPage() {
                 {!person.me && (
                   <>
                     {/* Message + call unlock only once you're connected (an
-                        accepted session request). Report/block stays available
-                        to everyone below. */}
-                    {connectedIds.has(person.id) && (
+                        accepted session request) AND you're 18+. Report/block
+                        stays available to everyone below. */}
+                    {connectedIds.has(person.id) && !adultOk && (
+                      <div className="mt-2">
+                        <AgeGateCard />
+                      </div>
+                    )}
+
+                    {connectedIds.has(person.id) && adultOk && (
                       <div className="mt-2 flex gap-2">
                         <Link
                           href={`/messages?with=${person.id}`}

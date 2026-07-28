@@ -1,6 +1,7 @@
 import { query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { communityExchangeEnabled } from "./util";
+import { communityExchangeEnabled, profileByClerkId } from "./util";
 import { blockedClerkIdsFor } from "./safety";
+import { isAdultProfile } from "./age";
 
 /**
  * Connections (Stage C) — the accepted-relationship layer that sits between a
@@ -48,6 +49,11 @@ export const myConnections = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
     const me = identity.subject;
+    // 18+, both ways. A minor sees no one, and no minor is shown to anyone —
+    // connections predating the age gate go quiet until both sides attest,
+    // which is the direction an age gate should fail when it is unsure.
+    const now = Date.now();
+    if (!isAdultProfile(await profileByClerkId(ctx, me), now)) return [];
     const blocked = await blockedClerkIdsFor(ctx, me);
 
     const [out, inc] = await Promise.all([
@@ -73,7 +79,8 @@ export const myConnections = query({
         .query("profiles")
         .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
         .unique();
-      if (profile) result.push({ profileId: profile._id, name: info.name, ts: info.ts });
+      if (!profile || !isAdultProfile(profile, now)) continue;
+      result.push({ profileId: profile._id, name: info.name, ts: info.ts });
     }
     return result.sort((a, b) => b.ts - a.ts);
   },
