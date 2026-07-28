@@ -3,18 +3,27 @@ import { v } from "convex/values";
 import {
   communityExchangeEnabled,
   displayName,
+  profileByClerkId,
   requireCommunityExchangeEnabled,
   requireIdentity,
   resolveTarget,
 } from "./util";
 import { blockedClerkIdsFor, isBlockedEitherWay } from "./safety";
-import { requireConnection } from "./connections";
+import { areConnected, requireConnection } from "./connections";
+import { isAdultProfile, requireAdult } from "./age";
 
 /**
  * 1:1 messaging (Stage D, text layer). The client targets a person by their
  * OPAQUE profile id (from profiles:listPeople); Clerk ids are resolved
  * server-side and never exposed. A `convoKey` (sorted clerk-id pair) groups
  * both directions into one thread.
+ *
+ * Reads are gated exactly as hard as writes. A thread already sent is still an
+ * adults-only surface — message bodies, names, photos, and signed voice-note
+ * URLs — and the opaque profile id the inbox hands back is the very token every
+ * write path takes as its target, so an ungated read would reopen the discovery
+ * hole `profiles:listPeople` was closed to shut. Both sides must be adults;
+ * anything less returns the same empty shape as "not signed in".
  */
 
 const convoKeyOf = (a: string, b: string) => [a, b].sort().join("|");
@@ -24,6 +33,7 @@ export const sendMessage = mutation({
   handler: async (ctx, { toProfileId, text }) => {
     requireCommunityExchangeEnabled();
     const from = await requireIdentity(ctx);
+    await requireAdult(ctx, from);
     const body = text.trim();
     if (!body) return null;
     const recent = await ctx.db
@@ -36,6 +46,11 @@ export const sendMessage = mutation({
     const toProfile = await resolveTarget(ctx, toProfileId, from, "message");
     const to = toProfile.clerkId;
     if (await isBlockedEitherWay(ctx, from, to)) {
+      throw new Error("This conversation is unavailable");
+    }
+    // Both sides must be adults, and the refusal reads the same as a block so
+    // it never confirms anything about the other person.
+    if (!isAdultProfile(toProfile, Date.now())) {
       throw new Error("This conversation is unavailable");
     }
     // Stage C: only connected people (an accepted session request) may message.
@@ -63,9 +78,22 @@ export const conversation = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return { other: null, messages: [] };
     const me = identity.subject;
+    const now = Date.now();
+    // 18+, both ways, mirroring sendMessage below. Every refusal from here down
+    // returns the identical empty shape, so probing a profile id never
+    // distinguishes "under age" from "blocked" from "no such thread".
+    if (!isAdultProfile(await profileByClerkId(ctx, me), now)) {
+      return { other: null, messages: [] };
+    }
     const other = await ctx.db.get(withProfileId);
-    if (!other) return { other: null, messages: [] };
+    if (!other || !isAdultProfile(other, now)) return { other: null, messages: [] };
     if (await isBlockedEitherWay(ctx, me, other.clerkId)) {
+      return { other: null, messages: [] };
+    }
+    // The write path requires a connection, so the read path does too —
+    // otherwise `other` (name + photo) came back for ANY profile id handed in,
+    // including an adult who never opted into the roster at all.
+    if (!(await areConnected(ctx, me, other.clerkId))) {
       return { other: null, messages: [] };
     }
     const data = (other.data ?? {}) as Record<string, unknown>;
@@ -103,8 +131,13 @@ export const markRead = mutation({
     requireCommunityExchangeEnabled();
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return;
+    // A mutation, and one the other side observes: flipping readByTo surfaces a
+    // live read receipt in an adult's UI. That is a non-adult writing state an
+    // adult can see, so it throws rather than no-ops.
+    await requireAdult(ctx, identity.subject);
     const other = await ctx.db.get(withProfileId);
     if (!other) return;
+    if (!isAdultProfile(other, Date.now())) return;
     if (await isBlockedEitherWay(ctx, identity.subject, other.clerkId)) return;
     const key = convoKeyOf(identity.subject, other.clerkId);
     const rows = await ctx.db
@@ -125,6 +158,11 @@ export const myConversations = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
     const me = identity.subject;
+    const now = Date.now();
+    // Same shape as connections:myConnections — a minor sees no one, and no
+    // minor is listed to anyone. Threads predating the age gate go quiet until
+    // both sides attest.
+    if (!isAdultProfile(await profileByClerkId(ctx, me), now)) return [];
     const blockedIds = await blockedClerkIdsFor(ctx, me);
     const incoming = await ctx.db
       .query("messages")
@@ -164,11 +202,8 @@ export const myConversations = query({
       unread: number;
     }[] = [];
     for (const [otherClerk, acc] of byOther) {
-      const prof = await ctx.db
-        .query("profiles")
-        .withIndex("by_clerkId", (q) => q.eq("clerkId", otherClerk))
-        .unique();
-      if (!prof) continue;
+      const prof = await profileByClerkId(ctx, otherClerk);
+      if (!prof || !isAdultProfile(prof, now)) continue;
       const data = (prof.data ?? {}) as Record<string, unknown>;
       out.push({
         otherProfileId: prof._id,
@@ -192,12 +227,26 @@ export const unreadCount = query({
     if (!communityExchangeEnabled()) return 0;
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return 0;
+    const me = identity.subject;
+    const now = Date.now();
+    // The nav badge is a notification. Leaving it live for a non-adult keeps
+    // pulling them toward an inbox the server now returns empty.
+    if (!isAdultProfile(await profileByClerkId(ctx, me), now)) return 0;
     const rows = await ctx.db
       .query("messages")
-      .withIndex("by_to_unread", (q) => q.eq("toClerkId", identity.subject).eq("readByTo", false))
+      .withIndex("by_to_unread", (q) => q.eq("toClerkId", me).eq("readByTo", false))
       .collect();
-    const blockedIds = await blockedClerkIdsFor(ctx, identity.subject);
-    return rows.filter((row) => !blockedIds.has(row.fromClerkId)).length;
+    const blockedIds = await blockedClerkIdsFor(ctx, me);
+    const candidates = rows.filter((row) => !blockedIds.has(row.fromClerkId));
+
+    // Count only senders myConversations would actually show, so the badge can
+    // never advertise unread mail from a thread the inbox has dropped. One
+    // profile lookup per distinct sender, not per message.
+    const adultSender = new Map<string, boolean>();
+    for (const clerkId of new Set(candidates.map((row) => row.fromClerkId))) {
+      adultSender.set(clerkId, isAdultProfile(await profileByClerkId(ctx, clerkId), now));
+    }
+    return candidates.filter((row) => adultSender.get(row.fromClerkId) === true).length;
   },
 });
 
@@ -210,6 +259,9 @@ export const generateUploadUrl = mutation({
     requireCommunityExchangeEnabled();
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
+    // Gated here as well as in sendVoice: this hands out a writable storage
+    // URL, so it is a capability in its own right, not just a step toward one.
+    await requireAdult(ctx, identity.subject);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -220,6 +272,7 @@ export const sendVoice = mutation({
   handler: async (ctx, { toProfileId, storageId, durationSec }) => {
     requireCommunityExchangeEnabled();
     const from = await requireIdentity(ctx);
+    await requireAdult(ctx, from);
     if (!Number.isFinite(durationSec) || durationSec < 1 || durationSec > 300) {
       throw new Error("Voice notes must be between 1 second and 5 minutes");
     }
@@ -233,6 +286,11 @@ export const sendVoice = mutation({
     const toProfile = await resolveTarget(ctx, toProfileId, from, "message");
     const to = toProfile.clerkId;
     if (await isBlockedEitherWay(ctx, from, to)) {
+      throw new Error("This conversation is unavailable");
+    }
+    // Both sides must be adults, and the refusal reads the same as a block so
+    // it never confirms anything about the other person.
+    if (!isAdultProfile(toProfile, Date.now())) {
       throw new Error("This conversation is unavailable");
     }
     // Stage C: only connected people (an accepted session request) may message.

@@ -12,6 +12,7 @@ import {
 } from "./util";
 import { blockedClerkIdsFor, isBlockedEitherWay } from "./safety";
 import { requireConnection } from "./connections";
+import { isAdultClerkId, isAdultProfile, requireAdult } from "./age";
 
 const MAX_SDP_BYTES = 250_000;
 const MAX_ICE_BYTES = 16_000;
@@ -50,8 +51,14 @@ export const startCall = mutation({
     requireCommunityExchangeEnabled();
     if (!offer || offer.length > MAX_SDP_BYTES) throw new Error("Invalid call offer");
     const caller = await requireIdentity(ctx);
+    await requireAdult(ctx, caller);
     const callee = await resolveTarget(ctx, toProfileId, caller, "call");
     if (await isBlockedEitherWay(ctx, caller, callee.clerkId)) {
+      throw new Error("This call is unavailable");
+    }
+    // Both sides must be adults; the refusal reads the same as a block so it
+    // never confirms anything about the person being rung.
+    if (!isAdultProfile(callee, Date.now())) {
       throw new Error("This call is unavailable");
     }
     // Stage C: only connected people (an accepted session request) may call.
@@ -85,19 +92,29 @@ export const incomingCall = query({
   handler: async (ctx) => {
     if (!communityExchangeEnabled()) return null;
     const me = await requireIdentity(ctx);
+    // A non-adult is never rung, and never learns a caller's name or opaque
+    // profile id (the same capability token every write path accepts).
+    if (!(await isAdultClerkId(ctx, me))) return null;
     const blockedIds = await blockedClerkIdsFor(ctx, me);
     const rows = await ctx.db
       .query("calls")
       .withIndex("by_callee", (q) => q.eq("calleeClerkId", me))
       .collect();
-    const ringing = rows
+    const candidates = rows
       .filter(
         (c) =>
           !blockedIds.has(c.callerClerkId) &&
           c.status === "ringing" &&
           Date.now() - c.ts < 60_000
       )
-      .sort((a, b) => b.ts - a.ts)[0];
+      .sort((a, b) => b.ts - a.ts);
+    let ringing = undefined as (typeof candidates)[number] | undefined;
+    for (const c of candidates) {
+      if (await isAdultClerkId(ctx, c.callerClerkId)) {
+        ringing = c;
+        break;
+      }
+    }
     if (!ringing) return null;
     return { callId: ringing._id, callerName: ringing.callerName, callerProfileId: ringing.callerProfileId, offer: ringing.offer };
   },
@@ -121,6 +138,12 @@ export const answerCall = mutation({
     if (!answer || answer.length > MAX_SDP_BYTES) throw new Error("Invalid call answer");
     const { call, role } = await callForParticipant(ctx, callId);
     if (role !== "callee") throw new Error("Only the recipient can answer");
+    // Picking up is what opens the media channel, so it is gated in its own
+    // right rather than being treated as already covered by startCall.
+    await requireAdult(ctx, call.calleeClerkId);
+    if (!(await isAdultClerkId(ctx, call.callerClerkId))) {
+      throw new Error("This call is unavailable");
+    }
     if (call.status !== "ringing" || Date.now() - call.ts > 60_000) {
       throw new Error("This call is no longer available");
     }

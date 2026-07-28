@@ -13,6 +13,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, Clock, Crown, Plus, Users, X } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useParties, type CreatePartyInput, type Party } from "@/lib/parties";
+import { AGE_GATE_ON, useAgeStatus } from "@/lib/age";
+import { AgeGateCard } from "@/components/AgeGateCard";
 import { LANGUAGES, langByCode } from "@/lib/languages";
 import { Avatar } from "@/components/Avatar";
 import { Card, Tag } from "@/components/ui";
@@ -38,6 +40,7 @@ type Tab = "upcoming" | "mine" | "past";
 export default function EventsPage() {
   const { profile, uiLang, t } = useApp();
   const { upcoming, mine, create, join, leave, cancel } = useParties(null);
+  const { adult } = useAgeStatus();
 
   const [tab, setTab] = useState<Tab>("upcoming");
   const [langFilter, setLangFilter] = useState<LangCode | null>(null);
@@ -53,6 +56,25 @@ export default function EventsPage() {
   );
 
   if (!profile) return null;
+
+  // Parties are live group sessions with real people, so they sit behind the
+  // same 18+ gate as the rest of community exchange. The server already returns
+  // nothing here and refuses to host or RSVP; this replaces the empty page with
+  // the date-of-birth ask that would open it.
+  if (AGE_GATE_ON && !adult) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="headline text-4xl lg:text-5xl">{t("events")}</h1>
+          <p className="mt-2 text-sm text-muted">🎈 {t("evSub")}</p>
+        </div>
+        <Card className="p-5">
+          <AgeGateCard />
+        </Card>
+      </div>
+    );
+  }
+
   const now = Date.now();
 
   /** Languages that actually have an upcoming party, for the filter chips. */

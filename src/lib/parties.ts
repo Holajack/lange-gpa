@@ -10,6 +10,7 @@
 
 import { useCallback } from "react";
 import { CONVEX_ON } from "@/lib/convexClient";
+import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { usePolledQuery } from "@/lib/convexPoll";
 import { useConvex } from "convex/react";
 
@@ -115,7 +116,13 @@ const STUB: PartiesApi = {
   refresh: () => {},
 };
 
-/** Language-parties API (no-op when Convex is unconfigured). */
-export const useParties: (langFilter?: string | null) => PartiesApi = CONVEX_ON
-  ? (langFilter = null) => usePartiesLive(langFilter)
-  : () => STUB;
+/**
+ * Language-parties API (no-op when Convex is unconfigured). Parties are part of
+ * community exchange server-side — convex/parties.ts refuses every call when
+ * that flag is off — so the client stops polling under the same condition
+ * rather than asking for data it will never be given.
+ */
+export const useParties: (langFilter?: string | null) => PartiesApi =
+  CONVEX_ON && COMMUNITY_EXCHANGE_ON
+    ? (langFilter = null) => usePartiesLive(langFilter)
+    : () => STUB;

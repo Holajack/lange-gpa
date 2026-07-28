@@ -1,7 +1,16 @@
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { displayName, requireIdentity } from "./util";
+import {
+  communityExchangeEnabled,
+  displayName,
+  photoUrlOf,
+  profileByClerkId,
+  requireCommunityExchangeEnabled,
+  requireIdentity,
+} from "./util";
+import { blockedClerkIdsFor } from "./safety";
+import { isAdultProfile, requireAdult } from "./age";
 
 /**
  * Language parties (Stage E) — Tandem/Meetup-style group sessions. Anyone hosts
@@ -9,31 +18,51 @@ import { displayName, requireIdentity } from "./util";
  * history. Callers are identified by Clerk id (identity.subject), resolved
  * server-side — clients only ever see the opaque party doc id. One row per
  * attendee in `partyGuests`; the host is auto-added as the first guest.
+ *
+ * A party is a live group session with real strangers, so it is community
+ * exchange in every sense the rest of the backend uses the term: adults only,
+ * both ways, re-derived from `profiles.birthDate` on every call (see
+ * convex/age.ts), and blind to anyone either side has blocked.
+ *
+ * The doors in — hosting and RSVPing — carry the full gate. The doors out —
+ * leaving and cancelling — deliberately carry none, following the same
+ * reasoning as `requests:respondRequest`, where declining stays open to
+ * everyone. Gating an exit would strand a minor in an adult's party, and would
+ * leave a party hosted before the gate shipped permanently listed with no one
+ * able to take it down. Neither exit reads any data back.
  */
 
 /** Build the client-safe view of one party (guest count + a small avatar preview). */
-async function viewOf(ctx: QueryCtx, party: Doc<"parties">, me: string | undefined) {
+async function viewOf(
+  ctx: QueryCtx,
+  party: Doc<"parties">,
+  me: string,
+  now: number,
+  blocked: Set<string>
+) {
   const guests = await ctx.db
     .query("partyGuests")
     .withIndex("by_party", (q) => q.eq("partyId", party._id))
     .collect();
   guests.sort((a, b) => a.ts - b.ts); // host first (auto-joined at creation)
 
-  const preview = await Promise.all(
-    guests.slice(0, 6).map(async (g) => {
-      const prof = await ctx.db
-        .query("profiles")
-        .withIndex("by_clerkId", (q) => q.eq("clerkId", g.clerkId))
-        .unique();
-      const data = (prof?.data ?? {}) as Record<string, unknown>;
-      return {
-        name: g.name,
-        photo: typeof data.photoUrl === "string" && data.photoUrl ? data.photoUrl : undefined,
-        isHost: g.clerkId === party.hostClerkId,
-        isMe: !!me && g.clerkId === me,
-      };
-    })
-  );
+  // The roster is a list of real people, so it is filtered like every other
+  // roster here: no minors, no one blocked either way. `guestCount` below stays
+  // the TRUE headcount — capacity is measured against it, and a filtered count
+  // would quietly misreport a full party as joinable.
+  const preview: { name: string; photo?: string; isHost: boolean; isMe: boolean }[] = [];
+  for (const g of guests) {
+    if (preview.length >= 6) break;
+    const mine = g.clerkId === me;
+    const prof = await profileByClerkId(ctx, g.clerkId);
+    if (!mine && (blocked.has(g.clerkId) || !isAdultProfile(prof, now))) continue;
+    preview.push({
+      name: g.name,
+      photo: photoUrlOf(prof),
+      isHost: g.clerkId === party.hostClerkId,
+      isMe: mine,
+    });
+  }
 
   return {
     id: party._id,
@@ -46,8 +75,8 @@ async function viewOf(ctx: QueryCtx, party: Doc<"parties">, me: string | undefin
     capacity: party.capacity ?? null,
     status: party.status,
     hostName: party.hostName,
-    iAmHost: !!me && party.hostClerkId === me,
-    iAmGoing: !!me && guests.some((g) => g.clerkId === me),
+    iAmHost: party.hostClerkId === me,
+    iAmGoing: guests.some((g) => g.clerkId === me),
     guestCount: guests.length,
     guests: preview,
   };
@@ -65,7 +94,9 @@ export const createParty = mutation({
     capacity: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    requireCommunityExchangeEnabled();
     const host = await requireIdentity(ctx);
+    await requireAdult(ctx, host);
 
     const title = args.title.trim().slice(0, 80);
     if (!title) throw new Error("A party needs a title");
@@ -99,19 +130,36 @@ export const createParty = mutation({
 export const listUpcoming = query({
   args: { lang: v.optional(v.string()) },
   handler: async (ctx, { lang }) => {
+    if (!communityExchangeEnabled()) return [];
+    // An identity is required: this used to answer anonymous callers, which
+    // handed the whole public roster to anyone who could reach the endpoint.
     const identity = await ctx.auth.getUserIdentity();
-    const me = identity?.subject;
+    if (!identity) return [];
+    const me = identity.subject;
     const now = Date.now();
+    if (!isAdultProfile(await profileByClerkId(ctx, me), now)) return [];
+    const blocked = await blockedClerkIdsFor(ctx, me);
+
     const GRACE = 30 * 60 * 1000; // keep a party listed until 30 min past its start (it's "live")
 
     const all = await ctx.db.query("parties").withIndex("by_starts").collect();
     const open = all
       .filter((p) => p.status === "scheduled" && p.startsAt + GRACE > now)
       .filter((p) => !lang || p.lang === lang)
+      .filter((p) => !blocked.has(p.hostClerkId))
       .sort((a, b) => a.startsAt - b.startsAt)
       .slice(0, 60);
 
-    return await Promise.all(open.map((p) => viewOf(ctx, p, me)));
+    // Hosts get the same treatment guests do — a party hosted by someone who
+    // has not attested to being an adult is offered to nobody, which is how
+    // parties created before the gate shipped go quiet.
+    const visible: Doc<"parties">[] = [];
+    for (const p of open) {
+      if (!isAdultProfile(await profileByClerkId(ctx, p.hostClerkId), now)) continue;
+      visible.push(p);
+    }
+
+    return await Promise.all(visible.map((p) => viewOf(ctx, p, me, now, blocked)));
   },
 });
 
@@ -119,9 +167,13 @@ export const listUpcoming = query({
 export const myParties = query({
   args: {},
   handler: async (ctx) => {
+    if (!communityExchangeEnabled()) return [];
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
     const me = identity.subject;
+    const now = Date.now();
+    if (!isAdultProfile(await profileByClerkId(ctx, me), now)) return [];
+    const blocked = await blockedClerkIdsFor(ctx, me);
 
     const guestRows = await ctx.db
       .query("partyGuests")
@@ -140,7 +192,7 @@ export const myParties = query({
       (p): p is Doc<"parties"> => p !== null
     );
     parties.sort((a, b) => b.startsAt - a.startsAt);
-    return await Promise.all(parties.map((p) => viewOf(ctx, p, me)));
+    return await Promise.all(parties.map((p) => viewOf(ctx, p, me, now, blocked)));
   },
 });
 
@@ -148,11 +200,22 @@ export const myParties = query({
 export const joinParty = mutation({
   args: { partyId: v.id("parties") },
   handler: async (ctx, { partyId }) => {
+    requireCommunityExchangeEnabled();
     const me = await requireIdentity(ctx);
+    await requireAdult(ctx, me);
 
     const party = await ctx.db.get(partyId);
     if (!party) throw new Error("Party not found");
     if (party.status !== "scheduled") throw new Error("This party isn't open");
+
+    // A blocked or non-adult host refuses in the same words as a closed party,
+    // so an RSVP never confirms anything about who is hosting.
+    const blocked = await blockedClerkIdsFor(ctx, me);
+    if (party.hostClerkId !== me) {
+      if (blocked.has(party.hostClerkId)) throw new Error("This party isn't open");
+      const host = await profileByClerkId(ctx, party.hostClerkId);
+      if (!isAdultProfile(host, Date.now())) throw new Error("This party isn't open");
+    }
 
     const existing = await ctx.db
       .query("partyGuests")
@@ -177,7 +240,14 @@ export const joinParty = mutation({
   },
 });
 
-/** Drop out of a party (the host can't leave — they cancel instead). */
+/**
+ * Drop out of a party (the host can't leave — they cancel instead).
+ *
+ * Ungated on purpose: this is a door out. It deletes one row — the caller's own
+ * — and reads nothing back, so leaving it open costs nothing, while closing it
+ * would pin a non-adult inside an adults-only party with no way to remove
+ * themselves. Same call the age gate makes in `requests:respondRequest`.
+ */
 export const leaveParty = mutation({
   args: { partyId: v.id("parties") },
   handler: async (ctx, { partyId }) => {
@@ -197,7 +267,14 @@ export const leaveParty = mutation({
   },
 });
 
-/** Host-only: cancel a party (kept in history, marked cancelled). */
+/**
+ * Host-only: cancel a party (kept in history, marked cancelled).
+ *
+ * Ungated on purpose, for the same reason as leaveParty: cancelling only takes
+ * a party OUT of circulation. A party hosted before the gate shipped is already
+ * hidden from every listing, and its host must still be able to close it rather
+ * than leave a dangling row nobody can reach.
+ */
 export const cancelParty = mutation({
   args: { partyId: v.id("parties") },
   handler: async (ctx, { partyId }) => {
