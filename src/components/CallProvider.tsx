@@ -16,10 +16,39 @@ import { useConvex } from "convex/react";
 import { useApp } from "@/lib/store";
 
 
-const ICE_SERVERS: RTCIceServer[] = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" },
-];
+/**
+ * ICE servers. STUN alone works on ~85% of networks; strict/symmetric NAT
+ * (many mobile carriers, corporate/hotel Wi-Fi) needs a TURN relay or the call
+ * never connects. TURN is configured via env (NEXT_PUBLIC_TURN_URLS +
+ * _USERNAME + _CREDENTIAL — plug in metered.ca / Cloudflare / Twilio). When
+ * none is set we fall back to the free Open Relay project so beta calls still
+ * connect on restrictive networks out of the box (replace for real scale).
+ */
+function buildIceServers(): RTCIceServer[] {
+  const servers: RTCIceServer[] = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ];
+  const urls = process.env.NEXT_PUBLIC_TURN_URLS;
+  const username = process.env.NEXT_PUBLIC_TURN_USERNAME;
+  const credential = process.env.NEXT_PUBLIC_TURN_CREDENTIAL;
+  if (urls && username && credential) {
+    servers.push({ urls: urls.split(",").map((u) => u.trim()).filter(Boolean), username, credential });
+  } else {
+    servers.push({
+      urls: [
+        "turn:openrelay.metered.ca:80",
+        "turn:openrelay.metered.ca:443",
+        "turn:openrelay.metered.ca:443?transport=tcp",
+      ],
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    });
+  }
+  return servers;
+}
+
+const ICE_SERVERS: RTCIceServer[] = buildIceServers();
 
 type CallState = "idle" | "calling" | "incoming" | "active";
 
@@ -32,6 +61,9 @@ function CallEngine({ children }: { children: React.ReactNode }) {
   const { t } = useApp();
   const [state, setState] = useState<CallState>("idle");
   const [peerName, setPeerName] = useState("");
+  const [muted, setMuted] = useState(false);
+  const [camOff, setCamOff] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -66,6 +98,28 @@ function CallEngine({ children }: { children: React.ReactNode }) {
     remoteSetRef.current = false;
     setState("idle");
     setPeerName("");
+    setMuted(false);
+    setCamOff(false);
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    setMuted((m) => {
+      const next = !m;
+      stream.getAudioTracks().forEach((tr) => (tr.enabled = !next));
+      return next;
+    });
+  }, []);
+
+  const toggleCam = useCallback(() => {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    setCamOff((c) => {
+      const next = !c;
+      stream.getVideoTracks().forEach((tr) => (tr.enabled = !next));
+      return next;
+    });
   }, []);
 
   const makePc = useCallback(
@@ -91,7 +145,16 @@ function CallEngine({ children }: { children: React.ReactNode }) {
   );
 
   const attachLocal = useCallback(async (pc: RTCPeerConnection) => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    // Preflight: acquire mic + camera. A denied/absent device is the most
+    // common call failure — surface it instead of failing silently.
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch (err) {
+      setMediaError(true);
+      window.setTimeout(() => setMediaError(false), 4500);
+      throw err;
+    }
     localStreamRef.current = stream;
     stream.getTracks().forEach((tr) => pc.addTrack(tr, stream));
     bindEls();
@@ -270,7 +333,15 @@ function CallEngine({ children }: { children: React.ReactNode }) {
                 muted
                 className="absolute bottom-24 right-4 h-36 w-28 rounded-2xl border border-white/20 bg-black object-cover shadow-pop sm:h-44 sm:w-32"
               />
-              <div className="absolute inset-x-0 bottom-0 flex justify-center p-6">
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-4 p-6">
+                <button
+                  onClick={toggleMute}
+                  aria-label={t("callMuteMic")}
+                  aria-pressed={muted}
+                  className={`flex h-12 w-12 items-center justify-center rounded-full text-xl shadow-pop ${muted ? "bg-white text-canvas" : "bg-white/15 text-white hover:bg-white/25"}`}
+                >
+                  {muted ? "🔇" : "🎤"}
+                </button>
                 <button
                   onClick={() => void hangUp()}
                   aria-label={t("callHangUp")}
@@ -278,9 +349,24 @@ function CallEngine({ children }: { children: React.ReactNode }) {
                 >
                   📞
                 </button>
+                <button
+                  onClick={toggleCam}
+                  aria-label={t("callToggleCam")}
+                  aria-pressed={camOff}
+                  className={`flex h-12 w-12 items-center justify-center rounded-full text-xl shadow-pop ${camOff ? "bg-white text-canvas" : "bg-white/15 text-white hover:bg-white/25"}`}
+                >
+                  {camOff ? "🚫" : "📷"}
+                </button>
               </div>
             </div>
           )}
+        </div>
+      )}
+      {mediaError && (
+        <div className="fixed inset-x-0 bottom-6 z-[110] flex justify-center px-4">
+          <p className="card max-w-sm bg-red-500/90 px-5 py-3 text-center text-sm font-semibold text-white shadow-pop">
+            {t("callMediaBlocked")}
+          </p>
         </div>
       )}
     </CallCtx.Provider>
