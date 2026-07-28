@@ -8,6 +8,7 @@ import {
   resolveTarget,
 } from "./util";
 import { blockedClerkIdsFor, isBlockedEitherWay } from "./safety";
+import { requireConnection } from "./connections";
 
 /**
  * 1:1 messaging (Stage D, text layer). The client targets a person by their
@@ -37,6 +38,8 @@ export const sendMessage = mutation({
     if (await isBlockedEitherWay(ctx, from, to)) {
       throw new Error("This conversation is unavailable");
     }
+    // Stage C: only connected people (an accepted session request) may message.
+    await requireConnection(ctx, from, to);
     const fromName = await displayName(ctx, from);
 
     return await ctx.db.insert("messages", {
@@ -232,6 +235,8 @@ export const sendVoice = mutation({
     if (await isBlockedEitherWay(ctx, from, to)) {
       throw new Error("This conversation is unavailable");
     }
+    // Stage C: only connected people (an accepted session request) may message.
+    await requireConnection(ctx, from, to);
     const fromName = await displayName(ctx, from);
     return await ctx.db.insert("messages", {
       convoKey: convoKeyOf(from, to),

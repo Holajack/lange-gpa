@@ -8,7 +8,7 @@
  * isn't configured, so it never calls useConvex() without a provider.
  */
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { CONVEX_ON } from "@/lib/convexClient";
 import { COMMUNITY_EXCHANGE_ON } from "@/lib/featureFlags";
 import { usePolledQuery } from "@/lib/convexPoll";
@@ -86,3 +86,25 @@ const STUB: RequestsApi = {
 /** Session-request API (no-op when Convex is unconfigured). */
 export const useRequests: () => RequestsApi =
   CONVEX_ON && COMMUNITY_EXCHANGE_ON ? useRequestsLive : () => STUB;
+
+/* ------------------------------- connections ------------------------------ */
+
+type Connection = { profileId: string; name: string; ts: number };
+const EMPTY_CONNECTIONS = new Set<string>();
+
+function useConnectionsLive(): Set<string> {
+  const convex = useConvex();
+  const { data } = usePolledQuery<Connection[]>(async () => {
+    const rows = await convex.query("connections:myConnections" as never, {} as never);
+    return Array.isArray(rows) ? (rows as Connection[]) : [];
+  }, []);
+  return useMemo(() => new Set(data.map((c) => c.profileId)), [data]);
+}
+
+/**
+ * The set of opaque profile ids I'm connected with (an accepted session
+ * request either way). Gates messaging/calling in the UI; empty when Convex
+ * or community exchange is off.
+ */
+export const useConnections: () => Set<string> =
+  CONVEX_ON && COMMUNITY_EXCHANGE_ON ? useConnectionsLive : () => EMPTY_CONNECTIONS;

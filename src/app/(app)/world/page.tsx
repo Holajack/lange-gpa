@@ -30,7 +30,7 @@ import { Card, SectionTitle, Tag } from "@/components/ui";
 import { NuriGlobe } from "@/components/NuriGlobe";
 import type { NuriGlobeHandle, GlobeCapital, GlobePerson } from "@/components/NuriGlobe";
 import { useRealPeople } from "@/lib/useRealPeople";
-import { useRequests } from "@/lib/requests";
+import { useConnections, useRequests } from "@/lib/requests";
 import { useCallActions } from "@/components/CallProvider";
 import type { LangCode } from "@/lib/types";
 
@@ -366,6 +366,7 @@ export default function WorldPage() {
   const globeRef = useRef<NuriGlobeHandle>(null);
   const realPeople = useRealPeople();
   const { send: sendRequest, outgoing: outgoingRequests } = useRequests();
+  const connectedIds = useConnections();
   const { startCall: startVideoCall } = useCallActions();
   const { block: blockPerson, report: reportPerson } = useSafetyActions();
   const [requested, setRequested] = useState<Set<string>>(new Set());
@@ -913,7 +914,7 @@ export default function WorldPage() {
                   <p className="pill mt-1 flex justify-center bg-white/5 px-5 py-2.5 text-sm font-semibold text-muted">
                     ⭐ {t("reqThisIsYou")}
                   </p>
-                ) : requested.has(person.id) ||
+                ) : connectedIds.has(person.id) ? null : requested.has(person.id) ||
                   outgoingRequests.some((o) => o.toName === person.name && o.status === "pending") ? (
                   <p className="pill mt-1 flex justify-center bg-lime/15 px-5 py-2.5 text-sm font-semibold text-lime">
                     ✓ {t("reqRequested")}
@@ -941,26 +942,31 @@ export default function WorldPage() {
 
                 {!person.me && (
                   <>
-                    <div className="mt-2 flex gap-2">
-                      <Link
-                        href={`/messages?with=${person.id}`}
-                        className="pill flex flex-1 items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
-                      >
-                        💬 {t("msgMessage")}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const id = person.id;
-                          const name = person.name;
-                          setPerson(null);
-                          startVideoCall(id, name);
-                        }}
-                        className="pill flex flex-1 items-center justify-center gap-1.5 bg-violet/15 px-5 py-2.5 text-sm font-semibold text-violet-soft hover:bg-violet/25"
-                      >
-                        📹 {t("callVideo")}
-                      </button>
-                    </div>
+                    {/* Message + call unlock only once you're connected (an
+                        accepted session request). Report/block stays available
+                        to everyone below. */}
+                    {connectedIds.has(person.id) && (
+                      <div className="mt-2 flex gap-2">
+                        <Link
+                          href={`/messages?with=${person.id}`}
+                          className="pill flex flex-1 items-center justify-center gap-1.5 bg-raised-2 px-5 py-2.5 text-sm font-semibold text-ink hover:bg-white/10"
+                        >
+                          💬 {t("msgMessage")}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const id = person.id;
+                            const name = person.name;
+                            setPerson(null);
+                            startVideoCall(id, name);
+                          }}
+                          className="pill flex flex-1 items-center justify-center gap-1.5 bg-violet/15 px-5 py-2.5 text-sm font-semibold text-violet-soft hover:bg-violet/25"
+                        >
+                          📹 {t("callVideo")}
+                        </button>
+                      </div>
+                    )}
 
                     <div className="mt-3 border-t border-line pt-3">
                       <div className="flex items-center justify-center gap-4 text-xs">
