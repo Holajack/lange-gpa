@@ -11,6 +11,7 @@ import {
   resolveTarget,
 } from "./util";
 import { blockedClerkIdsFor, isBlockedEitherWay } from "./safety";
+import { requireConnection } from "./connections";
 
 const MAX_SDP_BYTES = 250_000;
 const MAX_ICE_BYTES = 16_000;
@@ -53,6 +54,8 @@ export const startCall = mutation({
     if (await isBlockedEitherWay(ctx, caller, callee.clerkId)) {
       throw new Error("This call is unavailable");
     }
+    // Stage C: only connected people (an accepted session request) may call.
+    await requireConnection(ctx, caller, callee.clerkId);
     if (!dataOf(callee).exchange) throw new Error("This person is not open to calls");
     const me = await profileByClerkId(ctx, caller);
 
