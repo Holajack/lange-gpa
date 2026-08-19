@@ -13,6 +13,8 @@ import { Mic, Send, Square, Video } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useConversation, useConversations } from "@/lib/messages";
 import { useCallActions } from "@/components/CallProvider";
+import { AGE_GATE_ON, useAgeStatus } from "@/lib/age";
+import { AgeGateCard } from "@/components/AgeGateCard";
 import { Avatar } from "@/components/Avatar";
 import { Card } from "@/components/ui";
 
@@ -21,6 +23,7 @@ function MessagesInner() {
   const router = useRouter();
   const params = useSearchParams();
   const withId = params.get("with");
+  const { adult } = useAgeStatus();
 
   const convos = useConversations();
   const { other, messages, send, sendVoice } = useConversation(withId);
@@ -63,6 +66,20 @@ function MessagesInner() {
   }, [messages.length]);
 
   if (!profile) return null;
+
+  // Messaging is adults-only and the server already returns an empty inbox and
+  // empty threads to anyone else — this just stops us rendering the husk of a
+  // surface they can't use, and asks the question that would open it.
+  if (AGE_GATE_ON && !adult) {
+    return (
+      <div className="space-y-6">
+        <h1 className="headline text-4xl lg:text-5xl">{t("messages")}</h1>
+        <Card className="p-5">
+          <AgeGateCard />
+        </Card>
+      </div>
+    );
+  }
 
   const submit = (e: FormEvent) => {
     e.preventDefault();

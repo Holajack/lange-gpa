@@ -1,7 +1,32 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { communityExchangeEnabled, dataOf, requireIdentity } from "./util";
+import { communityExchangeEnabled, dataOf, profileByClerkId, requireIdentity } from "./util";
 import { blockedClerkIdsFor } from "./safety";
+import { isAdultProfile } from "./age";
+
+/**
+ * Claims about age that the profile sync payload may never carry. The real
+ * answer lives in the server-owned `birthDate` column that only `age:attestAge`
+ * writes; a copy riding along inside the free-form `data` blob would be a
+ * client-writable "I am an adult" sitting next to the genuine one, waiting for
+ * some future reader to reach for the wrong of the two. Strip them on the way
+ * in so that reader has nothing to find.
+ */
+const AGE_CLAIM_KEYS = [
+  "birthDate",
+  "ageAttestedAt",
+  "isAdult",
+  "adult",
+  "over18",
+  "ageVerified",
+] as const;
+
+function withoutAgeClaims(data: unknown): unknown {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return data;
+  const clean = { ...(data as Record<string, unknown>) };
+  for (const key of AGE_CLAIM_KEYS) delete clean[key];
+  return clean;
+}
 
 /**
  * Create or update the profile for a Clerk user.
@@ -22,15 +47,31 @@ export const upsertProfile = mutation({
   },
   handler: async (ctx, args) => {
     const clerkId = await requireIdentity(ctx);
-    const existing = await ctx.db
-      .query("profiles")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
-      .unique();
+    const existing = await profileByClerkId(ctx, clerkId);
+
+    // Age columns are server-owned (see convex/age.ts). Naming the writable
+    // fields one by one instead of handing `args` straight to patch keeps a
+    // later widening of the validator from quietly becoming a way for a client
+    // to age itself up, and a patch leaves every column it is not given — here,
+    // birthDate and ageAttestedAt — exactly as it found it.
+    const fields = {
+      name: args.name,
+      role: args.role,
+      targetLang: args.targetLang,
+      knownLangs: args.knownLangs,
+      immersion: args.immersion,
+      hoursListened: args.hoursListened,
+      phase: args.phase,
+      // omitted rather than set to undefined: a sync that carries no blob must
+      // leave the stored one alone, not erase it
+      ...(args.data === undefined ? {} : { data: withoutAgeClaims(args.data) }),
+    };
+
     if (existing) {
-      await ctx.db.patch(existing._id, args);
+      await ctx.db.patch(existing._id, fields);
       return existing._id;
     }
-    return await ctx.db.insert("profiles", { ...args, clerkId });
+    return await ctx.db.insert("profiles", { ...fields, clerkId });
   },
 });
 
@@ -99,18 +140,26 @@ export const listNurturerCertifications = query({
  * or Clerk id (each row carries an opaque `id` plus a server-computed `me` flag).
  * The client geocodes the city to a city-center pin; people without a city
  * simply aren't placed on the globe.
+ *
+ * The 18+ gate cuts both ways here, and this is the only place it can: a minor
+ * who cannot see the roster cannot obtain the opaque profile id that every
+ * write path takes as its target, and a minor absent from everyone's roster is
+ * never handed to an adult to act on in the first place.
  */
 export const listPeople = query({
   args: {},
   handler: async (ctx) => {
     if (!communityExchangeEnabled()) return [];
     const myId = await requireIdentity(ctx);
+    const now = Date.now();
+    if (!isAdultProfile(await profileByClerkId(ctx, myId), now)) return [];
     const blockedIds = await blockedClerkIdsFor(ctx, myId);
     const rows = await ctx.db.query("profiles").collect();
     return rows
       .filter(
         (r) =>
           !blockedIds.has(r.clerkId) &&
+          isAdultProfile(r, now) &&
           (r.clerkId === myId || Boolean(dataOf(r).exchange))
       )
       .map((r) => {
