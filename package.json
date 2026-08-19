@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.2",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "convex": "^1.41.0",
     "framer-motion": "^12.23.0",
     "lucide-react": "^0.544.0",
