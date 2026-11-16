@@ -7,7 +7,8 @@ import { ArrowRight, Check, LockKeyhole } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { PHASES, TOTAL_HOURS, phaseProgress } from "@/lib/phases";
 import { localizedPhase } from "@/lib/phaseI18n";
-import type { Phase } from "@/lib/types";
+import type { Phase, PhaseId } from "@/lib/types";
+import { phaseUnlocked } from "@/lib/phaseAccess";
 import { Mascot } from "@/components/Mascot";
 import { ProgressBar, Tag } from "@/components/ui";
 
@@ -76,7 +77,8 @@ function JourneyCard({
   openLabel: string;
   previewLabel: string;
 }) {
-  const betaPreview = phase.id > 1;
+  // locked = a phase the grower hasn't reached yet (phases are lived in order)
+  const betaPreview = !phaseUnlocked({ phase: currentPhaseId as PhaseId }, phase.id);
   const completed = !betaPreview && !phase.ongoing && hours >= phase.startHour + phase.hours;
   const current = !betaPreview && currentPhaseId === phase.id;
   const future = betaPreview || (!current && phase.id > currentPhaseId);
@@ -295,7 +297,7 @@ export default function CoursesPage() {
                     phaseWord={t("phaseWord")}
                     currentLabel={t("currentPhase")}
                     openLabel={t("openPhase")}
-                    previewLabel={t("crsMethodPreview")}
+                    previewLabel={t("stc_unlocksAt").replace("{n}", String(lp.id))}
                   />
                 </div>
               </motion.div>

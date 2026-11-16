@@ -20,6 +20,8 @@ import {
 import { useApp } from "@/lib/store";
 import { PHASES, phaseBySlug, phaseProgress } from "@/lib/phases";
 import { localizedPhase } from "@/lib/phaseI18n";
+import { UNLOCK_ALL_PHASES, phaseUnlocked } from "@/lib/phaseAccess";
+import { activityHref } from "@/lib/studioRoutes";
 import type { PhaseActivity } from "@/lib/types";
 import { CheckpointCard } from "@/components/CheckpointCard";
 import { Mascot } from "@/components/Mascot";
@@ -105,7 +107,8 @@ export default function PhasePage() {
   const lp = localizedPhase(phase, t);
 
   const progress = phaseProgress(phase, profile.hoursLogged);
-  const executablePhase = phase.id === 1;
+  // Phases are lived in order: a phase's activities open once the grower arrives.
+  const executablePhase = phaseUnlocked(profile, phase.id);
   const current = profile.phase === phase.id;
   const phasePassed = phase.id < profile.phase;
   const prevPhase = PHASES.find((p) => p.id === phase.id - 1);
@@ -123,6 +126,7 @@ export default function PhasePage() {
   const renderActivity = (a: PhaseActivity) => {
     const Icon = KIND_ICON[a.kind];
     const done = executablePhase && profile.completed.includes(a.id);
+    const href = activityHref(a);
     return (
       <div
         key={a.id}
@@ -158,11 +162,11 @@ export default function PhasePage() {
           {!executablePhase ? (
             <Tag className="ml-auto">
               <LockKeyhole size={12} strokeWidth={2.5} aria-hidden />
-              {t("crsMethodPreview")}
+              {t("stc_unlocksAt").replace("{n}", String(phase.id))}
             </Tag>
-          ) : a.practiceHref ? (
+          ) : href ? (
             <Link
-              href={a.practiceHref}
+              href={href}
               className={`pill ml-auto px-4 py-2 text-xs font-bold ${onAccent}`}
               style={{ background: phase.color }}
             >
@@ -223,7 +227,12 @@ export default function PhasePage() {
                 {!executablePhase && (
                   <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
                     <LockKeyhole size={12} strokeWidth={2.5} aria-hidden />
-                    {t("crsMethodPreview")}
+                    {t("stc_unlocksAt").replace("{n}", String(phase.id))}
+                  </span>
+                )}
+                {UNLOCK_ALL_PHASES && profile.phase < phase.id && (
+                  <span className="rounded-full border border-amber/40 bg-amber/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-amber">
+                    {t("stc_crsPreviewMode")}
                   </span>
                 )}
               </div>
@@ -281,10 +290,10 @@ export default function PhasePage() {
             </span>
             <div>
               <h2 id="method-preview-title" className="font-display text-lg font-bold text-ink">
-                {t("crsMethodPreview")}
+                {t("stc_crsOpensLater")}
               </h2>
               <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted">
-                {t("crsMethodPreviewBody")}
+                {t("stc_crsOpensLaterBody")}
               </p>
             </div>
           </div>

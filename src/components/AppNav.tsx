@@ -33,6 +33,7 @@ const CLUSTERS: Cluster[] = [
       { key: "dashboard", href: "/dashboard" },
       { key: "courses", href: "/courses" },
       { key: "practice", href: "/practice" },
+      { key: "library", href: "/library" },
     ],
   },
   {

@@ -8,11 +8,12 @@
  */
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CardFace } from "@/app/(app)/session/CardFace";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { VOCAB_DOMAINS, domainById } from "@/lib/vocab";
-import { getCardImage, whenCardsReady } from "@/lib/cards";
+import { whenCardsReady } from "@/lib/cards";
 import { speak, stopSpeaking } from "@/lib/tts";
 import type { VocabDomain, VocabItem } from "@/lib/types";
 import { useApp } from "@/lib/store";
@@ -370,7 +371,6 @@ function Game({ domain }: { domain: VocabDomain }) {
             const isTarget = target !== null && item.id === target.id;
             const correctReveal = revealed && isTarget;
             const showWord = correctReveal && writtenWordsReady;
-            const cardImage = getCardImage(item.id);
             return (
               <motion.button
                 key={item.id}
@@ -388,19 +388,15 @@ function Game({ domain }: { domain: VocabDomain }) {
                 ].join(" ")}
                 style={correctReveal ? { boxShadow: "0 0 50px -12px rgba(184,240,60,0.7)" } : undefined}
               >
-                {cardImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- static public/ asset, no optimization needed
-                  <img
-                    src={cardImage}
-                    alt=""
-                    width={96}
-                    height={96}
-                    draggable={false}
-                    className="h-24 w-24 select-none rounded-xl object-contain"
+                {/* drawn card → illustration → emoji, whichever this word has */}
+                <span className="flex h-24 w-24 items-center justify-center">
+                  <CardFace
+                    itemId={item.id}
+                    emoji={item.emoji}
+                    className="text-6xl leading-none"
+                    imgClassName="h-24 w-24 rounded-xl"
                   />
-                ) : (
-                  <span className="text-6xl leading-none">{item.emoji}</span>
-                )}
+                </span>
                 {/* Writing waits until Phase 1B; early success stays image + audio only. */}
                 {showWord ? (
                   <motion.span
