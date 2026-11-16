@@ -15,6 +15,29 @@ occurrences, 87 distinct facts, grouped below. (Reusable structure for any
 other app that needs the same kind of legal setup — the categories don't
 change, only the answers do.)
 
+## Status — 2026-11-16
+
+The pages were re-checked against the app as it runs today and corrected:
+
+- **Analytics.** The privacy page said there were none. Vercel Web Analytics
+  and Speed Insights are live (cookieless, aggregated) and are now disclosed.
+  Google Analytics is wired in the code but switched off in production (no
+  measurement ID set). Turning it on means updating the privacy page first
+  and, for EU/UK visitors, asking for cookie consent.
+- **Recordings kept on the device.** The Listening Library, Word Log and
+  tool work-in-progress (added since the first draft) are now described:
+  device-only, never uploaded, kept until the user deletes them, and the
+  user is responsible for consent when recording another person.
+- **Filled from verified facts (25 placeholders):** community features are
+  off in production; hosting is Vercel + Convex; no TURN relay is configured
+  (the Open Relay fallback would apply, and calls are off); no payment
+  provider; age check is a self-declared date of birth, stored in full;
+  no retention period is automated; the in-session recorder and its consent
+  dialog are live; cross-references to the Terms' section numbers.
+
+**Still open: 148 placeholders, 77 distinct facts** — everything in §1–§5
+and §7–§10 below. None of it can be read from the code.
+
 **Do not merge the legal-pages PR until this is filled in and reviewed.**
 Merging deploys them to production as reachable URLs even before they're
 linked from navigation.
@@ -124,7 +147,7 @@ Privacy law generally requires naming who processes user data on your behalf.
 
 | Placeholder | Answer (from what's actually running) |
 |---|---|
-| `HOSTING PROVIDER` | Vercel (app) + Convex (backend/database) |
+| `HOSTING PROVIDER` | Done — Vercel (app) + Convex (backend/database) |
 | `PRIMARY HOSTING REGION` | Whichever Vercel/Convex region is configured — check the dashboards |
 | `TURN PROVIDER NAME` / `TURN PROVIDER IN EFFECT` / `TURN PROVIDER CONFIGURATION REFERENCE` | Whatever TURN relay service `CallProvider.tsx` is configured against |
 | `PAYMENT PROVIDER` / `PAYMENT PROCESSOR DISCLOSURE` | Not chosen yet — this is the same open item from the roadmap (`credits.ts` still throws by design) |

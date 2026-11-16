@@ -369,7 +369,8 @@ export default function PrivacyPolicyPage() {
               Community Features are additionally controlled by a server-side configuration flag. When
               that flag is not enabled for a deployment, discovery, messaging, and calling are
               unavailable and the associated processing described in this Policy does not occur.
-              Current availability status: <Ph>COMMUNITY FEATURES AVAILABILITY STATEMENT</Ph>.
+              As at the date this Policy was last updated, that flag is not enabled on nurilang.app:
+              discovery, messaging, voice notes, calls, and group events are switched off.
             </P>
           </Clause>
           <Clause n="4.5" title="Adults only">
@@ -537,6 +538,34 @@ export default function PrivacyPolicyPage() {
               different account on the same browser. The geocoding cache described in clause 5.4 is
               also held locally.
             </P>
+            <P>
+              The activity tools also keep the following <Strong>on your device only</Strong>, in your
+              browser&rsquo;s own storage. None of it is uploaded to us, and we have no means of
+              reading, recovering, or deleting it:
+            </P>
+            <List>
+              <li>
+                <Strong>The Listening Library</Strong> — audio you record in the activity tools (your
+                own speech and, where you record a session with another person, theirs), the notes and
+                marks you add to a recording, and any pictures you add to an activity.
+              </li>
+              <li>
+                <Strong>The Word Log</Strong> — the words and phrases you save, and your notes on them.
+              </li>
+              <li>
+                <Strong>Work in progress</Strong> — what you have typed, drawn, or ticked inside an
+                activity tool, so that it is still there when you come back.
+              </li>
+            </List>
+            <P>
+              This material is kept separately for each account that uses the browser. It is not
+              cleared when you sign out, is not copied to your other devices, and remains until you
+              delete it — individually, or all at once from the Library — or clear your
+              browser&rsquo;s site data. If you clear that data or lose the device, it is gone. A
+              recording that contains another person&rsquo;s voice is that person&rsquo;s personal
+              data in your hands; the Recording, Consent and Communications notice explains your
+              responsibilities for it.
+            </P>
           </Clause>
 
           <Clause n="5.13" title="Technical and log data">
@@ -545,6 +574,15 @@ export default function PrivacyPolicyPage() {
               internet service, such as IP address, request metadata, user-agent string, and error
               logs. The retention and configuration of those logs is governed by the providers
               identified in Section 10 and by <Ph>LOG RETENTION CONFIGURATION</Ph>.
+            </P>
+            <P>
+              We also use two measurement tools supplied by our hosting provider, Vercel: Web
+              Analytics, which counts page views, and Speed Insights, which measures how quickly pages
+              load. They record the page visited, the referring page, and coarse device and location
+              information derived from the request, such as browser type and country. According to
+              Vercel&rsquo;s documentation they set no cookies and do not follow you across other
+              websites, and the figures we see are aggregated: we cannot use them to identify you or
+              to look up what an individual account did.
             </P>
           </Clause>
         </Section>
@@ -556,14 +594,19 @@ export default function PrivacyPolicyPage() {
           </P>
           <List>
             <li>
-              <Strong>No analytics or advertising technology.</Strong> The Service contains no
-              third-party analytics, product-telemetry, session-replay, advertising, or
-              cross-site-tracking software, and no advertising cookies. We do not sell or share
-              Personal Data for advertising purposes.
+              <Strong>No advertising or tracking technology.</Strong> The Service contains no
+              advertising, session-replay, or cross-site-tracking software, and no advertising or
+              analytics cookies. The only measurement tools in use are the cookieless page-view and
+              page-speed tools described in clause 5.13. We do not sell or share Personal Data for
+              advertising purposes.
             </li>
             <li>
               <Strong>No call recording.</Strong> We do not record, retain, or process the audio or
               video content of one-to-one calls.
+            </li>
+            <li>
+              <Strong>No copies of your recordings.</Strong> Audio you record in the activity tools is
+              saved on your own device, as described in clause 5.12. It is not sent to us.
             </li>
             <li>
               <Strong>No precise location.</Strong> We do not collect GPS or device location, and we
@@ -578,9 +621,9 @@ export default function PrivacyPolicyPage() {
               you have written it.
             </li>
             <li>
-              <Strong>No payment card data.</Strong> Where paid functionality is enabled, payment
-              processing arrangements will be described at <Ph>PAYMENT PROCESSOR DISCLOSURE</Ph>. We
-              do not store card numbers.
+              <Strong>No payment card data.</Strong> No paid functionality is currently enabled and
+              no payment processor has been appointed. If that changes, the processor will be named in
+              clause 10.2 before any payment is taken. We do not store card numbers.
             </li>
           </List>
         </Section>
@@ -699,10 +742,10 @@ export default function PrivacyPolicyPage() {
               not on general sign-up. You can use the Learning Service without providing it.
             </P>
             <P>
-              <Ph>
-                IMPLEMENTATION NOTE — CONFIRM THE DEPLOYED AGE-ASSURANCE MECHANISM, THE EXACT FIELDS
-                STORED, AND THE POINT OF COLLECTION BEFORE THIS POLICY IS PUBLISHED
-              </Ph>
+              The mechanism is self-declaration. You enter your date of birth in an age-confirmation
+              step; we do not ask for identity documents and do not verify the date against any other
+              source. We store the date you declare and the time at which you declared it. Whether you
+              are an adult is not stored: it is worked out from that date each time it is needed.
             </P>
           </Clause>
 
@@ -716,8 +759,8 @@ export default function PrivacyPolicyPage() {
 
           <Clause n="8.3" title="What is retained">
             <P>
-              We retain <Ph>DATE OF BIRTH RETENTION FORM — FULL DATE OR DERIVED ELIGIBILITY FLAG</Ph>{" "}
-              for <Ph>DATE OF BIRTH RETENTION PERIOD</Ph>. Retaining a record of the age determination
+              We retain the full date of birth you declared, and the time you declared it, for{" "}
+              <Ph>DATE OF BIRTH RETENTION PERIOD</Ph>. Retaining a record of the age determination
               is necessary so that we can demonstrate compliance with our adults-only rule and so that
               the check is not silently re-run in your favour.
             </P>
@@ -816,13 +859,11 @@ export default function PrivacyPolicyPage() {
                 ],
                 [
                   "Vercel",
-                  "Application hosting and content delivery",
+                  "Application hosting, content delivery, and the page-view and page-speed measurement described in clause 5.13",
                   "Request and technical data described in clause 5.13",
                 ],
                 [
-                  <>
-                    TURN relay provider — <Ph>TURN PROVIDER NAME</Ph>
-                  </>,
+                  "TURN relay provider — the Open Relay Project, operated by Metered (not in use while calls are switched off)",
                   "Relaying encrypted call media where a direct peer-to-peer connection cannot be established",
                   "Network addresses of the participants and encrypted media packets in transit. The relay carries encrypted media only; it does not hold the keys to the call and does not store the media.",
                 ],
@@ -841,8 +882,10 @@ export default function PrivacyPolicyPage() {
             <P>
               The TURN relay is configured by deployment. Unless a dedicated relay is configured, the
               Service falls back to the free Open Relay Project service operated by Metered. The
-              provider in effect for this deployment is <Ph>TURN PROVIDER IN EFFECT</Ph>, and the
-              current list of sub-processors is maintained at <Ph>SUB-PROCESSOR LIST URL</Ph>.
+              No dedicated relay is configured for this deployment, so the fallback would apply; while
+              calls are switched off (clause 4.4), no relay is used at all. The current list of
+              sub-processors is the table in this clause, which we update before a new provider begins
+              to process Personal Data.
             </P>
             <P>
               Typefaces are self-hosted and served from our own origin; no font request is made to a
@@ -995,10 +1038,8 @@ export default function PrivacyPolicyPage() {
 
           <Clause n="12.4" title="Automation">
             <P>
-              <Ph>
-                IMPLEMENTATION NOTE — CONFIRM WHICH RETENTION PERIODS ARE ENFORCED AUTOMATICALLY AND
-                WHICH ARE APPLIED BY OPERATIONAL PROCESS BEFORE PUBLICATION
-              </Ph>
+              None of the retention periods in clause 12.1 is currently enforced by an automated
+              deletion job. Each is applied by operational process rather than by software.
             </P>
           </Clause>
         </Section>
@@ -1314,9 +1355,14 @@ export default function PrivacyPolicyPage() {
             <P>
               Subject to clause 18.1, the Controller&rsquo;s liability arising out of or in connection
               with the Service is limited as set out in the Nurilang Terms of Service at{" "}
-              <Ph>TERMS OF SERVICE URL</Ph>, and in particular the aggregate liability cap of{" "}
+              <Link
+                href="/legal/terms"
+                className="font-semibold text-ink underline decoration-line underline-offset-4 transition-colors hover:decoration-lime"
+              >
+                nurilang.app/legal/terms
+              </Link>, and in particular the aggregate liability cap of{" "}
               <Ph>LIABILITY CAP</Ph> and the exclusion of indirect and consequential loss set out at{" "}
-              <Ph>TERMS OF SERVICE LIABILITY CLAUSE REFERENCE</Ph>.
+              Section 14 of those Terms.
             </P>
           </Clause>
           <Clause n="18.3">
@@ -1422,7 +1468,12 @@ export default function PrivacyPolicyPage() {
                 Recording, Consent and Communications
               </Link>{" "}
               notice, which describes how calls work and what is and is not stored, and with the
-              Nurilang Terms of Service at <Ph>TERMS OF SERVICE URL</Ph>.
+              Nurilang Terms of Service at <Link
+                href="/legal/terms"
+                className="font-semibold text-ink underline decoration-line underline-offset-4 transition-colors hover:decoration-lime"
+              >
+                nurilang.app/legal/terms
+              </Link>.
             </P>
           </Clause>
         </Section>

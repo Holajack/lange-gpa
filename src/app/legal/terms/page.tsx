@@ -530,6 +530,12 @@ export default function TermsPage() {
             Community Features, which put you in contact with other adults who are learning or
             helping others learn.
           </P>
+          <P>
+            Some learning activities are designed to be done with a person you arrange for
+            yourself, outside the Service — a tutor, a friend, a neighbour who speaks the
+            language. Nurilang does not introduce, select, or vet that person, and your dealings
+            with them are your own.
+          </P>
         </Clause>
 
         <Clause n="5.2" title="No guarantee of outcome">
@@ -659,6 +665,11 @@ export default function TermsPage() {
             including any photograph, is stored. Reports you submit are stored and are available
             to our moderators.
           </P>
+          <P>
+            Audio you record in the learning activities, the notes you add to it, and the words
+            you save are kept on your own device and are not stored by the Service. We cannot
+            recover them if you clear your browser&rsquo;s data or lose the device.
+          </P>
         </Clause>
 
         <Clause n="7.5" title="Calls are not recorded by us">
@@ -690,7 +701,8 @@ export default function TermsPage() {
             recording a conversation without consent is a criminal offence. The{" "}
             <A href="/legal/recording-consent">Recording, Consent &amp; Communications policy</A>{" "}
             sets out this obligation in full. It survives the ending of your Connection and of
-            your Account.
+            your Account. The same obligation applies when you record any other person in a
+            learning activity, whether or not that person uses the Service.
           </P>
         </Clause>
 
@@ -930,7 +942,8 @@ export default function TermsPage() {
             </li>
             <li>
               <strong className="text-ink">Hosting and content delivery</strong> —{" "}
-              <Ph>HOSTING PROVIDER</Ph>;
+              Vercel, which also supplies the cookieless page-view and page-speed measurement
+              described in the Privacy Policy;
             </li>
             <li>
               <strong className="text-ink">Call connectivity</strong> — public STUN servers
@@ -1001,13 +1014,15 @@ export default function TermsPage() {
               methods accepted will be shown to you before you commit to the transaction;
             </li>
             <li>
-              payment will be taken by our payment provider, <Ph>PAYMENT PROVIDER</Ph>, whose terms
+              payment will be taken by a payment provider that we will name to you before you
+              pay (none has been appointed while no paid features are offered), whose terms
               will additionally apply, and we do not receive or store your full payment card
               details;
             </li>
             <li>
               the terms of sale, including any right to cancel and our refund policy, are set out
-              at <Ph>REFUND AND CANCELLATION POLICY LOCATION</Ph> and form part of these Terms in
+              in a refund and cancellation policy that will be shown to you before you pay, and
+              form part of these Terms in
               respect of that purchase; and
             </li>
             <li>

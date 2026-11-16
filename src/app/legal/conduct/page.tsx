@@ -1027,7 +1027,7 @@ export default function ConductPage() {
                 <T>Effect of termination.</T> On termination your profile will cease to be
                 visible in the Community Features and your Connections will end. The treatment of
                 any credits, purchased hours, or scheduled sessions on termination is governed by
-                the Terms at <Ph>TERMS SECTION REFERENCE</Ph>. Section 2.7 restricts
+                Sections 12 and 16 of the Terms. Section 2.7 restricts
                 re-registration.
               </p>
             </Clause>
@@ -1202,7 +1202,7 @@ export default function ConductPage() {
               <p>
                 <T>Limitation of liability.</T> Our liability arising out of or in connection
                 with these Rules and your use of the Community Features is limited as set out in
-                the Terms at <Ph>TERMS LIMITATION OF LIABILITY SECTION REFERENCE</Ph>. Subject to
+                Section 14 of the Terms. Subject to
                 section 11.6, and to the fullest extent permitted by law: we are not liable for
                 the acts or omissions of any Member; we are not liable for any indirect or
                 consequential loss, or for loss of profit, revenue, goodwill, data, or
@@ -1214,8 +1214,8 @@ export default function ConductPage() {
             <Clause n="11.5">
               <p>
                 <T>Indemnity.</T> You agree to indemnify us in respect of claims arising from
-                your breach of these Rules, on the terms set out in the Terms at{" "}
-                <Ph>TERMS INDEMNITY SECTION REFERENCE</Ph>.
+                your breach of these Rules, on the terms set out in{" "}
+                Section 15 of the Terms.
               </p>
             </Clause>
 
@@ -1248,8 +1248,8 @@ export default function ConductPage() {
               <p>
                 <T>Jurisdiction.</T> The courts of <Ph>COURTS / EXCLUSIVE JURISDICTION</Ph> have{" "}
                 <Ph>EXCLUSIVE OR NON-EXCLUSIVE</Ph> jurisdiction to settle any such dispute or
-                claim, subject to any dispute-resolution procedure set out in the Terms at{" "}
-                <Ph>TERMS DISPUTE RESOLUTION SECTION REFERENCE</Ph>.
+                claim, subject to any dispute-resolution procedure set out in{" "}
+                Section 17 of the Terms.
               </p>
             </Clause>
 

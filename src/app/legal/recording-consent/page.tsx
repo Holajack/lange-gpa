@@ -152,7 +152,7 @@ const CONTENTS: { id: string; n: number; title: string }[] = [
   { id: "user-recording", n: 5, title: "Recording by users is prohibited without consent" },
   { id: "jurisdiction", n: 6, title: "Recording law varies by jurisdiction" },
   { id: "session-recorder", n: 7, title: "The in-session recording tool" },
-  { id: "practice", n: 8, title: "Practice recordings" },
+  { id: "practice", n: 8, title: "Practice recordings and the Listening Library" },
   { id: "stored", n: 9, title: "What is stored, and for how long" },
   { id: "withdraw", n: 10, title: "Withdrawing consent, blocking and deleting" },
   { id: "safety-retention", n: 11, title: "Data preserved for safety investigations" },
@@ -242,14 +242,20 @@ export default function RecordingConsentPage() {
           <Clause n="1.2">
             <P>
               This notice applies to all communication surfaces of the Service: one-to-one text
-              messages, voice notes, one-to-one voice and video calls, and the recording tool provided
-              inside a live learning session.
+              messages, voice notes, one-to-one voice and video calls, the recording tool provided
+              inside a live learning session, and the recordings you make and keep in the activity
+              tools (Section 8).
             </P>
           </Clause>
           <Clause n="1.3">
             <P>
               It binds every user. Breaching Section 5 is a breach of the Nurilang Terms of Service at{" "}
-              <Ph>TERMS OF SERVICE URL</Ph> and may also be a criminal offence or an actionable civil
+              <Link
+                href="/legal/terms"
+                className="font-semibold text-ink underline decoration-line underline-offset-4 transition-colors hover:decoration-lime"
+              >
+                nurilang.app/legal/terms
+              </Link> and may also be a criminal offence or an actionable civil
               wrong in your jurisdiction.
             </P>
           </Clause>
@@ -354,11 +360,11 @@ export default function RecordingConsentPage() {
               because it sits between them.
             </P>
             <P>
-              The relay in use for this deployment is <Ph>TURN PROVIDER IN EFFECT</Ph>. Where no
-              dedicated relay is configured, the Service falls back to a free public relay service, in
-              which case the operator of that service is a recipient of the relayed traffic on its own
-              terms rather than a processor engaged by us. Confirm the configured provider at{" "}
-              <Ph>TURN PROVIDER CONFIGURATION REFERENCE</Ph> before relying on this clause.
+              No dedicated relay is configured for this deployment. Where none is configured, the
+              Service falls back to a free public relay service, the Open Relay Project operated by
+              Metered, in which case the operator of that service is a recipient of the relayed traffic
+              on its own terms rather than a processor engaged by us. While Calls are switched off, no
+              relay is used at all. The relay in effect is named in clause 10.2 of the Privacy Policy.
             </P>
           </Clause>
 
@@ -655,18 +661,10 @@ export default function RecordingConsentPage() {
             </P>
           </Clause>
 
-          <Clause n="7.7">
-            <P>
-              <Ph>
-                IMPLEMENTATION NOTE — CONFIRM THAT THE IN-SESSION RECORDING TOOL AND ITS CONSENT DIALOG
-                ARE ENABLED IN THE DEPLOYED BUILD BEFORE PUBLICATION
-              </Ph>
-            </P>
-          </Clause>
         </Section>
 
         {/* ------------------------------------------------------------------ 8 */}
-        <Section id="practice" n={8} title="Practice recordings">
+        <Section id="practice" n={8} title="Practice recordings and the Listening Library">
           <Clause n="8.1">
             <P>
               Speaking practice lets you record your own voice and play it back to compare it with a
@@ -679,6 +677,46 @@ export default function RecordingConsentPage() {
             <P>
               Your browser will ask for microphone permission. Refusing it does not block the exercise;
               the Service falls back to a simulated take.
+            </P>
+          </Clause>
+          <Clause n="8.3" title="Recordings made in the activity tools">
+            <P>
+              The activity tools let you record audio and keep it to listen to again: your own
+              speech, and — where an activity is done with a real person, such as a nurturer or a
+              friend who speaks the language — that person telling a story, describing a picture, or
+              explaining something. Listening again to what was said to you is the point of the
+              method, which is why these recordings are kept rather than discarded.
+            </P>
+          </Clause>
+          <Clause n="8.4" title="Where they live">
+            <P>
+              <Strong>On your device only.</Strong> These recordings are saved to the Listening Library
+              in your browser&rsquo;s own storage, together with any notes and marks you add. They are
+              never uploaded to Nurilang. We do not receive them, cannot play them, and cannot recover
+              or delete them for you. They stay until you delete them — one at a time, or all at once
+              from the Library — or clear your browser&rsquo;s site data, and they are not copied to
+              your other devices.
+            </P>
+          </Clause>
+          <Clause n="8.5" title="Recording another person is your responsibility">
+            <P>
+              Section 5 applies in full to these recordings, and it applies whether or not the person
+              you record uses Nurilang. The tool reminds you to ask before you record someone else,
+              but, unlike the in-session recorder in Section 7, it does not put a consent screen in
+              front of the other person. <Strong>Obtaining their express, informed, prior consent is up
+              to you</Strong>, each time, before you press record. If they say no, do the activity
+              without recording.
+            </P>
+            <P>
+              A recording of someone&rsquo;s own life story is marked confidential in your Library. It
+              is for your listening only: do not play it to anyone else, share it, or publish it.
+            </P>
+          </Clause>
+          <Clause n="8.6" title="Your obligations for a kept recording">
+            <P>
+              Clause 5.3 applies: you, not Nurilang, are the controller of a recording that contains
+              another person. Use it only for your own listening practice, keep it secure, and delete
+              it if they ask you to.
             </P>
           </Clause>
         </Section>
@@ -771,6 +809,13 @@ export default function RecordingConsentPage() {
                   <Strong>No.</Strong> Held in your browser for the exercise only.
                 </>,
                 "Discarded when you leave the exercise",
+              ],
+              [
+                "Listening Library recordings from the activity tools",
+                <>
+                  <Strong>No.</Strong> Saved on your device only; never uploaded.
+                </>,
+                "Until you delete them or clear your browser's site data",
               ],
             ]}
           />
@@ -1005,9 +1050,14 @@ export default function RecordingConsentPage() {
             <P>
               Subject to clause 14.1, the Controller&rsquo;s liability arising out of or in connection
               with the Service is limited as set out in the Nurilang Terms of Service at{" "}
-              <Ph>TERMS OF SERVICE URL</Ph>, including the aggregate liability cap of{" "}
+              <Link
+                href="/legal/terms"
+                className="font-semibold text-ink underline decoration-line underline-offset-4 transition-colors hover:decoration-lime"
+              >
+                nurilang.app/legal/terms
+              </Link>, including the aggregate liability cap of{" "}
               <Ph>LIABILITY CAP</Ph> and the exclusion of indirect and consequential loss at{" "}
-              <Ph>TERMS OF SERVICE LIABILITY CLAUSE REFERENCE</Ph>.
+              Section 14 of those Terms.
             </P>
           </Clause>
           <Clause n="14.3">
@@ -1080,7 +1130,12 @@ export default function RecordingConsentPage() {
               >
                 Nurilang Privacy Policy
               </Link>{" "}
-              and the Nurilang Terms of Service at <Ph>TERMS OF SERVICE URL</Ph>. Where this notice
+              and the Nurilang Terms of Service at <Link
+                href="/legal/terms"
+                className="font-semibold text-ink underline decoration-line underline-offset-4 transition-colors hover:decoration-lime"
+              >
+                nurilang.app/legal/terms
+              </Link>. Where this notice
               conflicts with the Privacy Policy on a technical description of how communications work,
               this notice prevails.
             </P>
