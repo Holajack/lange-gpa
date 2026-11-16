@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OPERATOR_NAME, POSTAL_ADDRESS, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -9,6 +10,9 @@ import Link from "next/link";
  * fact about how the product behaves are kept to what the codebase actually
  * does; everything the operator must supply before publication is marked with
  * a bracketed placeholder.
+ *
+ * Status: placeholders resolved 2026-11-16 from the operator's answers; shared
+ * facts (operator, address, contact, dates, law) live in ../facts.tsx.
  */
 
 const title = "Community Conduct Rules";
@@ -35,15 +39,6 @@ export const metadata: Metadata = {
 };
 
 /* ------------------------------- typography ------------------------------- */
-
-/** An operator-supplied value that must be filled in before publication. */
-function Ph({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-md bg-amber/15 px-1.5 py-0.5 text-[0.9em] font-bold text-amber">
-      [{children}]
-    </span>
-  );
-}
 
 /** A defined term, or an emphasised obligation. */
 function T({ children }: { children: React.ReactNode }) {
@@ -159,19 +154,19 @@ export default function ConductPage() {
           <div className="flex gap-2">
             <dt className="font-semibold text-ink">Effective date:</dt>
             <dd>
-              <Ph>EFFECTIVE DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="flex gap-2">
             <dt className="font-semibold text-ink">Last updated:</dt>
             <dd>
-              <Ph>LAST UPDATED DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="flex gap-2">
             <dt className="font-semibold text-ink">Version:</dt>
             <dd>
-              <Ph>VERSION</Ph>
+              {VERSION}
             </dd>
           </div>
         </dl>
@@ -223,10 +218,8 @@ export default function ConductPage() {
                 These Community Conduct Rules (the <T>&ldquo;Rules&rdquo;</T>) govern your access
                 to and use of the Community Features of the Nurilang application and website at
                 nurilang.app (together, the <T>&ldquo;Service&rdquo;</T>). The Service is
-                operated by <Ph>LEGAL ENTITY NAME</Ph>, a <Ph>ENTITY TYPE</Ph> registered in{" "}
-                <Ph>JURISDICTION OF INCORPORATION</Ph> under number{" "}
-                <Ph>COMPANY REGISTRATION NUMBER</Ph>, with its registered address at{" "}
-                <Ph>REGISTERED ADDRESS</Ph> (the <T>&ldquo;Operator&rdquo;</T>,{" "}
+                operated by {OPERATOR_NAME}, an individual based in Florida, United States, who operates
+                the Service under the name Nurilang and can be reached by post at {POSTAL_ADDRESS} (the <T>&ldquo;Operator&rdquo;</T>,{" "}
                 <T>&ldquo;we&rdquo;</T>, <T>&ldquo;us&rdquo;</T>).
               </p>
             </Clause>
@@ -369,8 +362,8 @@ export default function ConductPage() {
                 <T>Further assurance.</T> We may at any time require you to re-confirm your age,
                 and we may suspend or terminate access to the Community Features, or to your
                 account, where we reasonably believe that you are under 18 or that you have given
-                a false date of birth. Where we adopt additional age-assurance measures, they will
-                be described at <Ph>AGE ASSURANCE NOTICE LOCATION</Ph>.
+                a false date of birth. Where we adopt additional
+                age-assurance measures, we will describe them in the Privacy Policy before they apply.
               </p>
             </Clause>
 
@@ -422,7 +415,7 @@ export default function ConductPage() {
                 <T>Account security.</T> Authentication is provided through our identity
                 provider. You are responsible for keeping your credentials confidential and for
                 all activity carried out through your account. You must notify us at{" "}
-                <Ph>SECURITY CONTACT EMAIL</Ph> without undue delay if you suspect unauthorised
+                <Email /> without undue delay if you suspect unauthorised
                 use.
               </p>
             </Clause>
@@ -844,7 +837,9 @@ export default function ConductPage() {
                 <T>Retention after enforcement.</T> Blocking a Member hides that Member from you
                 but does not delete the messages already exchanged. Content and Reports may be
                 retained after a block, suspension, or termination for audit, safety, and legal
-                purposes, as described in the Privacy Policy.
+                purposes. If you delete your account, your Content is deleted straight away; a
+                Report that another Member made about you is kept for the period stated in the
+                Privacy Policy.
               </p>
             </Clause>
 
@@ -952,8 +947,8 @@ export default function ConductPage() {
               <p>
                 <T>Alternative channel.</T> If you cannot use the in-product control, or your
                 concern relates to the conduct of the Operator, you may write to{" "}
-                <Ph>SAFETY CONTACT EMAIL</Ph>. Legal notices should be sent to{" "}
-                <Ph>LEGAL CONTACT EMAIL</Ph>.
+                <Email />. Legal notices should be sent to{" "}
+                <Email />.
               </p>
             </Clause>
           </Clauses>
@@ -1068,8 +1063,8 @@ export default function ConductPage() {
             <Clause n="9.1">
               <p>
                 <T>Right to appeal.</T> If we suspend or terminate your access under section
-                8.3(d) to (f), you may appeal by writing to <Ph>APPEALS CONTACT EMAIL</Ph> within{" "}
-                <Ph>NUMBER</Ph> days of the date of our notice, or of the date you became aware
+                8.3(d) to (f), you may appeal by writing to <Email /> within{" "}
+                30 days of the date of our notice, or of the date you became aware
                 of the measure if no notice was given.
               </p>
             </Clause>
@@ -1079,7 +1074,7 @@ export default function ConductPage() {
                 <T>What to include.</T> Your appeal should identify the account concerned and the
                 measure appealed, and set out concisely why you consider the decision wrong,
                 together with any information you wish us to take into account. You may submit an
-                appeal in <Ph>APPEAL LANGUAGES</Ph>.
+                appeal in English.
               </p>
             </Clause>
 
@@ -1088,7 +1083,7 @@ export default function ConductPage() {
                 <T>How appeals are handled.</T> We will review the original decision together
                 with any information you provide. Where operationally practicable the review will
                 be carried out by a person who was not responsible for the original decision. We
-                aim to respond within <Ph>NUMBER</Ph> days.
+                aim to respond within 30 days.
               </p>
             </Clause>
 
@@ -1112,10 +1107,8 @@ export default function ConductPage() {
               <p>
                 <T>Your other rights are unaffected.</T> Nothing in this section limits any right
                 you have to bring a complaint before a competent authority or court, or any
-                mandatory right you have under the law of your place of residence. Where
-                applicable law provides for out-of-court dispute settlement in respect of content
-                moderation decisions, details are set out at{" "}
-                <Ph>OUT-OF-COURT DISPUTE SETTLEMENT DETAILS, IF APPLICABLE</Ph>.
+                mandatory right you have under the law of your place of residence. We do not currently take part in an out-of-court dispute settlement scheme
+                for content moderation decisions.
               </p>
             </Clause>
           </Clauses>
@@ -1142,8 +1135,8 @@ export default function ConductPage() {
             <Clause n="10.3">
               <p>
                 <T>Material changes.</T> Where an amendment materially affects your rights or
-                obligations, we will give notice by <Ph>NOTICE METHOD</Ph> at least{" "}
-                <Ph>NUMBER</Ph> days before it takes effect, unless the change is required to
+                obligations, we will give notice by email to the address on your account or a prominent notice in the Service at least{" "}
+                30 days before it takes effect, unless the change is required to
                 take effect sooner for legal or safety reasons.
               </p>
             </Clause>
@@ -1160,7 +1153,7 @@ export default function ConductPage() {
             <Clause n="10.5">
               <p>
                 <T>Superseded versions.</T> Previous versions of these Rules are available on
-                request from <Ph>LEGAL CONTACT EMAIL</Ph>.
+                request from <Email />.
               </p>
             </Clause>
           </Clauses>
@@ -1207,7 +1200,7 @@ export default function ConductPage() {
                 the acts or omissions of any Member; we are not liable for any indirect or
                 consequential loss, or for loss of profit, revenue, goodwill, data, or
                 opportunity; and our total aggregate liability is limited to{" "}
-                <Ph>LIABILITY CAP</Ph>.
+                {LIABILITY_CAP}.
               </p>
             </Clause>
 
@@ -1239,15 +1232,15 @@ export default function ConductPage() {
                 <T>Governing law.</T> These Rules and any dispute or claim arising out of or in
                 connection with them, their subject matter, or their formation, whether
                 contractual or non-contractual, are governed by and construed in accordance with
-                the laws of <Ph>GOVERNING LAW JURISDICTION</Ph>, without regard to its
+                the laws of {GOVERNING_LAW}, without regard to its
                 conflict-of-laws rules.
               </p>
             </Clause>
 
             <Clause n="12.2">
               <p>
-                <T>Jurisdiction.</T> The courts of <Ph>COURTS / EXCLUSIVE JURISDICTION</Ph> have{" "}
-                <Ph>EXCLUSIVE OR NON-EXCLUSIVE</Ph> jurisdiction to settle any such dispute or
+                <T>Jurisdiction.</T> The courts of {COURTS} have{" "}
+                exclusive jurisdiction to settle any such dispute or
                 claim, subject to any dispute-resolution procedure set out in{" "}
                 Section 17 of the Terms.
               </p>
@@ -1301,35 +1294,32 @@ export default function ConductPage() {
               <p>You can reach us as follows:</p>
               <Bullets>
                 <Bullet label="Safety and conduct concerns:">
-                  <Ph>SAFETY CONTACT EMAIL</Ph>
+                  <Email />
                 </Bullet>
                 <Bullet label="Appeals:">
-                  <Ph>APPEALS CONTACT EMAIL</Ph>
+                  <Email />
                 </Bullet>
                 <Bullet label="Legal notices:">
-                  <Ph>LEGAL CONTACT EMAIL</Ph>
+                  <Email />
                 </Bullet>
                 <Bullet label="Account security:">
-                  <Ph>SECURITY CONTACT EMAIL</Ph>
+                  <Email />
                 </Bullet>
                 <Bullet label="Privacy and data protection:">
-                  <Ph>DATA PROTECTION CONTACT</Ph>
-                  {", "}
-                  <Ph>DPO NAME AND CONTACT DETAILS, IF APPOINTED</Ph>
+                  <Email />
                 </Bullet>
                 <Bullet label="Postal address:">
-                  <Ph>LEGAL ENTITY NAME</Ph>
+                  {OPERATOR_NAME}
                   {", "}
-                  <Ph>REGISTERED ADDRESS</Ph>
+                  {POSTAL_ADDRESS}
                 </Bullet>
               </Bullets>
             </Clause>
 
             <Clause n="13.2">
               <p>
-                Where applicable law requires us to designate a point of contact for authorities
-                or a legal representative, those details are set out at{" "}
-                <Ph>REGULATORY POINT OF CONTACT / LEGAL REPRESENTATIVE, IF REQUIRED</Ph>.
+                Authorities may contact us at the email and postal address above. We have not
+                designated a separate legal representative.
               </p>
             </Clause>
           </Clauses>

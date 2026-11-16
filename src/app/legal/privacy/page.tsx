@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OPERATOR_NAME, POSTAL_ADDRESS, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -12,6 +13,9 @@ import Link from "next/link";
  * a [BRACKETED PLACEHOLDER] rather than invented.
  *
  * The surrounding chrome (nav/footer) is expected from src/app/legal/layout.tsx.
+ *
+ * Status: placeholders resolved 2026-11-16 from the operator's answers; shared
+ * facts (operator, address, contact, dates, law) live in ../facts.tsx.
  */
 
 export const metadata: Metadata = {
@@ -22,15 +26,6 @@ export const metadata: Metadata = {
 };
 
 /* ------------------------------- primitives ------------------------------- */
-
-/** An unverifiable value that must be completed before publication. */
-function Ph({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="mx-0.5 inline-block rounded-md border border-amber/40 bg-amber/10 px-1.5 py-px align-baseline font-mono text-[0.82em] font-semibold uppercase tracking-wide text-amber">
-      [{children}]
-    </span>
-  );
-}
 
 function P({ children }: { children: React.ReactNode }) {
   return <p className="text-[15px] leading-7 text-muted">{children}</p>;
@@ -176,19 +171,19 @@ export default function PrivacyPolicyPage() {
           <div className="flex items-center gap-2">
             <dt className="font-semibold text-ink">Effective date:</dt>
             <dd>
-              <Ph>EFFECTIVE DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="flex items-center gap-2">
             <dt className="font-semibold text-ink">Last updated:</dt>
             <dd>
-              <Ph>LAST UPDATED DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="flex items-center gap-2">
             <dt className="font-semibold text-ink">Version:</dt>
             <dd>
-              <Ph>VERSION NUMBER</Ph>
+              {VERSION}
             </dd>
           </div>
         </dl>
@@ -264,7 +259,7 @@ export default function PrivacyPolicyPage() {
           </P>
           <List>
             <li>
-              <Term>Controller</Term> means <Ph>LEGAL ENTITY NAME</Ph>, the entity identified in
+              <Term>Controller</Term> means {OPERATOR_NAME}, the person identified in
               Section 3 that determines the purposes and means of processing.
             </li>
             <li>
@@ -310,32 +305,27 @@ export default function PrivacyPolicyPage() {
         <Section id="controller" n={3} title="Data controller and contact details">
           <Clause n="3.1" title="Controller">
             <P>
-              The controller of your Personal Data is <Ph>LEGAL ENTITY NAME</Ph>, a{" "}
-              <Ph>ENTITY TYPE</Ph> registered in <Ph>JURISDICTION OF INCORPORATION</Ph> under company
-              number <Ph>COMPANY REGISTRATION NUMBER</Ph>, whose registered address is{" "}
-              <Ph>REGISTERED ADDRESS</Ph>.
+              The controller of your Personal Data is {OPERATOR_NAME}, an individual based in Florida,
+              United States, who operates the Service under the name Nurilang. Nurilang is not a
+              company or other registered entity. Postal address: {POSTAL_ADDRESS}.
             </P>
           </Clause>
           <Clause n="3.2" title="Privacy contact">
             <P>
               Privacy enquiries and data-subject requests should be sent to{" "}
-              <Ph>PRIVACY CONTACT EMAIL</Ph>, marked for the attention of{" "}
-              <Ph>PRIVACY CONTACT NAME OR ROLE</Ph>.
+              <Email />, with &ldquo;Privacy&rdquo; in the subject line.
             </P>
           </Clause>
           <Clause n="3.3" title="Data protection officer">
             <P>
-              <Ph>DPO STATUS — APPOINTED / NOT APPOINTED</Ph>. Where a data protection officer has
-              been appointed, their contact details are <Ph>DPO NAME AND CONTACT DETAILS</Ph>. Where
-              no data protection officer is required under Article 37 GDPR, privacy enquiries are
-              handled by the contact named in clause 3.2.
+              We have not appointed a data protection officer. Privacy enquiries are handled by the
+              contact named in clause 3.2.
             </P>
           </Clause>
           <Clause n="3.4" title="Representative">
             <P>
-              Where required by Article 27 GDPR, our representative in the European Union is{" "}
-              <Ph>EU REPRESENTATIVE NAME AND ADDRESS</Ph>, and our representative in the United
-              Kingdom is <Ph>UK REPRESENTATIVE NAME AND ADDRESS</Ph>.
+              We have not appointed a representative in the European Union or in the United Kingdom.
+              You can reach us directly using the details in clause 3.2. We correspond in English.
             </P>
           </Clause>
         </Section>
@@ -573,7 +563,8 @@ export default function PrivacyPolicyPage() {
               Our hosting and backend providers process technical data inherent in delivering an
               internet service, such as IP address, request metadata, user-agent string, and error
               logs. The retention and configuration of those logs is governed by the providers
-              identified in Section 10 and by <Ph>LOG RETENTION CONFIGURATION</Ph>.
+              identified in Section 10, under their own standard settings. We keep no separate copy of
+              those logs.
             </P>
             <P>
               We also use two measurement tools supplied by our hosting provider, Vercel: Web
@@ -720,7 +711,7 @@ export default function PrivacyPolicyPage() {
               report; report content is restricted to a small allowlisted group of moderators; reports
               are never disclosed to the person reported; and users retain the right to object under
               Article 21 GDPR as described in Section 14. You may request a summary of the relevant
-              balancing test by contacting us at <Ph>PRIVACY CONTACT EMAIL</Ph>.
+              balancing test by contacting us at <Email />.
             </P>
           </Clause>
         </Section>
@@ -759,8 +750,8 @@ export default function PrivacyPolicyPage() {
 
           <Clause n="8.3" title="What is retained">
             <P>
-              We retain the full date of birth you declared, and the time you declared it, for{" "}
-              <Ph>DATE OF BIRTH RETENTION PERIOD</Ph>. Retaining a record of the age determination
+              We retain the full date of birth you declared, and the time you declared it, for as long as your account exists, and delete both when you delete your account.
+              Retaining a record of the age determination
               is necessary so that we can demonstrate compliance with our adults-only rule and so that
               the check is not silently re-run in your favour.
             </P>
@@ -770,7 +761,7 @@ export default function PrivacyPolicyPage() {
             <P>
               Your date of birth is never displayed to other users, never included in discovery
               results, and never included in the data returned to another user&rsquo;s browser. It is
-              accessible only to <Ph>ROLES AUTHORISED TO ACCESS AGE DATA</Ph>.
+              accessible only to the operator of the Service named in Section 3.
             </P>
           </Clause>
 
@@ -919,7 +910,7 @@ export default function PrivacyPolicyPage() {
             <P>
               Our providers operate global infrastructure. Personal Data may therefore be transferred
               to, stored in, or accessed from countries outside the European Economic Area and the
-              United Kingdom, including <Ph>TRANSFER DESTINATION COUNTRIES</Ph>.
+              United Kingdom, including the United States, where the Service is operated and hosted.
             </P>
           </Clause>
           <Clause n="11.2">
@@ -942,8 +933,8 @@ export default function PrivacyPolicyPage() {
           <Clause n="11.4">
             <P>
               You may request a copy of the safeguards applied to a transfer, with commercially
-              confidential terms redacted, by writing to <Ph>PRIVACY CONTACT EMAIL</Ph>. The primary
-              data hosting region for this deployment is <Ph>PRIMARY HOSTING REGION</Ph>.
+              confidential terms redacted, by writing to <Email />. The primary
+              data hosting region for this deployment is the United States.
             </P>
           </Clause>
         </Section>
@@ -963,57 +954,57 @@ export default function PrivacyPolicyPage() {
             rows={[
               [
                 "Account and profile data",
-                <Ph>ACCOUNT RETENTION PERIOD</Ph>,
-                "Deleted following account closure, subject to clause 12.3",
+                "For as long as your account exists",
+                "Deleted immediately when you delete your account",
               ],
               [
                 "Date of birth or derived eligibility record",
-                <Ph>DATE OF BIRTH RETENTION PERIOD</Ph>,
-                "Retained while the account is active and for the compliance period thereafter",
+                "For as long as your account exists",
+                "Deleted immediately when you delete your account",
               ],
               [
                 "Learning and progress data",
-                <Ph>PROGRESS DATA RETENTION PERIOD</Ph>,
-                "Deleted following account closure",
+                "For as long as your account exists",
+                "Deleted immediately when you delete your account",
               ],
               [
                 "Text messages",
-                <Ph>MESSAGE RETENTION PERIOD</Ph>,
-                "Retained for the life of the conversation unless deleted earlier",
+                "Until either participant deletes their account",
+                "Deleted for both participants when either account is deleted",
               ],
               [
                 "Voice-note audio files",
-                <Ph>VOICE NOTE RETENTION PERIOD</Ph>,
-                "Retained in file storage for the life of the conversation unless deleted earlier",
+                "Until either participant deletes their account",
+                "The stored audio file is deleted with its message",
               ],
               [
                 "Call signalling records and network candidates",
-                <Ph>CALL SIGNALLING RETENTION PERIOD</Ph>,
-                "Written when a call is set up; retained for the period stated",
+                "Until either participant deletes their account",
+                "Written when a call is set up; deleted when either account is deleted",
               ],
               [
                 "Connection requests and Connections",
-                <Ph>CONNECTION RETENTION PERIOD</Ph>,
-                "Retained while the relationship exists and for the period stated thereafter",
+                "Until either person deletes their account",
+                "Deleted when either account is deleted",
               ],
               [
                 "Blocks",
-                <Ph>BLOCK RETENTION PERIOD</Ph>,
-                "Retained for as long as the block is in force; see clause 12.3",
+                "Until the block is lifted or either account is deleted",
+                "Deleted when either account is deleted",
               ],
               [
                 "Safety reports and moderation records",
-                <Ph>SAFETY REPORT RETENTION PERIOD</Ph>,
-                "Retained after closure of the report so that repeat conduct can be identified",
+                "24 months after the report is closed",
+                "A report you made is deleted with your account; a report someone else made about your account is kept for this period (clause 12.3)",
               ],
               [
                 "Waitlist entries",
-                <Ph>WAITLIST RETENTION PERIOD</Ph>,
-                "Deleted on withdrawal of consent or at the end of the period stated",
+                "Until you ask to be removed, and no longer than 24 months",
+                "Deleted on request, when you delete an account under the same email address, or at the end of the period",
               ],
               [
                 "Provider infrastructure logs",
-                <Ph>LOG RETENTION PERIOD</Ph>,
+                "Set by each provider",
                 "Governed by the providers named in clause 10.2",
               ],
             ]}
@@ -1027,19 +1018,24 @@ export default function PrivacyPolicyPage() {
             </P>
           </Clause>
 
-          <Clause n="12.3" title="Safety retention">
+          <Clause n="12.3" title="What is kept after you delete your account">
             <P>
-              Where a record is necessary to enforce a block, to investigate or substantiate a safety
-              report, to comply with a legal obligation, or to defend a legal claim, we retain it for
-              the period necessary for that purpose even where the underlying account has been closed.
-              This is explained further in the Recording, Consent and Communications notice.
+              Deleting your account deletes the data in clause 12.1 straight away. There is no grace
+              period and no copy from which we could restore it. One kind of record is kept: a safety
+              report that another person made about your account. It is that person&rsquo;s
+              complaint, it identifies your former account by an internal ID and not by name, and it
+              is kept for the period in clause 12.1 so that a complaint cannot be erased by the person
+              it is about. This is explained further in the Recording, Consent and Communications
+              notice.
             </P>
           </Clause>
 
           <Clause n="12.4" title="Automation">
             <P>
-              None of the retention periods in clause 12.1 is currently enforced by an automated
-              deletion job. Each is applied by operational process rather than by software.
+              Deleting an account and its data is carried out by software, immediately, when you use
+              the Delete account button. The two time-based periods in clause 12.1 — waitlist entries
+              and closed safety reports — are applied by operational process rather than by an
+              automated job.
             </P>
           </Clause>
         </Section>
@@ -1090,9 +1086,9 @@ export default function PrivacyPolicyPage() {
           </Clause>
           <Clause n="13.2" title="Organisational measures">
             <P>
-              Access control, staff confidentiality obligations, onboarding and offboarding procedures,
-              logging and review, and periodic security testing are described at{" "}
-              <Ph>SECURITY PROGRAMME REFERENCE</Ph>.
+              The Service is operated by one person. Administrative access to the providers named in
+              clause 10.2 is limited to that person and protected by each provider&rsquo;s own sign-in
+              controls. We hold no formal security certification.
             </P>
           </Clause>
           <Clause n="13.3" title="No absolute guarantee">
@@ -1159,7 +1155,7 @@ export default function PrivacyPolicyPage() {
             <P>
               Several rights can be exercised directly in the Service: you can edit profile fields, turn
               discovery off, block a user, and report a user without contacting us. For access,
-              portability, erasure, restriction, or objection, write to <Ph>PRIVACY CONTACT EMAIL</Ph>{" "}
+              portability, erasure, restriction, or objection, write to <Email />{" "}
               from the email address associated with your account, stating the right you wish to
               exercise and the data concerned.
             </P>
@@ -1194,9 +1190,9 @@ export default function PrivacyPolicyPage() {
 
           <Clause n="14.6" title="Account closure">
             <P>
-              To close your account and request deletion of the associated data, follow the process at{" "}
-              <Ph>ACCOUNT DELETION PROCESS OR URL</Ph>, or write to <Ph>PRIVACY CONTACT EMAIL</Ph>.
-              Closure is subject to clause 12.3.
+              To delete your account and its data, use the Delete account button on your Profile page.
+              Deletion is immediate and cannot be undone. If you cannot sign in, write to <Email /> from
+              the email address on the account. Clause 12.3 describes the one record that is kept.
             </P>
           </Clause>
         </Section>
@@ -1213,7 +1209,7 @@ export default function PrivacyPolicyPage() {
             <P>
               Automated rules are applied to eligibility for Community Features, to rate limiting, and
               to the suppression of blocked users. Where an automated control restricts your access,
-              you may contest it by writing to <Ph>PRIVACY CONTACT EMAIL</Ph>, and a person will review
+              you may contest it by writing to <Email />, and a person will review
               the decision.
             </P>
           </Clause>
@@ -1245,9 +1241,11 @@ export default function PrivacyPolicyPage() {
               has been given. Using the Learning Service does not expose a user to any other user.
             </P>
             <P>
-              The minimum age for the Learning Service in your territory is{" "}
-              <Ph>MINIMUM AGE FOR THE LEARNING SERVICE</Ph>, and the age of digital consent applied
-              under Article 8 GDPR is <Ph>AGE OF DIGITAL CONSENT APPLIED</Ph>.
+              The minimum age for the Learning Service is 13. Where the law of your country sets a
+              higher age at which you can consent to the processing of your personal data without a
+              parent or guardian — in the European Economic Area it is between 13 and 16, depending on
+              the country — you may use the Service below that age only with your parent&rsquo;s or
+              guardian&rsquo;s consent.
             </P>
           </Clause>
 
@@ -1276,9 +1274,9 @@ export default function PrivacyPolicyPage() {
                 practicable, a parent or guardian; and
               </li>
               <li>
-                where the report concerns the safety of a minor, escalate it in accordance with{" "}
-                <Ph>MINOR SAFETY ESCALATION AND REPORTING PROCEDURE</Ph>, which may include reporting
-                to law enforcement or to the competent child-protection authority.
+                where the report concerns the safety of a minor, escalate it without delay, which may include reporting to law enforcement or to the
+                competent child-protection authority, including the National Center for Missing &amp;
+                Exploited Children in the United States where the law requires it.
               </li>
             </List>
           </Clause>
@@ -1287,14 +1285,14 @@ export default function PrivacyPolicyPage() {
             <P>
               If you believe a user is under 18, report them using the minor-safety category. Reports
               in that category are treated as a priority. You may also write to{" "}
-              <Ph>SAFETY CONTACT EMAIL</Ph>.
+              <Email />.
             </P>
           </Clause>
 
           <Clause n="16.4" title="Parents and guardians">
             <P>
               A parent or guardian who believes their child has created an account or supplied Personal
-              Data may contact <Ph>PRIVACY CONTACT EMAIL</Ph> to request its deletion. We will act
+              Data may contact <Email /> to request its deletion. We will act
               without undue delay once we have verified the request.
             </P>
           </Clause>
@@ -1335,8 +1333,7 @@ export default function PrivacyPolicyPage() {
           </Clause>
           <Clause n="17.5">
             <P>
-              Our breach response procedure and named incident owner are recorded at{" "}
-              <Ph>INCIDENT RESPONSE PROCEDURE REFERENCE</Ph>.
+              The operator named in Section 3 is responsible for responding to a Personal Data breach.
             </P>
           </Clause>
         </Section>
@@ -1361,7 +1358,7 @@ export default function PrivacyPolicyPage() {
               >
                 nurilang.app/legal/terms
               </Link>, and in particular the aggregate liability cap of{" "}
-              <Ph>LIABILITY CAP</Ph> and the exclusion of indirect and consequential loss set out at{" "}
+              {LIABILITY_CAP}, and the exclusion of indirect and consequential loss set out at{" "}
               Section 14 of those Terms.
             </P>
           </Clause>
@@ -1380,13 +1377,13 @@ export default function PrivacyPolicyPage() {
           <Clause n="19.1">
             <P>
               This Policy and any dispute arising out of or in connection with it are governed by the
-              law of <Ph>GOVERNING LAW JURISDICTION</Ph>, without regard to its conflict-of-laws rules.
+              law of {GOVERNING_LAW}, without regard to its conflict-of-laws rules.
             </P>
           </Clause>
           <Clause n="19.2">
             <P>
-              The courts of <Ph>COURTS OF EXCLUSIVE OR NON-EXCLUSIVE JURISDICTION</Ph> have{" "}
-              <Ph>EXCLUSIVE OR NON-EXCLUSIVE</Ph> jurisdiction to settle any such dispute.
+              The courts of {COURTS} have{" "}
+              exclusive jurisdiction to settle any such dispute.
             </P>
           </Clause>
           <Clause n="19.3">
@@ -1399,11 +1396,11 @@ export default function PrivacyPolicyPage() {
           </Clause>
           <Clause n="19.4" title="Regional supplements">
             <P>
-              Supplementary disclosures for specific territories — including any notice required for
-              residents of California under the California Consumer Privacy Act, and any notice
-              required in <Ph>OTHER TERRITORIES REQUIRING SUPPLEMENTAL DISCLOSURE</Ph> — are set out at{" "}
-              <Ph>REGIONAL SUPPLEMENT URL OR ANNEX REFERENCE</Ph>. Where a supplement conflicts with
-              the body of this Policy, the supplement prevails for residents of that territory.
+              We have not published a supplement for any specific territory. As at the date of this
+              Policy, the Service does not meet the thresholds at which the California Consumer Privacy
+              Act applies to a business. If a territory-specific supplement becomes necessary, it will
+              be published with this Policy and, where it conflicts with the body of this Policy, will
+              prevail for residents of that territory.
             </P>
           </Clause>
         </Section>
@@ -1420,13 +1417,13 @@ export default function PrivacyPolicyPage() {
             <P>
               Where a change materially affects your rights or the way your Personal Data is used, we
               will give you notice by email or by prominent notice in the Service at least{" "}
-              <Ph>MATERIAL CHANGE NOTICE PERIOD</Ph> before it takes effect. Where the change requires
+              30 days before it takes effect. Where the change requires
               your consent, we will ask for it before relying on it.
             </P>
           </Clause>
           <Clause n="20.3">
             <P>
-              Previous versions are available on request from <Ph>PRIVACY CONTACT EMAIL</Ph>.
+              Previous versions are available on request from <Email />.
             </P>
           </Clause>
         </Section>
@@ -1436,15 +1433,15 @@ export default function PrivacyPolicyPage() {
           <Clause n="21.1" title="Contact us first">
             <P>
               If you have a concern about how we handle your Personal Data, please raise it with us at{" "}
-              <Ph>PRIVACY CONTACT EMAIL</Ph>. We aim to acknowledge within{" "}
-              <Ph>ACKNOWLEDGEMENT TARGET</Ph> and to resolve within <Ph>RESOLUTION TARGET</Ph>.
+              <Email />. We aim to acknowledge within{" "}
+              5 business days and to resolve within 30 days.
             </P>
           </Clause>
           <Clause n="21.2" title="Safety concerns">
             <P>
               Reports of harassment, abuse, or risk to a person&rsquo;s safety should be made through
               the in-product reporting tool, which routes to the moderation queue, or, in urgent cases,
-              to <Ph>SAFETY CONTACT EMAIL</Ph>. If someone is in immediate danger, contact your local
+              to <Email />. If someone is in immediate danger, contact your local
               emergency services first.
             </P>
           </Clause>
@@ -1452,8 +1449,7 @@ export default function PrivacyPolicyPage() {
             <P>
               You have the right to lodge a complaint with a Supervisory Authority, in particular in
               the Member State of your habitual residence, place of work, or the place of the alleged
-              infringement. Our lead Supervisory Authority is{" "}
-              <Ph>LEAD SUPERVISORY AUTHORITY AND CONTACT DETAILS</Ph>. Users in the United Kingdom may
+              infringement. We have no establishment in the European Union and therefore no lead Supervisory Authority. Users in the United Kingdom may
               complain to the Information Commissioner&rsquo;s Office. Exercising this right does not
               require you to contact us first.
             </P>

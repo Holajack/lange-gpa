@@ -443,6 +443,12 @@ export default function EarlyPage() {
                       {submitting ? "Planting…" : "🌱 Keep me posted"}
                       {!submitting && <ArrowRight size={18} />}
                     </button>
+                    <p className="mt-3 text-xs leading-relaxed text-muted">
+                      We use your email only to send early-access and launch news. Ask and we remove it.{" "}
+                      <Link href="/legal/privacy" className="font-semibold text-ink underline decoration-line underline-offset-4">
+                        Privacy Policy
+                      </Link>
+                    </p>
                   </form>
                 </div>
               </motion.div>
@@ -502,9 +508,11 @@ export default function EarlyPage() {
               Growing Participator Approach
             </a>
           </p>
-          <Link href="/" className="text-xs font-semibold transition-colors hover:text-ink">
-            ← Back to Nuri
-          </Link>
+          <div className="flex items-center gap-5 text-xs font-semibold">
+            <Link href="/legal/terms" className="transition-colors hover:text-ink">Terms</Link>
+            <Link href="/legal/privacy" className="transition-colors hover:text-ink">Privacy</Link>
+            <Link href="/" className="transition-colors hover:text-ink">← Back to Nuri</Link>
+          </div>
         </div>
       </footer>
     </div>

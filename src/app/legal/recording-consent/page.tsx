@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { POSTAL_ADDRESS, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -11,6 +12,9 @@ import Link from "next/link";
  * the repository are left as [BRACKETED PLACEHOLDERS].
  *
  * The surrounding chrome (nav/footer) is expected from src/app/legal/layout.tsx.
+ *
+ * Status: placeholders resolved 2026-11-16 from the operator's answers; shared
+ * facts (operator, address, contact, dates, law) live in ../facts.tsx.
  */
 
 export const metadata: Metadata = {
@@ -21,14 +25,6 @@ export const metadata: Metadata = {
 };
 
 /* ------------------------------- primitives ------------------------------- */
-
-function Ph({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="mx-0.5 inline-block rounded-md border border-amber/40 bg-amber/10 px-1.5 py-px align-baseline font-mono text-[0.82em] font-semibold uppercase tracking-wide text-amber">
-      [{children}]
-    </span>
-  );
-}
 
 function P({ children }: { children: React.ReactNode }) {
   return <p className="text-[15px] leading-7 text-muted">{children}</p>;
@@ -155,7 +151,7 @@ const CONTENTS: { id: string; n: number; title: string }[] = [
   { id: "practice", n: 8, title: "Practice recordings and the Listening Library" },
   { id: "stored", n: 9, title: "What is stored, and for how long" },
   { id: "withdraw", n: 10, title: "Withdrawing consent, blocking and deleting" },
-  { id: "safety-retention", n: 11, title: "Data preserved for safety investigations" },
+  { id: "safety-retention", n: 11, title: "What is kept after an account is deleted" },
   { id: "reporting", n: 12, title: "Reporting unlawful recording or misuse" },
   { id: "enforcement", n: 13, title: "Enforcement" },
   { id: "liability", n: 14, title: "Limitation of liability" },
@@ -178,19 +174,19 @@ export default function RecordingConsentPage() {
           <div className="flex items-center gap-2">
             <dt className="font-semibold text-ink">Effective date:</dt>
             <dd>
-              <Ph>EFFECTIVE DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="flex items-center gap-2">
             <dt className="font-semibold text-ink">Last updated:</dt>
             <dd>
-              <Ph>LAST UPDATED DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="flex items-center gap-2">
             <dt className="font-semibold text-ink">Version:</dt>
             <dd>
-              <Ph>VERSION NUMBER</Ph>
+              {VERSION}
             </dd>
           </div>
         </dl>
@@ -705,7 +701,8 @@ export default function RecordingConsentPage() {
               but, unlike the in-session recorder in Section 7, it does not put a consent screen in
               front of the other person. <Strong>Obtaining their express, informed, prior consent is up
               to you</Strong>, each time, before you press record. If they say no, do the activity
-              without recording.
+              without recording. You must be 18 or over to record another person; if you are
+              younger, record only your own voice.
             </P>
             <P>
               A recording of someone&rsquo;s own life story is marked confidential in your Library. It
@@ -754,7 +751,7 @@ export default function RecordingConsentPage() {
                   negotiated session description, and the network candidates — which contain IP
                   addresses.
                 </>,
-                <Ph>CALL SIGNALLING RETENTION PERIOD</Ph>,
+                <>Until either participant deletes their account</>,
               ],
               [
                 "Text messages",
@@ -762,7 +759,7 @@ export default function RecordingConsentPage() {
                   <Strong>Yes.</Strong> Full message content, sender and recipient, display name,
                   timestamp, and read state. Not end-to-end encrypted; readable by us.
                 </>,
-                <Ph>MESSAGE RETENTION PERIOD</Ph>,
+                <>Until either participant deletes their account</>,
               ],
               [
                 "Voice notes",
@@ -771,7 +768,7 @@ export default function RecordingConsentPage() {
                   the recipient can play it back, together with its duration and timestamp. Not
                   end-to-end encrypted.
                 </>,
-                <Ph>VOICE NOTE RETENTION PERIOD</Ph>,
+                <>Until either participant deletes their account</>,
               ],
               [
                 "Connection requests and Connections",
@@ -779,14 +776,14 @@ export default function RecordingConsentPage() {
                   <Strong>Yes.</Strong> Both display names, the language proposed, any message attached
                   to the request, status, and timestamp.
                 </>,
-                <Ph>CONNECTION RETENTION PERIOD</Ph>,
+                <>Until either person deletes their account</>,
               ],
               [
                 "Blocks",
                 <>
                   <Strong>Yes.</Strong> Who blocked whom, and when. Never shown to the person blocked.
                 </>,
-                <Ph>BLOCK RETENTION PERIOD</Ph>,
+                <>Until the block is lifted or either account is deleted</>,
               ],
               [
                 "Safety reports",
@@ -794,7 +791,7 @@ export default function RecordingConsentPage() {
                   <Strong>Yes.</Strong> Reporter, reported user, category, your description of up to 500
                   characters, status, and timestamps. Visible only to allowlisted moderators.
                 </>,
-                <Ph>SAFETY REPORT RETENTION PERIOD</Ph>,
+                <>24 months after the report is closed</>,
               ],
               [
                 "In-session recordings",
@@ -831,8 +828,9 @@ export default function RecordingConsentPage() {
           <Clause n="9.3" title="Who can see stored communications">
             <P>
               Your conversations are returned only to the two participants. Message content is not
-              exposed in discovery, in the moderation queue by default, or to any other user. Access by
-              our personnel is limited to the circumstances in clause 11.2.
+              exposed in discovery, in the moderation queue by default, or to any other user. Access by the
+              operator of the Service is limited to what is necessary for safety, legal compliance,
+              and enforcement.
             </P>
           </Clause>
         </Section>
@@ -874,10 +872,11 @@ export default function RecordingConsentPage() {
 
           <Clause n="10.4" title="Delete content, or your account">
             <P>
-              To delete specific messages or Voice Notes, or to close your account and delete the
-              associated data, follow the process at <Ph>DELETION PROCESS OR URL</Ph> or write to{" "}
-              <Ph>PRIVACY CONTACT EMAIL</Ph>. We act on verified requests within the timescales in
-              Section 14 of the Privacy Policy.
+              To delete your account and everything in it, use the Delete account button on your
+              Profile page. Deletion is immediate and cannot be undone, and it removes your
+              conversations for both participants. To have a specific message or Voice Note removed
+              without deleting your account, write to <Email />; we act on verified requests within the
+              timescales in Section 14 of the Privacy Policy.
             </P>
           </Clause>
 
@@ -897,60 +896,46 @@ export default function RecordingConsentPage() {
                 ordinary course; and
               </li>
               <li>
-                the records in Section 11 are retained even where the rest of your data is deleted.
+                a safety report that someone else made about your account is kept, as set out in
+                Section 11.
               </li>
             </List>
           </Clause>
         </Section>
 
         {/* ----------------------------------------------------------------- 11 */}
-        <Section id="safety-retention" n={11} title="Data preserved for safety investigations">
+        <Section id="safety-retention" n={11} title="What is kept after an account is deleted">
           <Callout>
             <p>
-              Some records survive deletion. A person who harasses someone and then deletes their
-              account must not be able to erase the trail and return. Article 17(3) GDPR permits
-              retention where processing is necessary for compliance with a legal obligation or for the
-              establishment, exercise, or defence of legal claims, and we rely on that.
+              Deleting your account deletes your data straight away: your conversations, your Voice
+              Notes, your connections, your blocks, and your call records. One kind of record is
+              kept — a safety report that someone else made about your account. A complaint must not
+              disappear because the person it is about deleted their account. Article 17(3) GDPR
+              permits retention where it is necessary for the establishment, exercise, or defence of
+              legal claims, and we rely on that.
             </p>
           </Callout>
 
-          <Clause n="11.1" title="What is preserved">
+          <Clause n="11.1" title="What is kept">
             <P>
-              Where necessary and proportionate for a safety, legal, or enforcement purpose, we retain:
+              A safety report that another person made about your account: the report, its category,
+              the reporter&rsquo;s description, and its outcome. It identifies your former account by
+              an internal ID and not by your name or email address.
             </P>
-            <List>
-              <li>
-                <Strong>Safety reports</Strong> — the report, its category, your description, and its
-                outcome, so that a pattern across multiple reporters can be identified;
-              </li>
-              <li>
-                <Strong>Block records</Strong> — so that a block continues to be enforced and cannot be
-                circumvented;
-              </li>
-              <li>
-                <Strong>Moderation and enforcement records</Strong> — the decision taken, its reasons,
-                and the identifiers necessary to enforce it, including against a re-registration
-                attempt;
-              </li>
-              <li>
-                <Strong>Evidence relevant to an open investigation</Strong> — including message or
-                Voice Note content preserved under a hold, retained for the investigation and any
-                resulting proceedings;
-              </li>
-              <li>
-                <Strong>Records required by law</Strong> — including anything subject to a legal
-                preservation obligation or lawful request.
-              </li>
-            </List>
+            <P>
+              Nothing else is kept. In particular, the messages and Voice Notes themselves are deleted
+              with the account, so after a deletion we can no longer retrieve them — for you, for the
+              other participant, or to assess a report.
+            </P>
           </Clause>
 
           <Clause n="11.2" title="Limits on that retention">
             <P>
-              Preserved records are held for <Ph>SAFETY PRESERVATION PERIOD</Ph>, or for the duration of
-              the investigation, dispute, or legal obligation if longer, and are then deleted. They are
-              restricted to <Ph>ROLES AUTHORISED TO ACCESS PRESERVED SAFETY RECORDS</Ph>, are not used
-              for any purpose other than safety, legal compliance, and enforcement, and are never used
-              for personalisation or marketing.
+              A kept report is held for 24 months after it is closed, or for the duration of an
+              investigation, dispute, or legal obligation if longer, and is then deleted. It is
+              accessible only to the operator of the Service, is not used for any purpose other than
+              safety, legal compliance, and enforcement, and is never used for personalisation or
+              marketing.
             </P>
           </Clause>
 
@@ -965,8 +950,9 @@ export default function RecordingConsentPage() {
 
           <Clause n="11.4" title="Reporters are protected">
             <P>
-              The identity of a reporter is not disclosed to the person reported. If you report someone
-              and then delete your account, your report is not withdrawn and continues to be assessed.
+              The identity of a reporter is not disclosed to the person reported. A report you
+              made is deleted with your account, so if you want it assessed, make it and wait for the
+              outcome before you delete your account.
             </P>
           </Clause>
         </Section>
@@ -979,7 +965,7 @@ export default function RecordingConsentPage() {
               misused a recording of you, report it immediately through the in-product reporting tool
               and block them. Use the privacy category, or the sexual-content or dangerous-behaviour
               category where those better describe what happened. You may also write to{" "}
-              <Ph>SAFETY CONTACT EMAIL</Ph>.
+              <Email />.
             </P>
           </Clause>
           <Clause n="12.2">
@@ -992,10 +978,9 @@ export default function RecordingConsentPage() {
           </Clause>
           <Clause n="12.3">
             <P>
-              We will acknowledge a report within <Ph>REPORT ACKNOWLEDGEMENT TARGET</Ph> and aim to
-              reach an outcome within <Ph>REPORT RESOLUTION TARGET</Ph>. Reports concerning intimate
-              imagery, the safety of a minor, or a credible threat are escalated immediately under{" "}
-              <Ph>PRIORITY ESCALATION PROCEDURE</Ph>.
+              We will acknowledge a report within 3 business days and aim to
+              reach an outcome within 14 days. Reports concerning intimate
+              imagery, the safety of a minor, or a credible threat are dealt with first, ahead of every other report.
             </P>
           </Clause>
           <Clause n="12.4">
@@ -1029,8 +1014,8 @@ export default function RecordingConsentPage() {
           </Clause>
           <Clause n="13.3">
             <P>
-              You may appeal an enforcement decision by writing to <Ph>APPEALS CONTACT EMAIL</Ph> within{" "}
-              <Ph>APPEAL WINDOW</Ph>. An appeal is reviewed by a person who did not take the original
+              You may appeal an enforcement decision by writing to <Email /> within{" "}
+              30 days of being notified of the decision. An appeal is reviewed by a person who did not take the original
               decision, where operationally possible.
             </P>
           </Clause>
@@ -1056,7 +1041,7 @@ export default function RecordingConsentPage() {
               >
                 nurilang.app/legal/terms
               </Link>, including the aggregate liability cap of{" "}
-              <Ph>LIABILITY CAP</Ph> and the exclusion of indirect and consequential loss at{" "}
+              {LIABILITY_CAP}, and the exclusion of indirect and consequential loss at{" "}
               Section 14 of those Terms.
             </P>
           </Clause>
@@ -1083,13 +1068,13 @@ export default function RecordingConsentPage() {
           <Clause n="15.1">
             <P>
               This notice and any dispute arising out of or in connection with it are governed by the
-              law of <Ph>GOVERNING LAW JURISDICTION</Ph>, without regard to its conflict-of-laws rules.
+              law of {GOVERNING_LAW}, without regard to its conflict-of-laws rules.
             </P>
           </Clause>
           <Clause n="15.2">
             <P>
-              The courts of <Ph>COURTS OF EXCLUSIVE OR NON-EXCLUSIVE JURISDICTION</Ph> have{" "}
-              <Ph>EXCLUSIVE OR NON-EXCLUSIVE</Ph> jurisdiction to settle any such dispute.
+              The courts of {COURTS} have{" "}
+              exclusive jurisdiction to settle any such dispute.
             </P>
           </Clause>
           <Clause n="15.3">
@@ -1110,15 +1095,15 @@ export default function RecordingConsentPage() {
               We may amend this notice. The version in force is the one published on this page,
               identified by the version number and last-updated date at the top. Where a change
               materially affects what is recorded or stored, we will give notice at least{" "}
-              <Ph>MATERIAL CHANGE NOTICE PERIOD</Ph> before it takes effect and, where consent is the
+              30 days before it takes effect and, where consent is the
               applicable basis, ask for it first.
             </P>
           </Clause>
           <Clause n="16.2" title="Contact">
             <P>
-              Privacy and data-subject matters: <Ph>PRIVACY CONTACT EMAIL</Ph>. Safety and recording
-              complaints: <Ph>SAFETY CONTACT EMAIL</Ph>. Enforcement appeals:{" "}
-              <Ph>APPEALS CONTACT EMAIL</Ph>. Postal correspondence: <Ph>REGISTERED ADDRESS</Ph>.
+              Privacy and data-subject matters: <Email />. Safety and recording
+              complaints: <Email />. Enforcement appeals:{" "}
+              <Email />. Postal correspondence: {POSTAL_ADDRESS}.
             </P>
           </Clause>
           <Clause n="16.3" title="Related notices">

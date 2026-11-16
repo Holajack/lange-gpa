@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OPERATOR_NAME, POSTAL_ADDRESS, EFFECTIVE_DATE, GOVERNING_LAW, COURTS, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -13,6 +14,9 @@ import Link from "next/link";
  * code (convex/*.ts, src/components/CallProvider.tsx, src/lib/*), and anything
  * that cannot be established from the code is left as a [BRACKETED
  * PLACEHOLDER] for counsel to complete before publication.
+ *
+ * Status: placeholders resolved 2026-11-16 from the operator's answers; shared
+ * facts (operator, address, contact, dates, law) live in ../facts.tsx.
  */
 
 const title = "Terms of Service";
@@ -169,15 +173,6 @@ function Callout({
   );
 }
 
-/** Text the operator must complete before publication. */
-function Ph({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded bg-white/8 px-1.5 py-0.5 font-mono text-[0.82em] font-semibold text-lemon">
-      [{children}]
-    </span>
-  );
-}
-
 function Xref({ children }: { children: React.ReactNode }) {
   return <span className="font-semibold text-ink">{children}</span>;
 }
@@ -222,7 +217,7 @@ export default function TermsPage() {
               Effective date
             </dt>
             <dd className="mt-1.5 text-ink">
-              <Ph>EFFECTIVE DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div>
@@ -230,7 +225,7 @@ export default function TermsPage() {
               Last updated
             </dt>
             <dd className="mt-1.5 text-ink">
-              <Ph>LAST UPDATED DATE</Ph>
+              {EFFECTIVE_DATE}
             </dd>
           </div>
           <div className="sm:col-span-2">
@@ -238,10 +233,8 @@ export default function TermsPage() {
               Provider of the Service
             </dt>
             <dd className="mt-1.5 leading-7 text-ink">
-              <Ph>LEGAL ENTITY NAME</Ph>, a <Ph>ENTITY TYPE</Ph> registered in{" "}
-              <Ph>JURISDICTION OF INCORPORATION</Ph> under company number{" "}
-              <Ph>COMPANY REGISTRATION NUMBER</Ph>, with its registered office at{" "}
-              <Ph>REGISTERED ADDRESS</Ph> (<strong>&ldquo;Nurilang&rdquo;</strong>,{" "}
+              {OPERATOR_NAME}, an individual based in Florida, United States, who operates the Service
+              under the name Nurilang and can be reached by post at {POSTAL_ADDRESS} (<strong>&ldquo;Nurilang&rdquo;</strong>,{" "}
               <strong>&ldquo;we&rdquo;</strong>, <strong>&ldquo;us&rdquo;</strong>,{" "}
               <strong>&ldquo;our&rdquo;</strong>).
             </dd>
@@ -403,7 +396,7 @@ export default function TermsPage() {
         <Clause n="3.1" title="Minimum age for the Service as a whole">
           <P>
             You may use the Learning Service only if you are at least{" "}
-            <Ph>MINIMUM AGE FOR THE LEARNING SERVICE</Ph> years old, or such higher minimum age
+            13 years old, or such higher minimum age
             as applies in your country of residence. Where the law of your country requires
             parental or guardian consent for a person of your age to enter into this contract or
             to have their personal data processed, you may use the Service only with that
@@ -423,6 +416,12 @@ export default function TermsPage() {
           <P>
             By accessing or attempting to access any Community Feature, you represent and warrant
             on each occasion that you are aged 18 or over.
+          </P>
+          <P>
+            The same age limit applies to every way of being in live contact with another person
+            through the Service, and to recording another person in a learning activity. If you
+            are under 18 you may use the Service for self-study only: you may record your own
+            voice, but you must not use the Service to contact, call, or record anyone else.
           </P>
         </Clause>
 
@@ -465,8 +464,7 @@ export default function TermsPage() {
           <P>You may not use the Service if:</P>
           <List>
             <li>
-              you are barred from receiving it under the laws of your country of residence, of{" "}
-              <Ph>GOVERNING LAW JURISDICTION</Ph>, or under any applicable sanctions regime;
+              you are barred from receiving it under the laws of your country of residence, of the United States, or under any applicable sanctions regime;
             </li>
             <li>
               we have previously terminated your account or withdrawn your access to the
@@ -505,7 +503,7 @@ export default function TermsPage() {
           <P>
             You are responsible for maintaining the confidentiality of your sign-in credentials
             and for all activity that occurs under your Account. You must notify us at{" "}
-            <Ph>SECURITY CONTACT EMAIL</Ph> promptly on becoming aware of any unauthorised use of
+            <Email /> promptly on becoming aware of any unauthorised use of
             your Account or any other breach of security. We are not liable for loss arising from
             unauthorised use of your Account before you notify us, except to the extent that loss
             is caused by our breach of these Terms or our negligence.
@@ -843,8 +841,8 @@ export default function TermsPage() {
         <Clause n="9.5" title="Appeals">
           <P>
             If your Account is suspended or terminated and you believe we have made a mistake, you
-            may ask us to review the decision by writing to <Ph>APPEALS CONTACT EMAIL</Ph> within{" "}
-            <Ph>APPEAL WINDOW, e.g. 30 days</Ph> of being notified. We will review the decision and
+            may ask us to review the decision by writing to <Email /> within{" "}
+            30 days of being notified. We will review the decision and
             tell you the outcome. This does not affect any right you have to bring a complaint to a
             regulator or a court.
           </P>
@@ -1092,7 +1090,7 @@ export default function TermsPage() {
             Nothing in these Terms excludes or limits our liability for death or personal injury
             caused by our negligence, for fraud or fraudulent misrepresentation, or for any other
             liability that cannot be excluded or limited under the law of{" "}
-            <Ph>GOVERNING LAW JURISDICTION</Ph> or under the mandatory consumer law of your
+            {GOVERNING_LAW} or under the mandatory consumer law of your
             country of residence.
           </P>
         </Clause>
@@ -1124,8 +1122,8 @@ export default function TermsPage() {
             of or in connection with these Terms and the Service, whether in contract, tort
             (including negligence), breach of statutory duty, or otherwise, is limited to the
             greater of (a) the total amount you paid to us for the Service in the{" "}
-            <Ph>CAP PERIOD, e.g. twelve (12) months</Ph> immediately preceding the event giving
-            rise to the claim, and (b) <Ph>MINIMUM CAP AMOUNT AND CURRENCY</Ph>.
+            twelve (12) months immediately preceding the event giving
+            rise to the claim, and (b) one hundred US dollars (USD 100).
           </P>
         </Clause>
 
@@ -1177,8 +1175,9 @@ export default function TermsPage() {
       <Section {...SECTIONS[15]}>
         <Clause n="16.1" title="Ending your Account">
           <P>
-            You may stop using the Service at any time, and you may delete your Account through the
-            Service or by writing to <Ph>SUPPORT CONTACT EMAIL</Ph>. Deletion is handled as
+            You may stop using the Service at any time, and you may delete your Account with the
+            Delete account button on your Profile page or, if you cannot sign in, by writing to{" "}
+            <Email />. Deletion is immediate and permanent. Deletion is handled as
             described in the <A href="/legal/privacy">Privacy Policy</A>.
           </P>
         </Clause>
@@ -1223,15 +1222,15 @@ export default function TermsPage() {
             These Terms, and any dispute or claim arising out of or in connection with them, their
             subject matter, or their formation (including non-contractual disputes or claims), are
             governed by and construed in accordance with the laws of{" "}
-            <Ph>GOVERNING LAW JURISDICTION</Ph>, without regard to its conflict-of-laws rules.
+            {GOVERNING_LAW}, without regard to its conflict-of-laws rules.
           </P>
         </Clause>
 
         <Clause n="17.2" title="Talk to us first">
           <P>
-            If you have a complaint, please contact us at <Ph>LEGAL NOTICES EMAIL</Ph> before
+            If you have a complaint, please contact us at <Email /> before
             starting formal proceedings. We will try in good faith to resolve the matter with you
-            within <Ph>INFORMAL RESOLUTION PERIOD, e.g. 30 days</Ph>. This step does not suspend any
+            within 30 days. This step does not suspend any
             limitation period unless the law provides otherwise.
           </P>
         </Clause>
@@ -1239,14 +1238,9 @@ export default function TermsPage() {
         <Clause n="17.3" title="Forum">
           <P>
             Subject to <Xref>Section 17.4</Xref>, the courts of{" "}
-            <Ph>COURTS / EXCLUSIVE OR NON-EXCLUSIVE JURISDICTION</Ph> have{" "}
-            <Ph>EXCLUSIVE OR NON-EXCLUSIVE</Ph> jurisdiction to settle any dispute or claim arising
-            out of or in connection with these Terms.{" "}
-            <Ph>
-              IF ARBITRATION IS ADOPTED, SET OUT THE ARBITRATION AGREEMENT, PROVIDER, RULES, SEAT,
-              LANGUAGE, CLASS-ACTION WAIVER AND ANY OPT-OUT MECHANISM HERE
-            </Ph>
-            .
+            {COURTS} have{" "}
+            exclusive jurisdiction to settle any dispute or claim arising
+            out of or in connection with these Terms.
           </P>
         </Clause>
 
@@ -1254,8 +1248,8 @@ export default function TermsPage() {
           <P>
             If you are a consumer, nothing in this Section deprives you of the protection of the
             mandatory law of your country of residence, or of your right to bring proceedings in
-            the courts of that country. <Ph>ONLINE DISPUTE RESOLUTION / ADR BODY, IF APPLICABLE</Ph>
-            .
+            the courts of that country. We do not take part in an alternative dispute
+            resolution scheme.
           </P>
         </Clause>
       </Section>
@@ -1274,7 +1268,7 @@ export default function TermsPage() {
         <Clause n="18.2" title="Notice of material changes">
           <P>
             Where a change is material and adverse to you, we will give you at least{" "}
-            <Ph>NOTICE PERIOD, e.g. 30 days</Ph> notice before it takes effect, by email to the
+            30 days&rsquo; notice before it takes effect, by email to the
             address on your Account or by a prominent notice in the Service. Changes required for
             legal, regulatory, safety, or security reasons may take effect immediately.
           </P>
@@ -1345,8 +1339,8 @@ export default function TermsPage() {
         <Clause n="19.7" title="Notices">
           <P>
             We may give you notice by email to the address on your Account or by a notice in the
-            Service. You must give us notice in writing to <Ph>LEGAL NOTICES EMAIL</Ph> or to our
-            registered address above.
+            Service. You must give us notice in writing to <Email /> or to the
+            postal address at the top of these Terms.
           </P>
         </Clause>
 
@@ -1364,14 +1358,14 @@ export default function TermsPage() {
         <Clause n="20.1" title="Contact details">
           <P>
             Questions about these Terms, notices, and legal correspondence should be sent to{" "}
-            <Ph>LEGAL NOTICES EMAIL</Ph>. General support enquiries should be sent to{" "}
-            <Ph>SUPPORT CONTACT EMAIL</Ph>. Safety concerns should be reported through the report
+            <Email />. General support enquiries should be sent to{" "}
+            <Email />. Safety concerns should be reported through the report
             function in the Service, or, if that is not possible, to{" "}
-            <Ph>SAFETY CONTACT EMAIL</Ph>.
+            <Email />.
           </P>
           <P>
-            Our postal address is <Ph>REGISTERED ADDRESS</Ph>. Data protection enquiries should be
-            addressed to <Ph>DATA PROTECTION CONTACT / DPO NAME AND EMAIL, IF APPOINTED</Ph>, and
+            Our postal address is {POSTAL_ADDRESS}. Data protection enquiries should be
+            addressed to <Email />, and
             are dealt with in the <A href="/legal/privacy">Privacy Policy</A>.
           </P>
         </Clause>

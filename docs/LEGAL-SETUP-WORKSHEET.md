@@ -15,30 +15,49 @@ occurrences, 87 distinct facts, grouped below. (Reusable structure for any
 other app that needs the same kind of legal setup — the categories don't
 change, only the answers do.)
 
-## Status — 2026-11-16
+## Status — 2026-11-16: filled in
 
-The pages were re-checked against the app as it runs today and corrected:
+Every placeholder is resolved. The values the pages share live in one file,
+`src/app/legal/facts.tsx` (operator, postal address, contact email, dates,
+governing law, courts, liability cap) — change them there, once.
 
-- **Analytics.** The privacy page said there were none. Vercel Web Analytics
-  and Speed Insights are live (cookieless, aggregated) and are now disclosed.
-  Google Analytics is wired in the code but switched off in production (no
-  measurement ID set). Turning it on means updating the privacy page first
-  and, for EU/UK visitors, asking for cookie consent.
-- **Recordings kept on the device.** The Listening Library, Word Log and
-  tool work-in-progress (added since the first draft) are now described:
-  device-only, never uploaded, kept until the user deletes them, and the
-  user is responsible for consent when recording another person.
-- **Filled from verified facts (25 placeholders):** community features are
-  off in production; hosting is Vercel + Convex; no TURN relay is configured
-  (the Open Relay fallback would apply, and calls are off); no payment
-  provider; age check is a self-declared date of birth, stored in full;
-  no retention period is automated; the in-session recorder and its consent
-  dialog are live; cross-references to the Terms' section numbers.
+**From the owner's answers**
 
-**Still open: 148 placeholders, 77 distinct facts** — everything in §1–§5
-and §7–§10 below. None of it can be read from the code.
+- Operator: an individual (not a company), Florida, United States; postal
+  address and one contact inbox as given.
+- 18+ applies to every way of being in live contact with another person, and
+  to recording another person. Under 18 = self-study only.
+- Deletion is real and immediate: the Delete account button on /profile
+  removes the account's data, the sign-in, and what is saved in the browser.
+  No grace period.
+- EU/UK users are welcome; no representative or DPO is appointed.
 
-**Do not merge the legal-pages PR until this is filled in and reviewed.**
+**Defaults chosen (change in the pages or `facts.tsx` if you disagree)**
+
+| Item | Value |
+|---|---|
+| Minimum age for the learning app | 13 (US law requires verified parental consent below that) |
+| Governing law / courts | Florida; state courts in Volusia County and the federal Middle District of Florida, exclusive |
+| Liability cap | Greater of what the user paid in the prior 12 months and USD 100 |
+| Safety reports | Kept 24 months after closing |
+| Waitlist entries | Until removal is requested, at most 24 months |
+| Privacy enquiries | Acknowledge in 5 business days, resolve in 30 days |
+| Safety reports | Acknowledge in 3 business days, outcome in 14 days |
+| Appeals, notice of changes, informal resolution | 30 days each |
+
+**Still worth doing**
+
+- A lawyer's read of Terms §14 (liability) and §17 (governing law). These are
+  common defaults, not legal advice.
+- The one record kept after an account is deleted: a safety report that
+  someone else filed about it. Everything else goes.
+- The two time-based periods (waitlist, closed reports) are not automated.
+- The 18+ rule for recording another person is stated in the Terms but the
+  activity tools do not check age before recording.
+- The pages are in English only.
+- Florida asks anyone trading under a name other than their own to register
+  it as a fictitious name; "Nurilang" would be that name.
+- Turning on Google Analytics needs the privacy page updated first.
 Merging deploys them to production as reachable URLs even before they're
 linked from navigation.
 
