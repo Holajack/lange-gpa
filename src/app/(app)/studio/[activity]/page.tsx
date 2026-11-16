@@ -9,6 +9,7 @@ import { Mascot } from "@/components/Mascot";
 import { PhaseGate } from "@/components/studio/StudioShell";
 import { loadStudioTool } from "@/components/studio/registry";
 import type { StudioTool } from "@/components/studio/types";
+import type { LangCode } from "@/lib/types";
 
 /**
  * /studio/{activityId} — the workbench for one curriculum activity.
@@ -17,26 +18,33 @@ import type { StudioTool } from "@/components/studio/types";
  */
 export default function StudioPage() {
   const { activity: activityId } = useParams<{ activity: string }>();
-  const { profile, t } = useApp();
+  const { profile, t, uiLang } = useApp();
   // undefined = still loading · null = no workbench registered
   const [tool, setTool] = useState<{ id: string; Tool: StudioTool | null } | undefined>(undefined);
+
+  // the languages this grower's interface can speak: their own, the one shown
+  // right now, and (as immersion grows) the one they are growing into
+  const native = profile?.knownLangs[0];
+  const target = profile?.targetLang;
+  const langKey = [native, uiLang, target].filter(Boolean).join(",");
 
   useEffect(() => {
     if (!activityId) return;
     let alive = true;
-    loadStudioTool(activityId)
-      .then((Tool) => alive && setTool({ id: activityId, Tool: Tool ?? null }))
-      .catch(() => alive && setTool({ id: activityId, Tool: null }));
+    const key = `${activityId}|${langKey}`;
+    loadStudioTool(activityId, langKey.split(",") as LangCode[])
+      .then((Tool) => alive && setTool({ id: key, Tool: Tool ?? null }))
+      .catch(() => alive && setTool({ id: key, Tool: null }));
     return () => {
       alive = false;
     };
-  }, [activityId]);
+  }, [activityId, langKey]);
 
   if (!profile) return null;
 
   const phase = PHASES.find((p) => p.activities.some((a) => a.id === activityId));
   const activity = phase?.activities.find((a) => a.id === activityId);
-  const loaded = tool && tool.id === activityId ? tool : undefined;
+  const loaded = tool && tool.id === `${activityId}|${langKey}` ? tool : undefined;
 
   if (phase && activity && !loaded) {
     return <div className="mx-auto min-h-[60vh] max-w-4xl" aria-busy="true" />;

@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CardFace } from "@/app/(app)/session/CardFace";
 import { motion } from "framer-motion";
 import { VOCAB_DOMAINS } from "@/lib/vocab";
 import { speak, stopSpeaking } from "@/lib/tts";
@@ -276,8 +277,18 @@ function RepeatExperience() {
               {slide?.domain.emoji} · {ix + 1} / {TOTAL}
             </span>
 
-            <span key={slide?.item.id} className="popin text-7xl leading-none lg:text-8xl">
-              {slide?.item.emoji}
+            <span
+              key={slide?.item.id}
+              className="popin flex h-28 w-28 items-center justify-center lg:h-36 lg:w-36"
+            >
+              {slide && (
+                <CardFace
+                  itemId={slide.item.id}
+                  emoji={slide.item.emoji}
+                  className="text-7xl leading-none lg:text-8xl"
+                  imgClassName="h-full w-full rounded-2xl"
+                />
+              )}
             </span>
 
             {/* the written word — only after the first hearing */}

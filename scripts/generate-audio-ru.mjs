@@ -12,6 +12,7 @@
  *   node --experimental-strip-types scripts/generate-audio-ru.mjs --limit 5      # small test batch
  *   node --experimental-strip-types scripts/generate-audio-ru.mjs                # everything missing
  *   node --experimental-strip-types scripts/generate-audio-ru.mjs --verify       # STT round-trip of clips made by this script
+ *   … --verify --single   # one clip per request (costs more) for clips the batch pass can't place, e.g. quoted dialogue
  *   node --experimental-strip-types scripts/generate-audio-ru.mjs --redo id1,id2 # regenerate specific ids
  *   --questions    also voice the "Где …?" review question for every nameable thing
  *   --lines FILE   also voice extra sentences: JSON array of exact strings (studio narration)
@@ -151,7 +152,7 @@ async function sttBatch(apiKey, files) {
     const heard = files.map(() => []);
     for (const w of words) {
       let idx = 0;
-      for (let i = 0; i < starts.length; i++) if (w.start >= starts[i] - 0.25) idx = i;
+      for (let i = 0; i < starts.length; i++) if (w.start >= starts[i] - GAP_SEC / 2) idx = i;
       heard[idx].push(w.text);
     }
     return heard.map((parts) => parts.join(" "));
@@ -263,7 +264,7 @@ async function main() {
     let ok = 0;
     let bad = 0;
     const queue = todo.slice(0, max);
-    const BATCH = 40;
+    const BATCH = flag("single") ? 1 : 40;
     for (let i = 0; i < queue.length; i += BATCH) {
       const group = queue.slice(i, i + BATCH);
       try {

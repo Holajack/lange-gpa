@@ -10,6 +10,7 @@
  *   --model flux-schnell | flux-dev | recraft-v3   (default: flux-schnell)
  *   --only apple,dog,ear                           generate only these item ids
  *   --limit 5                                      stop after N new images (test batches)
+ *   --redo wrench,lake                             regenerate these ids even though a file exists
  *
  * Needs REPLICATE_API_TOKEN in .env at the project root (never printed).
  *
@@ -271,11 +272,32 @@ const NO_TEXT =
   "ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO NUMBERS, NO LABELS, NO CAPTIONS, " +
   "NO WATERMARK, NO SIGNATURE";
 
+/**
+ * Hand-written subjects for the Phase 1 expansion (scripts/card-subjects.json):
+ * { [itemId]: "what is in the picture" | null }. `null` = the word cannot be
+ * shown as one unambiguous picture, so the card keeps its emoji.
+ */
+let EXTRA_SUBJECTS = {};
+try {
+  EXTRA_SUBJECTS = JSON.parse(await fs.readFile(path.join(ROOT, "scripts", "card-subjects.json"), "utf8"));
+} catch {
+  /* no extra subjects file */
+}
+
+const subjectFor = (item) => SUBJECT_OVERRIDES[item.id] ?? EXTRA_SUBJECTS[item.id] ?? null;
+
 function promptFor(domain, item) {
-  const subject = SUBJECT_OVERRIDES[item.id] ?? `one single ${item.words.en}`;
+  const written = subjectFor(item);
   const domainName = domain.names.en ?? domain.id;
+  if (written) {
+    // a written subject is the whole brief — the emoji is often only a rough stand-in
+    return (
+      `${STYLE}. Subject: ${written}. A picture card that means "${item.words.en}", ` +
+      `for a "${domainName}" deck. Exactly ONE clear idea, nothing unrelated in frame. ${NO_TEXT}.`
+    );
+  }
   return (
-    `${STYLE}. Subject: ${subject} — the meaning of the ${item.emoji} emoji, ` +
+    `${STYLE}. Subject: one single ${item.words.en} — the meaning of the ${item.emoji} emoji, ` +
     `for a "${domainName}" picture-card deck. Exactly ONE unambiguous subject, ` +
     `nothing else in frame. ${NO_TEXT}.`
   );
@@ -396,6 +418,7 @@ function parseArgs(argv) {
     else if (a.startsWith("--model=")) args.model = a.slice("--model=".length);
     else if (a === "--only") args.only = argv[++i];
     else if (a.startsWith("--only=")) args.only = a.slice("--only=".length);
+    else if (a === "--redo") args.redo = argv[++i];
     else if (a === "--limit") args.limit = Number(argv[++i]);
     else if (a.startsWith("--limit=")) args.limit = Number(a.slice("--limit=".length));
     else {
@@ -449,6 +472,8 @@ async function main() {
   let generated = 0;
   let skipped = 0;
   let failed = 0;
+  let undescribed = 0;
+  const redoIds = new Set((args.redo ?? "").split(",").map((x) => x.trim()).filter(Boolean));
 
   console.log(`Model: ${modelSlug}`);
 
@@ -460,9 +485,17 @@ async function main() {
       const outPath = path.join(CARDS_DIR, `${item.id}.webp`);
       const publicPath = `/cards/${item.id}.webp`;
 
-      if (await fileExists(outPath)) {
+      const redo = redoIds.has(item.id);
+      if (!redo && (await fileExists(outPath))) {
         manifest.items[item.id] = publicPath;
         skipped++;
+        continue;
+      }
+
+      // New pictures are only made from a written subject: a bare
+      // "one single <word>" prompt is where the inaccurate cards came from.
+      if (!redo && !subjectFor(item)) {
+        undescribed++;
         continue;
       }
 
@@ -474,6 +507,7 @@ async function main() {
         await fs.writeFile(outPath, image);
         manifest.items[item.id] = publicPath;
         generated++;
+        if (generated % 20 === 0) await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + "\n");
         console.log(`  ${domain.id}/${item.id} → ${publicPath}  (${image.length.toLocaleString()} bytes)`);
       } catch (err) {
         failed++;
@@ -485,7 +519,7 @@ async function main() {
 
   await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + "\n");
 
-  console.log(`\nDone. generated=${generated} skipped=${skipped} failed=${failed}`);
+  console.log(`\nDone. generated=${generated} skipped=${skipped} failed=${failed} no-subject=${undescribed}`);
   console.log(`Manifest: ${MANIFEST_PATH}`);
   if (failed > 0) process.exitCode = 1;
 }
