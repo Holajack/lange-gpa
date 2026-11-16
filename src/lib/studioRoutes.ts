@@ -12,6 +12,7 @@ export const STUDIO_ACTIVITY_IDS: ReadonlySet<string> = new Set([
   "p2-describe", "p2-storybuild", "p2-clarify", "p2-wsw", "p2-busy", "p2-process", "p2-smalltalk", "p2-lifestory",
   // Phase 3 — shared stories
   "p3-bridge", "p3-script", "p3-cartoon", "p3-massage", "p3-shared", "p3-prop", "p3-flood", "p3-host",
+  "p3-expository", "p3-talkmore", "p3-sample", "p3-reading",
   // Phase 4 — deep life sharing
   "p4-lifestory", "p4-vocab", "p4-walkoflife", "p4-observe", "p4-feedback", "p4-holes", "p4-tworecorder",
   // Phase 5 — native-to-native discourse

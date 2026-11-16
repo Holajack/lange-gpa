@@ -66,7 +66,7 @@ export function StudioHeader({
     <header className="mb-6 space-y-4">
       <Link
         href={`/courses/${phase.slug}`}
-        className="pill inline-flex bg-white/6 px-4 py-2 text-sm text-muted hover:text-ink"
+        className="pill inline-flex min-h-10 bg-white/6 px-4 py-2 text-sm text-muted hover:text-ink"
       >
         <ArrowLeft size={14} strokeWidth={2.5} /> {t("stc_backToPhase")}
       </Link>
@@ -174,7 +174,7 @@ export function StepGuide({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 text-left"
+        className="flex min-h-10 w-full items-center justify-between gap-3 text-left"
       >
         <h2 className="font-display text-lg font-bold text-ink">{title ?? t("stc_steps")}</h2>
         <ChevronDown
@@ -252,7 +252,10 @@ export function NeedsPersonCallout({ children }: { children?: ReactNode }) {
   return (
     <Callout icon="🤝" title={t("stc_modeNurturer")} tone="warm">
       <p>{children ?? t("stc_modeNurturerSub")}</p>
-      <Link href="/schedule" className="mt-2 inline-block text-sm font-semibold text-ink underline underline-offset-4">
+      <Link
+        href="/schedule"
+        className="mt-1 inline-flex min-h-10 items-center text-sm font-semibold text-ink underline underline-offset-4"
+      >
         {t("stc_findPerson")} →
       </Link>
     </Callout>

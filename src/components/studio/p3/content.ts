@@ -238,6 +238,207 @@ export const CARTOON_ASKS: PhraseDef[] = [
   },
 ];
 
+/* ---- 3C: explanations, talking more, a native-to-native sample, reading ---- */
+
+export const EXPOSITORY_ASKS: PhraseDef[] = [
+  {
+    id: "ex-topic",
+    labelKey: "st3_exAskTopic",
+    text: tx(
+      "Расскажите мне об этом. Я хорошо знаю эту тему.",
+      "Please tell me about this. I know the subject well.",
+      "Hábleme de esto, por favor. Conozco bien el tema."
+    ),
+  },
+  {
+    id: "ex-film",
+    labelKey: "st3_exAskFilm",
+    text: tx(
+      "Расскажите, пожалуйста, что происходит в этом фильме.",
+      "Please tell me what happens in this film.",
+      "Cuénteme, por favor, qué pasa en esta película."
+    ),
+  },
+  {
+    id: "ex-book",
+    labelKey: "st3_exAskBook",
+    text: tx(
+      "Расскажите коротко, о чём эта книга.",
+      "Tell me briefly what this book is about.",
+      "Cuénteme en pocas palabras de qué trata este libro."
+    ),
+  },
+  {
+    id: "ex-news",
+    labelKey: "st3_exAskNews",
+    text: tx(
+      "Что об этом говорят в новостях?",
+      "What are they saying about this in the news?",
+      "¿Qué dicen de esto en las noticias?"
+    ),
+  },
+  {
+    id: "ex-talk",
+    labelKey: "st3_exAskTalk",
+    text: tx(
+      "О чём сейчас все говорят?",
+      "What is everyone talking about these days?",
+      "¿De qué habla todo el mundo estos días?"
+    ),
+  },
+  {
+    id: "ex-new",
+    labelKey: "st3_exAskNew",
+    text: tx("Есть что-нибудь новое об этом?", "Is there anything new about that?", "¿Hay algo nuevo sobre eso?"),
+  },
+  {
+    id: "ex-read",
+    labelKey: "st3_exAskRead",
+    text: tx(
+      "Прочитайте это вслух, а потом расскажите своими словами.",
+      "Please read it aloud, and then tell it in your own words.",
+      "Léalo en voz alta, por favor, y después cuéntelo con sus propias palabras."
+    ),
+  },
+  { id: "ex-why", labelKey: "st3_exAskWhy", text: tx("А почему так?", "Why is that?", "¿Y por qué es así?") },
+];
+
+/** Openers for the grower's own telling, keyed by the way of talking they belong to. */
+export const TALK_ASKS: PhraseDef[] = [
+  {
+    id: "tm-check",
+    labelKey: "st3_tmAskCheck",
+    text: tx(
+      "Я хочу проверить, правильно ли я понимаю эту историю.",
+      "Let me check that I understood your story.",
+      "Quiero ver si entendí bien su historia."
+    ),
+  },
+  {
+    id: "tm-life",
+    labelKey: "st3_tmAskLife",
+    text: tx(
+      "Я хочу рассказать вам одну историю из своей жизни.",
+      "I want to tell you a story from my life.",
+      "Quiero contarle una historia de mi vida."
+    ),
+  },
+  {
+    id: "tm-next",
+    labelKey: "st3_tmAskNext",
+    text: tx("Я расскажу, что было дальше.", "Let me tell you what happened next.", "Le voy a contar qué pasó después."),
+  },
+  {
+    id: "tm-day",
+    labelKey: "st3_tmAskDay",
+    text: tx(
+      "Со мной случилось кое-что интересное.",
+      "Something interesting happened to me.",
+      "Me pasó algo interesante."
+    ),
+  },
+  {
+    id: "tm-howsay",
+    labelKey: "st3_tmAskHowSay",
+    text: tx("Как это лучше сказать?", "What is a better way to say that?", "¿Cómo se dice mejor eso?"),
+  },
+  {
+    id: "tm-retell",
+    labelKey: "st3_tmAskRetell",
+    text: tx(
+      "Теперь расскажите, пожалуйста, эту историю своими словами.",
+      "Now please tell this story back in your own words.",
+      "Ahora cuénteme usted esta historia, por favor, con sus palabras."
+    ),
+  },
+  {
+    id: "tm-else",
+    labelKey: "st3_tmAskElse",
+    text: tx("А как ещё можно сказать?", "How else could you say it?", "¿De qué otra manera se puede decir?"),
+  },
+];
+
+/** Nuri as a rehearsal audience: plain questions that keep a telling going. Never answers. */
+export const NURI_PROMPTS: PhraseDef[] = [
+  {
+    id: "np-then",
+    labelKey: "st3_npThen",
+    text: tx("А что было потом?", "And then what happened?", "¿Y qué pasó después?"),
+  },
+  { id: "np-who", labelKey: "st3_npWho", text: tx("Кто там был?", "Who was there?", "¿Quién estaba allí?") },
+  { id: "np-where", labelKey: "st3_npWhere", text: tx("Где это было?", "Where was it?", "¿Dónde fue?") },
+  {
+    id: "np-end",
+    labelKey: "st3_npEnd",
+    text: tx("И чем всё закончилось?", "And how did it end?", "¿Y cómo terminó todo?"),
+  },
+];
+
+export const SAMPLE_ASKS: PhraseDef[] = [
+  {
+    id: "sm-ask",
+    labelKey: "st3_smAskTell",
+    text: tx(
+      "Расскажите, пожалуйста, эту историю кому-нибудь из знакомых и запишите. Меня рядом не будет.",
+      "Please tell this story to someone you know and record it. I will not be there.",
+      "Por favor, cuéntele esta historia a alguien que conozca y grábelo. Yo no voy a estar."
+    ),
+  },
+  {
+    id: "sm-natural",
+    labelKey: "st3_smAskNatural",
+    text: tx(
+      "Говорите так, как вы обычно говорите между собой.",
+      "Speak the way you normally speak with each other.",
+      "Hablen como hablan normalmente entre ustedes."
+    ),
+  },
+  {
+    id: "sm-listen",
+    labelKey: "st3_smAskListen",
+    text: tx("Давайте послушаем это вместе.", "Let's listen to it together.", "Vamos a escucharlo juntos."),
+  },
+];
+
+export const READING_ASKS: PhraseDef[] = [
+  {
+    id: "rd-write",
+    labelKey: "st3_rdAskWrite",
+    text: tx(
+      "Напишите, пожалуйста, то, что сказано на этой записи.",
+      "Please write down what is said in this recording.",
+      "Por favor, escriba lo que se dice en esta grabación."
+    ),
+  },
+  {
+    id: "rd-aloud",
+    labelKey: "st3_rdAskAloud",
+    text: tx(
+      "Прочитайте мне это вслух, пожалуйста.",
+      "Please read this aloud to me.",
+      "Léame esto en voz alta, por favor."
+    ),
+  },
+];
+
+/**
+ * Wordless three-frame situations with empty speech bubbles (💬). The pair
+ * talks through the many things each person might say; nothing is authored.
+ */
+export interface SayStrip {
+  id: string;
+  frames: string[];
+}
+
+export const SAY_STRIPS: SayStrip[] = [
+  { id: "bump", frames: ["🚶 💥 🧍", "😳 💬", "🙂 💬"] },
+  { id: "late", frames: ["🕘 🏃", "🚪 😅 💬", "👩 📋 💬"] },
+  { id: "gift", frames: ["🎁 ➡️ 👵", "👵 😊 💬", "🙂 💬"] },
+  { id: "lost", frames: ["🗺️ 😕", "🙋 💬", "👮 👉 💬"] },
+  { id: "spill", frames: ["☕ ⤵️ 👔", "😱 💬", "😐 💬"] },
+  { id: "leaving", frames: ["🏠 🫖 👥", "👋 🧑 💬", "👵 🚪 💬"] },
+];
+
 /* ------------------------------------------------------------------ *
  *  Bridge-story rehearsal: public-domain folk tales, retold simply.
  *  `pic` is a wordless picture (emoji; ":turnip:" renders a drawn turnip).
@@ -1692,6 +1893,11 @@ const ALL_PHRASES: PhraseDef[] = [
   ...HOST_ASKS,
   ...FLOOD_ASKS,
   ...CARTOON_ASKS,
+  ...EXPOSITORY_ASKS,
+  ...TALK_ASKS,
+  ...NURI_PROMPTS,
+  ...SAMPLE_ASKS,
+  ...READING_ASKS,
 ];
 
 function gather(lang: LangCode): string[] {

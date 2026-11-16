@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LangCode } from "@/lib/types";
 import { speak, stopSpeaking } from "@/lib/tts";
-import type { LibraryItem } from "@/lib/library";
+import type { LibraryItem, RecordingKind } from "@/lib/library";
 
 /* ------------------------------------------------------------------ *
  *  Persisted tool state: localStorage `lange.studio.{id}.v1`, one slot
@@ -307,4 +307,15 @@ export function shuffled<T>(arr: readonly T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/** kinds that hold a host person's speech (never the grower's own takes) */
+const HOST_SPEECH: RecordingKind[] = ["primary", "expansion", "improved", "imported"];
+
+/** Host-speech recordings from this phase or earlier, in this language, that aren't confidential. */
+export function hostSpeech(all: LibraryItem[], lang: LangCode): LibraryItem[] {
+  return all.filter(
+    (it) =>
+      it.lang === lang && it.phase <= 3 && !it.confidential && it.speaker !== "me" && HOST_SPEECH.includes(it.kind)
+  );
 }
