@@ -552,7 +552,8 @@ export function Buddy({
       role="img"
       aria-label={`${LABEL[id]} the buddy`}
       className={`${animated ? "floaty" : ""} ${className}`.trim()}
-      style={animated ? { animationDelay: `${floatDelay}s` } : undefined}
+      // arms and leaves swing past the frame mid-wave; never clip them at it
+      style={animated ? { overflow: "visible", animationDelay: `${floatDelay}s` } : { overflow: "visible" }}
     >
       {ART[id](wave)}
     </svg>
