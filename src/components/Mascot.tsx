@@ -40,6 +40,9 @@ export function Mascot({
       width={size}
       height={size}
       className={`${float ? "floaty" : ""} ${className}`}
+      // the waving hand swings past the 170-unit frame; an <svg> clips at its
+      // frame by default, which sliced the hand off mid-wave
+      style={{ overflow: "visible" }}
       role="img"
       aria-label="Nuri the mascot"
     >
@@ -67,8 +70,11 @@ export function Mascot({
       {/* left arm */}
       <path d="M34 100 q-16 6 -18 22 q14 2 24 -10" fill="#FF8A1E" />
 
-      {/* right arm — waves */}
-      <g className={mood === "wave" || mood === "cheer" ? "wavehand" : ""}>
+      {/* right arm — waves from the shoulder (the class default pivots below it) */}
+      <g
+        className={mood === "wave" || mood === "cheer" ? "wavehand" : ""}
+        style={{ transformOrigin: "133px 92px" }}
+      >
         <path d="M136 96 q22 -10 26 -30 q-20 -4 -32 16" fill="#FF8A1E" />
         <circle cx="160" cy="64" r="9" fill="#FFB52E" />
       </g>
