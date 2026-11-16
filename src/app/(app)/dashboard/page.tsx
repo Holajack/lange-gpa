@@ -19,6 +19,7 @@ import type { LangCode, PhaseActivity, Profile } from "@/lib/types";
 import { gate1bPassed, gateLegs1b } from "@/lib/gates";
 import { Avatar } from "@/components/Avatar";
 import { CheckpointCard, weakestLegChip } from "@/components/CheckpointCard";
+import { PhaseToday } from "@/components/studio/PhaseToday";
 import { Mascot } from "@/components/Mascot";
 import { MascotImage } from "@/components/MascotImage";
 import { ProgressBar, SectionTitle } from "@/components/ui";
@@ -317,6 +318,13 @@ export default function DashboardPage() {
       {profile.role !== "nurturer" && profile.phase <= 2 && (
         <motion.div variants={fadeUp}>
           <CheckpointCard />
+        </motion.div>
+      )}
+
+      {/* ============ Phase 2+ : today's workbench (the phase's own activities) ============ */}
+      {profile.phase >= 2 && profile.role !== "nurturer" && (
+        <motion.div variants={fadeUp}>
+          <PhaseToday />
         </motion.div>
       )}
 

@@ -52,7 +52,7 @@ import {
   currentCard,
   introducedCards,
   plannedReviewLength,
-  questionFor,
+  reviewPrompt,
   reveal,
   reviewTarget,
   startReview,
@@ -441,10 +441,10 @@ function SessionRoom() {
             await sleep(300);
             if (dead) return;
           }
-          await say(questionFor(sessionLang, tgt.word));
+          await say(reviewPrompt(sessionLang, tgt));
           // gentle re-ask until the grower taps
           const id = window.setInterval(() => {
-            if (!busyRef.current) void say(questionFor(sessionLang, tgt.word));
+            if (!busyRef.current) void say(reviewPrompt(sessionLang, tgt));
           }, 10000);
           timers.push(id);
           return;
@@ -569,7 +569,7 @@ function SessionRoom() {
   const hearAgain = () => {
     const text =
       flow.phase === "review" && target
-        ? questionFor(sessionLang, target.word)
+        ? reviewPrompt(sessionLang, target)
         : newest
           ? newest.word
           : CUES[targetLang]?.greeting ?? mascot.nativeHello;
@@ -1173,7 +1173,7 @@ function SessionRoom() {
                     {flow.fullReview ? ` · ${t("sesFullSweep")}` : ""}
                   </p>
                   <p className="headline mt-1 text-2xl">
-                    {cues ? `${cues.point} ` : ""}«{questionFor(sessionLang, target.word)}»
+                    {cues ? `${cues.point} ` : ""}«{reviewPrompt(sessionLang, target)}»
                   </p>
                   <p className="mt-1 text-xs text-muted">
                     {t("sesAnswerLabel")}: <span className="text-base">{target.emoji}</span>{" "}
@@ -1187,7 +1187,7 @@ function SessionRoom() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void speak(questionFor(sessionLang, target.word), sessionLang)}
+                  onClick={() => void speak(reviewPrompt(sessionLang, target), sessionLang)}
                   title={t("listen")}
                   className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-violet text-white transition hover:scale-105"
                 >

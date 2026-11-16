@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { CardFace } from "@/app/(app)/session/CardFace";
 import { motion } from "framer-motion";
 import { Volume2, X } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
@@ -304,7 +305,14 @@ export function PlacementCheck({
                         : undefined
                     }
                   >
-                    <span className="text-6xl leading-none">{tile.emoji}</span>
+                    <span className="flex h-20 w-20 items-center justify-center">
+                      <CardFace
+                        itemId={tile.id}
+                        emoji={tile.emoji}
+                        className="text-6xl leading-none"
+                        imgClassName="h-20 w-20 rounded-xl"
+                      />
+                    </span>
                     {pickedAt >= 0 && round.answer.length > 1 && (
                       <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-lime text-xs font-black text-canvas">
                         {pickedAt + 1}

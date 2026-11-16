@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { getCardImage } from "@/lib/cards";
+import { drawnCard, hasDrawnCard } from "@/components/DrawnCard";
 
 /**
  * CardFace — the text-free face of a picture card.
  *
- * Renders the real illustration from /cards/ when one exists, the emoji
+ * Renders a code-drawn face for cards that must be exact (see DrawnCard),
+ * else the real illustration from /cards/ when one exists, the emoji
  * otherwise — emoji stays the universal fallback so every deck works even
  * before a single illustration ships. getCardImage (src/lib/cards) lazily
  * fetches /cards/manifest.json and caches it, so the very first paint can
@@ -55,6 +57,19 @@ export function CardFace({
       if (timer !== null) window.clearTimeout(timer);
     };
   }, [itemId]);
+
+  // Exact-by-construction cards (numbers, weekdays, months, clock times,
+  // shapes, arrows) are drawn in code and win over any illustration or emoji.
+  if (hasDrawnCard(itemId)) {
+    return (
+      <span
+        aria-hidden
+        className={`pointer-events-none inline-block select-none ${imgClassName || "h-[1.5em] w-[1.5em] align-middle"}`}
+      >
+        {drawnCard(itemId)}
+      </span>
+    );
+  }
 
   if (url) {
     return (
