@@ -1,5 +1,5 @@
 import type { LangCode, PhaseId, VocabItem } from "./types";
-import { TPR_COMMANDS, VOCAB_DOMAINS } from "./vocab";
+import { TPR_COMMANDS, VOCAB_DOMAINS, isThingCard } from "./vocab";
 import { QUESTION_TEMPLATES, questionFor } from "./sessionFlow";
 import { phaseById } from "./phases";
 
@@ -124,7 +124,7 @@ function wordRounds(
       ).slice(0, tileCount - 1);
       rounds.push({
         kind,
-        audio: [kind === "question" ? questionFor(lang, word) : word],
+        audio: [kind === "question" && isThingCard(pool.domain.id, target.id) ? questionFor(lang, word) : word],
         tiles: shuffle([target, ...distractors]).map((it) => ({ id: it.id, emoji: it.emoji })),
         answer: [target.id],
       });

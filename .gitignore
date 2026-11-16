@@ -28,3 +28,6 @@ ru-marketplace.jpeg
 
 # Tester/contact lists (PII — belongs in App Store Connect, not git history)
 apple_tester_import*.csv
+
+# derived: studio narration lines collected for voice generation
+scripts/.studio-lines-*.json

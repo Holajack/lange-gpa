@@ -55,6 +55,8 @@ const isProtected = createRouteMatcher([
   "/nurture(.*)",
   "/session(.*)",
   "/practice(.*)",
+  "/studio(.*)",
+  "/library(.*)",
   "/profile(.*)",
   "/messages(.*)",
   "/onboarding(.*)",

@@ -1562,6 +1562,30 @@ export const VOCAB_DOMAINS: VocabDomain[] = [
 
 export const domainById = (id: string) => VOCAB_DOMAINS.find((d) => d.id === id);
 
+/**
+ * Is this card a THING you can ask "Where is …?" about?
+ *
+ * The Dirty Dozen review question only makes sense for nameable things. For
+ * actions, qualities, relations, numbers and whole phrases ("to write",
+ * "big", "under", "Excuse me") a "Where is …?" frame is ungrammatical in
+ * every language — a nurturer simply says the word and the grower points.
+ * Card ids are language-independent, so one list serves all decks.
+ */
+const WORD_ONLY_DOMAINS: ReadonlySet<string> = new Set([
+  "prepositions", "emotions", "adjectives", "states", "verbs", "touch-actions", "expressions",
+  "questions", "quantities", "water-words", "directions", "ordinals", "senses", "colors", "numbers",
+]);
+const WORD_ONLY_IDS: ReadonlySet<string> = new Set([
+  "run", "swim", "jump", "dance", "ski", "sleep", "eat", "drink", "wash", "visit-visit",
+  "rooms-indoors", "rooms-outdoors", "wx-sunny", "wx-cloudy", "mny-cheap", "mny-expensive",
+  "shape-straight", "shape-crooked", "shape-curved", "day-today", "day-tomorrow", "day-yesterday",
+  "tod-half-past",
+]);
+
+export function isThingCard(domainId: string, itemId: string): boolean {
+  return !WORD_ONLY_DOMAINS.has(domainId) && !WORD_ONLY_IDS.has(itemId);
+}
+
 /** TPR-style action commands for the listening trainer (Phase 1 "Total Physical Response") */
 export const TPR_COMMANDS: { id: string; emoji: string; words: Partial<Record<string, string>> }[] = [
   { id: "stand", emoji: "🧍", words: { en: "Stand up!", es: "¡Levántate!", ru: "Встань!", fr: "Lève-toi !", de: "Steh auf!", pt: "Levanta-te!", it: "Alzati!", ja: "立って！", zh: "站起来！", ht: "Kanpe!", ar: "قوم!", ko: "일어나!", tr: "Ayağa kalk!", uk: "Встань!", hi: "खड़े हो जाओ!", vi: "Đứng lên!", id: "Berdiri!", pl: "Wstawaj!", th: "ลุกขึ้น!" } },

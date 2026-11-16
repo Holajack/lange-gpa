@@ -1,5 +1,5 @@
 import type { LangCode } from "./types";
-import { VOCAB_DOMAINS } from "./vocab";
+import { VOCAB_DOMAINS, isThingCard } from "./vocab";
 
 /**
  * sessionFlow — the authentic GPA Phase-1 "Dirty Dozen" pacing engine.
@@ -238,6 +238,15 @@ export const QUESTION_TEMPLATES: Partial<Record<LangCode, (word: string) => stri
 export function questionFor(lang: LangCode, word: string): string {
   const template = QUESTION_TEMPLATES[lang] ?? QUESTION_TEMPLATES.en;
   return template ? template(word) : word;
+}
+
+/**
+ * What the nurturer says to review one card: "Where is …?" for things, the
+ * bare word for actions/qualities/phrases (see isThingCard) — never an
+ * ungrammatical "Where is to write?".
+ */
+export function reviewPrompt(lang: LangCode, card: Pick<DeckCard, "id" | "word" | "domainId">): string {
+  return isThingCard(card.domainId, card.id) ? questionFor(lang, card.word) : card.word;
 }
 
 /* ------------------------- review picking ------------------------- */
