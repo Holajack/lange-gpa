@@ -22,6 +22,7 @@ import { langByCode } from "@/lib/languages";
 import { interestById, motivationById, paceByMinutes } from "@/lib/onboardingOptions";
 import { Avatar } from "@/components/Avatar";
 import { Card, Tag } from "@/components/ui";
+import { DeleteAccountCard } from "@/components/DeleteAccountCard";
 
 const CLERK_ON = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 const COMMERCE_ON = process.env.NEXT_PUBLIC_ENABLE_COMMERCE === "true";
@@ -352,6 +353,9 @@ export default function ProfilePage() {
 
       {/* account & security (Clerk) */}
       {CLERK_ON && <AccountPanel t={t} />}
+
+      {/* delete account — removes everything, straight away */}
+      <DeleteAccountCard />
     </div>
   );
 }

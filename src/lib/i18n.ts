@@ -1,6 +1,7 @@
 import type { LangCode } from "./types";
 import { CORE_STUDIO_STRINGS } from "./studioStrings/core";
 import { PHASE_STRINGS } from "./studioStrings/phase";
+import { ACCOUNT_STRINGS } from "./accountStrings";
 import coreLocales from "./studioStrings/coreLocales.json";
 
 /**
@@ -1212,7 +1213,7 @@ export const STRINGS: Dict = {
    Each phase's strings are registered on demand, with that phase's tools,
    for the grower's own languages only (see components/studio/registry.ts) —
    so no page pays for 3,000 strings × 19 languages it will never show. */
-Object.assign(STRINGS, CORE_STUDIO_STRINGS, PHASE_STRINGS);
+Object.assign(STRINGS, CORE_STUDIO_STRINGS, PHASE_STRINGS, ACCOUNT_STRINGS);
 
 /** Add or extend entries in the table (used for lazily-loaded string sets). */
 export function registerStrings(dict: Dict): void {
