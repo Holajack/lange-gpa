@@ -8,14 +8,17 @@
  * @module
  */
 
+import type * as account from "../account.js";
 import type * as age from "../age.js";
 import type * as calls from "../calls.js";
 import type * as connections from "../connections.js";
 import type * as credits from "../credits.js";
+import type * as crons from "../crons.js";
 import type * as messages from "../messages.js";
 import type * as parties from "../parties.js";
 import type * as profiles from "../profiles.js";
 import type * as requests from "../requests.js";
+import type * as retention from "../retention.js";
 import type * as safety from "../safety.js";
 import type * as util from "../util.js";
 import type * as waitlist from "../waitlist.js";
@@ -27,14 +30,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  account: typeof account;
   age: typeof age;
   calls: typeof calls;
   connections: typeof connections;
   credits: typeof credits;
+  crons: typeof crons;
   messages: typeof messages;
   parties: typeof parties;
   profiles: typeof profiles;
   requests: typeof requests;
+  retention: typeof retention;
   safety: typeof safety;
   util: typeof util;
   waitlist: typeof waitlist;

@@ -15,7 +15,51 @@ occurrences, 87 distinct facts, grouped below. (Reusable structure for any
 other app that needs the same kind of legal setup — the categories don't
 change, only the answers do.)
 
-**Do not merge the legal-pages PR until this is filled in and reviewed.**
+## Status — 2026-11-16: filled in
+
+Every placeholder is resolved. The values the pages share live in one file,
+`src/app/legal/facts.tsx` (operator, postal address, contact email, dates,
+governing law, courts, liability cap) — change them there, once.
+
+**From the owner's answers**
+
+- Operator: an individual (not a company), Florida, United States; one
+  contact inbox. No postal address is published (the owner did not want a
+  home address public); the pages offer one on request for legal notices.
+- 18+ applies to every way of being in live contact with another person, and
+  to recording another person. Under 18 = self-study only.
+- Deletion is real and immediate: the Delete account button on /profile
+  removes the account's data, the sign-in, and what is saved in the browser.
+  No grace period.
+- EU/UK users are welcome; no representative or DPO is appointed.
+
+**Defaults chosen (change in the pages or `facts.tsx` if you disagree)**
+
+| Item | Value |
+|---|---|
+| Minimum age for the learning app | 13 (US law requires verified parental consent below that) |
+| Governing law / courts | Florida; state courts in Volusia County and the federal Middle District of Florida, exclusive |
+| Liability cap | Greater of what the user paid in the prior 12 months and USD 100 |
+| Safety reports | Kept 24 months after closing |
+| Waitlist entries | Until removal is requested, at most 24 months |
+| Privacy enquiries | Acknowledge in 5 business days, resolve in 30 days |
+| Safety reports | Acknowledge in 3 business days, outcome in 14 days |
+| Appeals, notice of changes, informal resolution | 30 days each |
+
+**Still worth doing**
+
+- A lawyer's read of Terms §14 (liability) and §17 (governing law). These are
+  common defaults, not legal advice.
+- The one record kept after an account is deleted: a safety report that
+  someone else filed about it. Everything else goes.
+- The two time-based periods (waitlist, closed reports) are enforced by a daily
+  job (`convex/retention.ts`, scheduled in `convex/crons.ts`).
+- The 18+ rule for recording another person is stated in the Terms but the
+  activity tools do not check age before recording.
+- The pages are in English only.
+- Florida asks anyone trading under a name other than their own to register
+  it as a fictitious name; "Nurilang" would be that name.
+- Turning on Google Analytics needs the privacy page updated first.
 Merging deploys them to production as reachable URLs even before they're
 linked from navigation.
 
@@ -124,7 +168,7 @@ Privacy law generally requires naming who processes user data on your behalf.
 
 | Placeholder | Answer (from what's actually running) |
 |---|---|
-| `HOSTING PROVIDER` | Vercel (app) + Convex (backend/database) |
+| `HOSTING PROVIDER` | Done — Vercel (app) + Convex (backend/database) |
 | `PRIMARY HOSTING REGION` | Whichever Vercel/Convex region is configured — check the dashboards |
 | `TURN PROVIDER NAME` / `TURN PROVIDER IN EFFECT` / `TURN PROVIDER CONFIGURATION REFERENCE` | Whatever TURN relay service `CallProvider.tsx` is configured against |
 | `PAYMENT PROVIDER` / `PAYMENT PROCESSOR DISCLOSURE` | Not chosen yet — this is the same open item from the roadmap (`credits.ts` still throws by design) |

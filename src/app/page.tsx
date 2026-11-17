@@ -566,6 +566,8 @@ export default function LandingPage() {
           <div className="flex items-center gap-5 text-xs font-semibold">
             <Link href="/courses" className="transition-colors hover:text-ink">Courses</Link>
             <Link href="/forum" className="transition-colors hover:text-ink">Forum</Link>
+            <Link href="/legal/terms" className="transition-colors hover:text-ink">Terms</Link>
+            <Link href="/legal/privacy" className="transition-colors hover:text-ink">Privacy</Link>
           </div>
         </div>
       </footer>
