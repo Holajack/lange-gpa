@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OPERATOR_NAME, POSTAL_ADDRESS, EFFECTIVE_DATE, GOVERNING_LAW, COURTS, Email } from "../facts";
+import { OPERATOR_NAME, EFFECTIVE_DATE, GOVERNING_LAW, COURTS, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -234,7 +234,7 @@ export default function TermsPage() {
             </dt>
             <dd className="mt-1.5 leading-7 text-ink">
               {OPERATOR_NAME}, an individual based in Florida, United States, who operates the Service
-              under the name Nurilang and can be reached by post at {POSTAL_ADDRESS} (<strong>&ldquo;Nurilang&rdquo;</strong>,{" "}
+              under the name Nurilang (<strong>&ldquo;Nurilang&rdquo;</strong>,{" "}
               <strong>&ldquo;we&rdquo;</strong>, <strong>&ldquo;us&rdquo;</strong>,{" "}
               <strong>&ldquo;our&rdquo;</strong>).
             </dd>
@@ -1339,8 +1339,7 @@ export default function TermsPage() {
         <Clause n="19.7" title="Notices">
           <P>
             We may give you notice by email to the address on your Account or by a notice in the
-            Service. You must give us notice in writing to <Email /> or to the
-            postal address at the top of these Terms.
+            Service. You must give us notice in writing to <Email />.
           </P>
         </Clause>
 
@@ -1364,7 +1363,7 @@ export default function TermsPage() {
             <Email />.
           </P>
           <P>
-            Our postal address is {POSTAL_ADDRESS}. Data protection enquiries should be
+            A postal address for formal legal notices is provided on request. Data protection enquiries should be
             addressed to <Email />, and
             are dealt with in the <A href="/legal/privacy">Privacy Policy</A>.
           </P>

@@ -7,7 +7,12 @@
 
 /** The person who operates Nurilang. Nurilang is not a company. */
 export const OPERATOR_NAME = "Jacken Holland";
-export const POSTAL_ADDRESS = "2570 Jasmine Road, Port Orange, Florida 32128, United States";
+/**
+ * No postal address is published: the operator is a private individual and a
+ * home address does not belong on a public page (or in a public repository).
+ * The pages say one is provided on request for formal legal notices. When a
+ * mailbox address exists, add it here and restore the "by post" wording.
+ */
 
 /** One monitored inbox for every kind of enquiry, for now. */
 export const CONTACT_EMAIL = "marketmindsj@gmail.com";

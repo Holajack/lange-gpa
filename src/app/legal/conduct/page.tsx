@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OPERATOR_NAME, POSTAL_ADDRESS, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
+import { OPERATOR_NAME, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -219,7 +219,7 @@ export default function ConductPage() {
                 to and use of the Community Features of the Nurilang application and website at
                 nurilang.app (together, the <T>&ldquo;Service&rdquo;</T>). The Service is
                 operated by {OPERATOR_NAME}, an individual based in Florida, United States, who operates
-                the Service under the name Nurilang and can be reached by post at {POSTAL_ADDRESS} (the <T>&ldquo;Operator&rdquo;</T>,{" "}
+                the Service under the name Nurilang (the <T>&ldquo;Operator&rdquo;</T>,{" "}
                 <T>&ldquo;we&rdquo;</T>, <T>&ldquo;us&rdquo;</T>).
               </p>
             </Clause>
@@ -1309,9 +1309,7 @@ export default function ConductPage() {
                   <Email />
                 </Bullet>
                 <Bullet label="Postal address:">
-                  {OPERATOR_NAME}
-                  {", "}
-                  {POSTAL_ADDRESS}
+                  {OPERATOR_NAME}. A postal address for formal legal notices is provided on request.
                 </Bullet>
               </Bullets>
             </Clause>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { POSTAL_ADDRESS, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
+import { EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -1103,7 +1103,7 @@ export default function RecordingConsentPage() {
             <P>
               Privacy and data-subject matters: <Email />. Safety and recording
               complaints: <Email />. Enforcement appeals:{" "}
-              <Email />. Postal correspondence: {POSTAL_ADDRESS}.
+              <Email />. A postal address for formal legal notices is provided on request.
             </P>
           </Clause>
           <Clause n="16.3" title="Related notices">

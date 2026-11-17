@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OPERATOR_NAME, POSTAL_ADDRESS, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
+import { OPERATOR_NAME, EFFECTIVE_DATE, VERSION, GOVERNING_LAW, COURTS, LIABILITY_CAP, Email } from "../facts";
 import Link from "next/link";
 
 /**
@@ -307,7 +307,8 @@ export default function PrivacyPolicyPage() {
             <P>
               The controller of your Personal Data is {OPERATOR_NAME}, an individual based in Florida,
               United States, who operates the Service under the name Nurilang. Nurilang is not a
-              company or other registered entity. Postal address: {POSTAL_ADDRESS}.
+              company or other registered entity. A postal address for formal legal notices is provided on request to the
+              contact in clause 3.2.
             </P>
           </Clause>
           <Clause n="3.2" title="Privacy contact">

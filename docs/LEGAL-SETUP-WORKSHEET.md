@@ -23,8 +23,9 @@ governing law, courts, liability cap) — change them there, once.
 
 **From the owner's answers**
 
-- Operator: an individual (not a company), Florida, United States; postal
-  address and one contact inbox as given.
+- Operator: an individual (not a company), Florida, United States; one
+  contact inbox. No postal address is published (the owner did not want a
+  home address public); the pages offer one on request for legal notices.
 - 18+ applies to every way of being in live contact with another person, and
   to recording another person. Under 18 = self-study only.
 - Deletion is real and immediate: the Delete account button on /profile
