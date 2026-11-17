@@ -1035,8 +1035,8 @@ export default function PrivacyPolicyPage() {
             <P>
               Deleting an account and its data is carried out by software, immediately, when you use
               the Delete account button. The two time-based periods in clause 12.1 — waitlist entries
-              and closed safety reports — are applied by operational process rather than by an
-              automated job.
+              and closed safety reports — are enforced by a job that runs once a day and removes
+              whatever has passed its period.
             </P>
           </Clause>
         </Section>

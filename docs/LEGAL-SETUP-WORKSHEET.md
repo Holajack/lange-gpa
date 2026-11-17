@@ -52,7 +52,8 @@ governing law, courts, liability cap) — change them there, once.
   common defaults, not legal advice.
 - The one record kept after an account is deleted: a safety report that
   someone else filed about it. Everything else goes.
-- The two time-based periods (waitlist, closed reports) are not automated.
+- The two time-based periods (waitlist, closed reports) are enforced by a daily
+  job (`convex/retention.ts`, scheduled in `convex/crons.ts`).
 - The 18+ rule for recording another person is stated in the Terms but the
   activity tools do not check age before recording.
 - The pages are in English only.
